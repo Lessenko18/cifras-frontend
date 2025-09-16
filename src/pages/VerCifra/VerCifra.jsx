@@ -17,24 +17,41 @@ import { Title } from "../Playlist/PlaylistStyled";
 import { Input } from "../../components/Input/Input";
 import TextareaAutosize from "react-textarea-autosize";
 import toast from "react-hot-toast";
+import {
+  GuardaEscolhidos,
+  MultSeletorContainer,
+} from "../../components/MultSeletor/MultSeletorStyled";
+import {
+  getCategoriaById,
+  searchCategoria,
+} from "../../service/categoriaService";
 
 export default function VerCifra() {
   const { id } = useParams();
   const [cifra, setCifra] = useState({});
   const [update, setUpdate] = useState(false);
   const [modalDelete, setModalDelete] = useState(false);
+  const [escolhidos, setEscolhidos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const navigate = useNavigate();
 
   async function getCifra() {
     const response = await getCifraById(id);
+    let listaCategorias = [];
     setCifra(response.data);
+    for (const categoria of response.data.categorias) {
+      const responseCat = await getCategoriaById(categoria);
+      listaCategorias.push(responseCat.data);
+    }
+    setEscolhidos(listaCategorias);
+    console.log(response.data.categorias);
   }
 
   async function handleUpdateCifra(event) {
     event.preventDefault();
     const formdata = new FormData(event.target);
     const data = Object.fromEntries(formdata.entries());
-
+    data.categorias = escolhidos.map((c) => c._id);
     try {
       await editCifraService(id, data);
       toast.success("Cifra atualizada com sucesso!");
@@ -44,6 +61,29 @@ export default function VerCifra() {
     }
     setUpdate(false);
     getCifra();
+  }
+  function handleSelect(item) {
+    let lista = [...escolhidos];
+    if (lista.find((i) => i._id == item._id)) {
+      return;
+    }
+    lista.push(item);
+    setEscolhidos(lista);
+  }
+  function removeSelect(item) {
+    let lista = [...escolhidos];
+    lista = lista.filter((i) => i._id != item._id);
+    setEscolhidos(lista);
+  }
+  async function handleSearch(e) {
+    var response = {};
+    if (e.target.value.trim() == "") {
+      setItems([]);
+      return;
+    }
+    response = await searchCategoria(e.target.value);
+    console.log(response.data);
+    setCategorias(response.data);
   }
 
   async function handleDeleteCifra() {
@@ -80,6 +120,7 @@ export default function VerCifra() {
           </button>
         </div>
       </UsersHeader>
+      {/* UPDATE */}
       <CifraBody>
         {!update ? (
           <CifraContent>
@@ -98,6 +139,28 @@ export default function VerCifra() {
               <label htmlFor="nome">Link da cifra</label>
               <Input type="text" name="link" defaultValue={cifra.link} />
             </div>
+            <MultSeletorContainer>
+              <GuardaEscolhidos>
+                {escolhidos.length > 0 &&
+                  escolhidos.map((item) => (
+                    <p key={item._id} onClick={() => removeSelect(item)}>
+                      {item.nome}
+                    </p>
+                  ))}
+              </GuardaEscolhidos>
+              <h3>Adicionar categoria</h3>
+              <Input
+                type="text"
+                placeholder="Pesquisar"
+                onChange={(e) => handleSearch(e)}
+              />
+              {categorias.length > 0 &&
+                categorias.map((item) => (
+                  <p key={item._id} onClick={() => handleSelect(item)}>
+                    {item.nome}
+                  </p>
+                ))}
+            </MultSeletorContainer>
             <TextareaAutosize
               name="observacao"
               defaultValue={cifra.observacao}

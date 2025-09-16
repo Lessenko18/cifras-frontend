@@ -13,6 +13,7 @@ export const CifrasBody = styled.div`
   grid-template-columns: repeat(3, 1fr);
   gap: 28px;
   justify-items: center;
+  border-radius: 12px;
 
   a {
     width: 100%;
@@ -20,6 +21,7 @@ export const CifrasBody = styled.div`
     max-width: 350px;
     transition: 0.3s;
     box-shadow: 0 2px 15px -5px #1a1a1a8d;
+    border-radius: 8px;
     &:hover {
       transform: scale(1.01);
     }

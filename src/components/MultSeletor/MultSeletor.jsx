@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Input } from "../Input/Input";
-import { MultSeletorContainer } from "./MultSeletorStyled";
+import { GuardaEscolhidos, MultSeletorContainer } from "./MultSeletorStyled";
 import { searchCategoria } from "../../service/categoriaService";
 
 export default function MultSeletor(props) {
@@ -8,6 +8,20 @@ export default function MultSeletor(props) {
   const [items, setItems] = useState([]);
   const [escolhidos, setEscolhidos] = useState([]);
 
+  function handleSelect(item) {
+    let lista = [...escolhidos];
+    if (lista.find((i) => i._id == item._id)) {
+      return;
+    }
+    lista.push(item);
+    setEscolhidos(lista);
+    props.addItem(lista);
+  }
+  function removeSelect(item) {
+    let lista = [...escolhidos];
+    lista = lista.filter((i) => i._id != item._id);
+    setEscolhidos(lista);
+  }
   async function handleSearch(e) {
     var response = {};
     if (e.target.value.trim() == "") {
@@ -28,6 +42,14 @@ export default function MultSeletor(props) {
 
   return (
     <MultSeletorContainer>
+      <GuardaEscolhidos>
+        {escolhidos.length > 0 &&
+          escolhidos.map((item) => (
+            <p key={item._id} onClick={() => removeSelect(item)}>
+              {item.nome}
+            </p>
+          ))}
+      </GuardaEscolhidos>
       <h3>Adicionar categoria</h3>
       <Input
         type="text"
@@ -35,8 +57,11 @@ export default function MultSeletor(props) {
         onChange={(e) => handleSearch(e)}
       />
       {items.length > 0 &&
-        items.map((item) => <p key={item._id}>{item.nome}</p>)}
-      <button onClick={() => props.carainho(items)}>Aqui</button>
+        items.map((item) => (
+          <p key={item._id} onClick={() => handleSelect(item)}>
+            {item.nome}
+          </p>
+        ))}
     </MultSeletorContainer>
   );
 }

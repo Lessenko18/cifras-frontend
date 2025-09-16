@@ -15,6 +15,10 @@ export async function createCategoriaService(data) {
   const response = await axios.post(`${baseURL}/categoria/create`, data);
   return response;
 }
+export async function getCategoriaById(id) {
+  const response = await axios.get(`${baseURL}/categoria/${id}`);
+  return response;
+}
 export async function deleteCategoriaService(id) {
   const response = await axios.delete(`${baseURL}/categoria/delete/${id}`);
   return response;
