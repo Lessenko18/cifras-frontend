@@ -33,18 +33,43 @@ export default function VerCifra() {
   const [modalDelete, setModalDelete] = useState(false);
   const [escolhidos, setEscolhidos] = useState([]);
   const [categorias, setCategorias] = useState([]);
+  const [part1, setPart1] = useState("");
+  const [part2, setPart2] = useState("");
   const navigate = useNavigate();
 
   async function getCifra() {
     const response = await getCifraById(id);
     let listaCategorias = [];
     setCifra(response.data);
+    const partes = response.data.observacao.split("!!!");
+    if (partes.length == 2) {
+      setPart1(partes[0] || "");
+      setPart2(partes[1] || "");
+      console.log(partes);
+    } else {
+      setPart1("");
+      setPart2("");
+    }
+
     for (const categoria of response.data.categorias) {
       const responseCat = await getCategoriaById(categoria);
       listaCategorias.push(responseCat.data);
     }
     setEscolhidos(listaCategorias);
     console.log(response.data.categorias);
+  }
+  function cortarTexto(texto, marcador) {
+    const partes = texto.split(marcador);
+
+    if (partes.length < 2) {
+      // Caso o marcador não seja encontrado
+      return { antes: texto, depois: "" };
+    }
+
+    const antes = partes[0].trim();
+    const depois = partes.slice(1).join(marcador).trim(); // junta caso tenha mais ocorrências
+
+    return { antes, depois };
   }
 
   async function handleUpdateCifra(event) {
@@ -100,7 +125,7 @@ export default function VerCifra() {
     getCifra();
   }, []);
   return (
-    <VerCifraContainer>
+    <VerCifraContainer className={part1 != "" && "partes"}>
       <UsersHeader>
         <button onClick={() => navigate(-1)}>
           <img
@@ -123,11 +148,19 @@ export default function VerCifra() {
       {/* UPDATE */}
       <CifraBody>
         {!update ? (
-          <CifraContent>
+          <CifraContent className={part1 != "" && "partes"}>
             <a target="_blank" href={cifra.link}>
               Acesse a cifra original
             </a>
-            <pre>{cifra.observacao}</pre>
+            {part1 == "" && part2 == "" ? (
+              <pre>{cifra.observacao}</pre>
+            ) : (
+              <div className="cifra-partes">
+                {part1 != "" && <pre>{part1}</pre>}
+                <span></span>
+                {part2 != "" && <pre>{part2}</pre>}
+              </div>
+            )}
           </CifraContent>
         ) : (
           <UpdateCifra onSubmit={handleUpdateCifra}>
@@ -143,15 +176,21 @@ export default function VerCifra() {
               <GuardaEscolhidos>
                 {escolhidos.length > 0 &&
                   escolhidos.map((item) => (
-                    <p key={item._id} onClick={() => removeSelect(item)}>
+                    <p key={item._id}>
                       {item.nome}
+                      <span
+                        className="remove"
+                        onClick={() => removeSelect(item)}
+                      >
+                        X
+                      </span>
                     </p>
                   ))}
               </GuardaEscolhidos>
               <h3>Adicionar categoria</h3>
               <Input
                 type="text"
-                placeholder="Pesquisar"
+                placeholder="Pesquisar a categoria"
                 onChange={(e) => handleSearch(e)}
               />
               {categorias.length > 0 &&
@@ -161,12 +200,13 @@ export default function VerCifra() {
                   </p>
                 ))}
             </MultSeletorContainer>
+            <button className="btn">Salvar Cifra</button>
+            <p>Utilize "!!!" para separar a cifra em duas colunas</p>
             <TextareaAutosize
               name="observacao"
               defaultValue={cifra.observacao}
               minRows={2}
             />
-            <button className="btn">Salvar Cifra</button>
           </UpdateCifra>
         )}
       </CifraBody>

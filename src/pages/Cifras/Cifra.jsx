@@ -158,7 +158,7 @@ export default function Cifras() {
                 required
               />
             </div>
-
+            <p>Utilize "!!!" para separar a cifra em duas colunas</p>
             <div>
               <label htmlFor="observacao">Observação</label>
               <textarea name="observacao" style={{ resize: "vertical" }} />

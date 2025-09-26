@@ -133,7 +133,7 @@ export const ModalDelete = styled.div`
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 5px 15px -5px #1a1a1a8d;
-  max-width: 400px;
+  max-width: 350px;
   width: 100%;
   margin: 15px auto;
   text-align: center;

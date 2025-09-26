@@ -55,6 +55,11 @@ export const ModalCifra = styled.form`
   display: grid;
   gap: 14px;
 
+  p {
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
   h3 {
     font-size: 20px;
     font-weight: 800;

@@ -4,23 +4,40 @@ export const VerCifraContainer = styled.section`
   max-width: 1200px;
   width: 100%;
   padding: 0 10px;
+  &.partes {
+    max-width: 1300px;
+  }
 `;
 export const CifraBody = styled.div``;
 export const CifraContent = styled.div`
   display: grid;
   margin: 50px auto;
   justify-items: center;
-  max-width: 850px;
   background: linear-gradient(to left, var(--dark), #1f1b64);
   color: #ffffff;
   border-radius: 10px;
   padding: 30px;
   gap: 40px;
+  max-width:850px;
+  &.partes {
+    max-width: 1300px;
+  }
   a {
     color: var(--main);
     text-decoration: underline;
     font-style: italic;
     margin-left: auto;
+  }
+  .cifra-partes {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr max-content 1fr;
+    gap: 20px;
+    & > span {
+      background-color: #fff;
+      width: 2px;
+      height: 100%;
+    }
   }
   pre {
     font-size: 25px;

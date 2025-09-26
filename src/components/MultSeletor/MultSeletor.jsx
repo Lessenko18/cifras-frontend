@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Input } from "../Input/Input";
 import { GuardaEscolhidos, MultSeletorContainer } from "./MultSeletorStyled";
 import { searchCategoria } from "../../service/categoriaService";
+import { searchCifra } from "../../service/cifraService";
 
 export default function MultSeletor(props) {
   const [tipo, setTipo] = useState("");
@@ -32,7 +33,11 @@ export default function MultSeletor(props) {
       console.log(e);
       response = await searchCategoria(e.target.value);
     }
-    console.log(response.data);
+    if (tipo == "cifra") {
+      console.log(e);
+      response = await searchCifra(e.target.value);
+    }
+    // console.log(response.data);
     setItems(response.data);
   }
 
@@ -45,15 +50,18 @@ export default function MultSeletor(props) {
       <GuardaEscolhidos>
         {escolhidos.length > 0 &&
           escolhidos.map((item) => (
-            <p key={item._id} onClick={() => removeSelect(item)}>
+            <p key={item._id}>
               {item.nome}
+              <span className="remove" onClick={() => removeSelect(item)}>
+                X
+              </span>
             </p>
           ))}
       </GuardaEscolhidos>
-      <h3>Adicionar categoria</h3>
+      <h3>Adicionar {tipo}</h3>
       <Input
         type="text"
-        placeholder="Pesquisar"
+        placeholder={`Pesquisar a ${tipo}`}
         onChange={(e) => handleSearch(e)}
       />
       {items.length > 0 &&

@@ -24,3 +24,7 @@ export async function editCifraService(id, data) {
   const response = await axios.patch(`${baseURL}/cifra/update/${id}`, data);
   return response;
 }
+export async function searchCifra(data) {
+  const response = await axios.get(`${baseURL}/cifra/search?nome=${data}`);
+  return response;
+}

@@ -11,6 +11,7 @@ import Cifras from "./pages/Cifras/Cifra.jsx";
 import Playlist from "./pages/Playlist/Playlist.jsx";
 import VerCifra from "./pages/VerCifra/VerCifra.jsx";
 import { Toaster } from "react-hot-toast";
+import VerPlaylist from "./pages/VerPlaylist/VerPlaylist.jsx";
 
 const router = createBrowserRouter([
   {
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
       {
         path: "/home/playlists",
         element: <Playlist />,
+      },
+      {
+        path: "/home/playlists/:id/ver",
+        element: <VerPlaylist />,
       },
     ],
   },

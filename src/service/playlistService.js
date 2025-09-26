@@ -19,3 +19,7 @@ export async function editPlaylistService(id, data) {
   const response = await axios.patch(`${baseURL}/playlist/update/${id}`, data);
   return response;
 }
+export async function getPlaylistViewService(id) {
+  const { data } = await axios.get(`${baseURL}/playlist/${id}/view`);
+  return data; 
+}

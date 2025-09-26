@@ -20,6 +20,7 @@ import { getCifrasService } from "../../service/cifraService";
 import { useNavigate } from "react-router-dom";
 import { UsersHeader } from "../Users/UsersStyled";
 import toast from "react-hot-toast";
+import MultSeletor from "../../components/MultSeletor/MultSeletor";
 
 export default function Playlists() {
   const [playlists, setPlaylists] = useState([]);
@@ -29,6 +30,7 @@ export default function Playlists() {
   const [modalEdit, setModalEdit] = useState(false);
   const [modalDelete, setModalDelete] = useState(false);
   const [chosen, setChosen] = useState(null);
+  const [chosenCifras, setChosenCifras] = useState([]);
   const navigate = useNavigate();
 
   const cifrasById = useMemo(() => {
@@ -37,6 +39,9 @@ export default function Playlists() {
     return m;
   }, [cifras]);
 
+  function UpdateCifra(items) {
+    setChosenCifras(items);
+  }
   async function fetchPlaylists() {
     try {
       const res = await getPlaylistsService();
@@ -62,7 +67,7 @@ export default function Playlists() {
     e.preventDefault();
     const form = new FormData(e.target);
     const data = Object.fromEntries(form.entries());
-    data.cifras = form.getAll("cifras[]");
+    data.cifras = chosenCifras.map((c) => c._id);
 
     if (!data.nome?.trim()) {
       toast.error("Informe o nome da playlist.");
@@ -148,11 +153,14 @@ export default function Playlists() {
             .map((pl) => (
               <Card key={pl._id}>
                 <h3>{pl.nome}</h3>
-                <div className="count">
-                  {Array.isArray(pl.cifras) ? pl.cifras.length : 0} música(s)
-                </div>
+                <div className="count">{pl.cifras?.length || 0} música(s)</div>
                 <div className="actions">
-                  <button className="btn">Ver Músicas</button>
+                  <button
+                    className="btn"
+                    onClick={() => navigate(`/home/playlists/${pl._id}/ver`)}
+                  >
+                    Ver Músicas
+                  </button>
                   <button
                     className=" btn btn-success"
                     onClick={() => {
@@ -186,14 +194,15 @@ export default function Playlists() {
           </div>
           <div>
             <label>Músicas</label>
-            <CifrasGrid>
+            <MultSeletor tipo="cifra" addItem={UpdateCifra} />
+            {/* <CifrasGrid>
               {cifras.map((c) => (
                 <label key={c._id}>
                   <strong>{c.nome}</strong>
                   <input type="checkbox" name="cifras[]" value={c._id} />
                 </label>
               ))}
-            </CifrasGrid>
+            </CifrasGrid> */}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button type="submit" className="btn">
