@@ -18,7 +18,7 @@ export const CifraContent = styled.div`
   border-radius: 10px;
   padding: 30px;
   gap: 40px;
-  max-width:850px;
+  max-width: 850px;
   &.partes {
     max-width: 1300px;
   }

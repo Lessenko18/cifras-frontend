@@ -5,7 +5,7 @@ export const NavContainer = styled.nav`
   width: 100%;
   margin: 15px auto 40px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   gap: 20px;
   background: linear-gradient(to right, var(--dark), var(--main));
