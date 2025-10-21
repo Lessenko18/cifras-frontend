@@ -8,8 +8,10 @@ import {
   TituloMusica,
   TextoCifra,
   Empty,
+  Velocimetro,
+  Sumario,
+  PlaylistBody,
 } from "./VerPlaylistStyled";
-import { Velocimetro } from "../../../../../Users/THIAGO/OneDrive - Univille/Documentos/Projetos Code/CifrasFront/src/pages/VerPlaylist/VerPlaylistStyled";
 
 export default function VerPlaylist() {
   const { id } = useParams();
@@ -20,11 +22,13 @@ export default function VerPlaylist() {
   const [velocity, setVelocity] = useState(5);
   const intervalRef = useRef(null);
   const navigate = useNavigate();
+  const [musicaAtiva, setMusicaAtiva] = useState(0);
 
   function interruptor() {
     setScrolling((s) => !s);
   }
 
+  // auto scroll
   useEffect(() => {
     clearInterval(intervalRef.current);
     intervalRef.current = null;
@@ -57,6 +61,34 @@ export default function VerPlaylist() {
     })();
   }, [id]);
 
+  // rolar até música específica
+  function scrollToMusica(index) {
+    const elemento = document.getElementById(`musica-${index}`);
+    if (elemento) {
+      elemento.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  // destacar música ativa conforme rolagem
+  useEffect(() => {
+    if (!data?.musicas) return;
+
+    const handler = () => {
+      let ativo = 0;
+      data.musicas.forEach((_, i) => {
+        const el = document.getElementById(`musica-${i}`);
+        if (el) {
+          const top = el.getBoundingClientRect().top;
+          if (top < window.innerHeight / 2) ativo = i;
+        }
+      });
+      setMusicaAtiva(ativo);
+    };
+
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler);
+  }, [data?.musicas]);
+
   if (loading) return <Page>Carregando…</Page>;
   if (err) return <Page>{err}</Page>;
   if (!data)
@@ -76,6 +108,7 @@ export default function VerPlaylist() {
           className="img-hover"
         />
       </button>
+
       <Velocimetro>
         <button onClick={() => setVelocity((v) => Math.min(9, v + 2))}>
           -
@@ -91,6 +124,7 @@ export default function VerPlaylist() {
           +
         </button>
       </Velocimetro>
+
       <Header>
         <h2>{data.nome}</h2>
         <span>{data.musicas?.length || 0} música(s)</span>
@@ -100,12 +134,30 @@ export default function VerPlaylist() {
         <Empty>Esta playlist ainda não tem músicas.</Empty>
       )}
 
-      {data.musicas?.map((m) => (
-        <CifraCard key={m._id}>
-          <TituloMusica>{m.nome}</TituloMusica>
-          <TextoCifra>{m.descricao || ""}</TextoCifra>
-        </CifraCard>
-      ))}
+      <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+        {/* Sumário lateral */}
+        <Sumario>
+          {data.musicas?.map((m, i) => (
+            <button
+              key={`${m._id || m.nome}-${i}`}
+              onClick={() => scrollToMusica(i)}
+              className={i === musicaAtiva ? "ativo" : ""}
+            >
+              {m.nome}
+            </button>
+          ))}
+        </Sumario>
+
+        {/* Lista de músicas */}
+        <PlaylistBody>
+          {data.musicas?.map((m, i) => (
+            <CifraCard key={`${m._id || m.nome}-${i}`} id={`musica-${i}`}>
+              <TituloMusica>{m.nome}</TituloMusica>
+              <TextoCifra>{m.descricao || ""}</TextoCifra>
+            </CifraCard>
+          ))}
+        </PlaylistBody>
+      </div>
     </Page>
   );
 }

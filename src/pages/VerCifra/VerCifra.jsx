@@ -25,8 +25,7 @@ import {
   getCategoriaById,
   searchCategoria,
 } from "../../service/categoriaService";
-import { Velocimetro } from "../../../../../Users/THIAGO/OneDrive - Univille/Documentos/Projetos Code/CifrasFront/src/pages/Cifras/CifraStyled";
-
+import { Velocimetro } from "../VerPlaylist/VerPlaylistStyled";
 export default function VerCifra() {
   const { id } = useParams();
   const [cifra, setCifra] = useState({});
@@ -70,7 +69,6 @@ export default function VerCifra() {
     if (partes.length == 2) {
       setPart1(partes[0] || "");
       setPart2(partes[1] || "");
-      console.log(partes);
     } else {
       setPart1("");
       setPart2("");
@@ -81,20 +79,6 @@ export default function VerCifra() {
       listaCategorias.push(responseCat.data);
     }
     setEscolhidos(listaCategorias);
-    console.log(response.data.categorias);
-  }
-  function cortarTexto(texto, marcador) {
-    const partes = texto.split(marcador);
-
-    if (partes.length < 2) {
-      // Caso o marcador não seja encontrado
-      return { antes: texto, depois: "" };
-    }
-
-    const antes = partes[0].trim();
-    const depois = partes.slice(1).join(marcador).trim(); // junta caso tenha mais ocorrências
-
-    return { antes, depois };
   }
 
   async function handleUpdateCifra(event) {
@@ -132,7 +116,6 @@ export default function VerCifra() {
       return;
     }
     response = await searchCategoria(e.target.value);
-    console.log(response.data);
     setCategorias(response.data);
   }
 

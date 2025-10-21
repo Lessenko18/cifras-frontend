@@ -15,6 +15,7 @@ import {
   createPlaylistService,
   editPlaylistService,
   deletePlaylistService,
+  getPlaylistViewService,
 } from "../../service/playlistService";
 import { getCifrasService } from "../../service/cifraService";
 import { useNavigate } from "react-router-dom";
@@ -49,6 +50,13 @@ export default function Playlists() {
     } catch (err) {
       alert("Falha ao carregar playlists.");
     }
+  }
+
+  async function handleClickEdit(item) {
+    const response = await getPlaylistViewService(item._id);
+    setChosenCifras(response.musicas);
+    setChosen(item);
+    setModalEdit(true);
   }
 
   async function fetchCifras() {
@@ -96,10 +104,10 @@ export default function Playlists() {
 
     const form = new FormData(e.target);
     const data = Object.fromEntries(form.entries());
-    data.cifras = form.getAll("cifras[]");
+    data.cifras = chosenCifras.map((c) => c._id);
 
     if (!data.nome?.trim()) {
-      alert("Informe o nome da playlist.");
+      toast.error("Informe o nome da playlist.");
       return;
     }
 
@@ -163,10 +171,7 @@ export default function Playlists() {
                   </button>
                   <button
                     className=" btn btn-success"
-                    onClick={() => {
-                      setChosen(pl);
-                      setModalEdit(true);
-                    }}
+                    onClick={() => handleClickEdit(pl)}
                   >
                     Editar
                   </button>
@@ -195,14 +200,6 @@ export default function Playlists() {
           <div>
             <label>Músicas</label>
             <MultSeletor tipo="cifra" addItem={UpdateCifra} />
-            {/* <CifrasGrid>
-              {cifras.map((c) => (
-                <label key={c._id}>
-                  <strong>{c.nome}</strong>
-                  <input type="checkbox" name="cifras[]" value={c._id} />
-                </label>
-              ))}
-            </CifrasGrid> */}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button type="submit" className="btn">
@@ -235,7 +232,12 @@ export default function Playlists() {
           <div>
             <label>Músicas</label>
             <CifrasGrid>
-              {cifras.length > 0 &&
+              <MultSeletor
+                tipo="cifra"
+                escolhidos={chosenCifras}
+                addItem={UpdateCifra}
+              />
+              {/* {cifras.length > 0 &&
                 cifras.map((c) => (
                   <label key={c._id}>
                     <strong>{c.nome}</strong>
@@ -250,7 +252,7 @@ export default function Playlists() {
                       )}
                     />
                   </label>
-                ))}
+                ))} */}
             </CifrasGrid>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
