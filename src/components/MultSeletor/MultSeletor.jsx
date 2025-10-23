@@ -10,17 +10,20 @@ export default function MultSeletor(props) {
   const [escolhidos, setEscolhidos] = useState([]);
 
   function handleSelect(item) {
-    let lista = [...escolhidos];
-    if (lista.find((i) => i._id === item._id)) return;
-    lista.push(item);
-    setEscolhidos(lista);
-    props.addItem(lista);
+    setEscolhidos((prev) => {
+      if (prev.find((i) => i._id === item._id)) return prev;
+      const novaLista = [...prev, item];
+      props.addItem(novaLista);
+      return novaLista;
+    });
   }
 
   function removeSelect(item) {
-    let lista = escolhidos.filter((i) => i._id !== item._id);
-    setEscolhidos(lista);
-    props.addItem(lista); 
+    setEscolhidos((prev) => {
+      const novaLista = prev.filter((i) => i._id !== item._id);
+      props.addItem(novaLista);
+      return novaLista;
+    });
   }
 
   async function handleSearch(e) {
@@ -37,7 +40,7 @@ export default function MultSeletor(props) {
       response = await searchCifra(value);
     }
 
-    setItems(response.data || []);
+    setItems(Array.isArray(response.data) ? response.data : []);
   }
   useEffect(() => {
     setTipo(props.tipo);
