@@ -8,41 +8,61 @@ export const VerCifraContainer = styled.section`
     max-width: 1300px;
   }
 `;
+
 export const CifraBody = styled.div``;
+
 export const CifraContent = styled.div`
   display: grid;
   margin: 50px auto;
   justify-items: center;
-  background: linear-gradient(to left, var(--dark), #1f1b64);
-  color: #ffffff;
+
+  background: #fafafa;
+  color: #222;
   border-radius: 10px;
   padding: 30px;
   gap: 40px;
-  max-width:850px;
+  max-width: 850px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+
   &.partes {
     max-width: 1300px;
   }
+
   a {
-    color: var(--main);
+    color: #0070f3;
     text-decoration: underline;
     font-style: italic;
     margin-left: auto;
   }
+
   .cifra-partes {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr max-content 1fr;
     gap: 20px;
+
     & > span {
-      background-color: #fff;
+      background-color: #ddd;
       width: 2px;
       height: 100%;
     }
   }
+
   pre {
-    font-size: 25px;
+    font-size: 18px;
+    line-height: 1.4rem;
+    white-space: pre-wrap;
+    background-color: #fafafa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #030303;
+    width: 100%;
+    max-width: 750px;
+    overflow-x: auto;
+    color: #000;
   }
 `;
+
 export const UpdateCifra = styled.form`
   display: grid;
   margin: 50px auto;
@@ -52,10 +72,12 @@ export const UpdateCifra = styled.form`
   border-radius: 10px;
   padding: 30px;
   gap: 20px;
+
   textarea {
     padding: 20px;
     font-size: 18px;
   }
+
   div {
     max-width: 400px;
     width: 100%;
@@ -68,6 +90,7 @@ export const UpdateCifra = styled.form`
     }
   }
 `;
+
 export const ModalDelete = styled.div`
   background-color: var(--light);
   padding: 20px;

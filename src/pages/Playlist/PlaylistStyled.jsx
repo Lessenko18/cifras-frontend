@@ -108,6 +108,8 @@ export const ModalBox = styled.form`
   width: 100%;
   margin: 20px auto;
   border: 1px solid #000;
+  max-height: 500px;
+  overflow-y: scroll;
 
   position: fixed;
   top: 50%;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   deleteCifraService,
@@ -25,7 +25,7 @@ import {
   getCategoriaById,
   searchCategoria,
 } from "../../service/categoriaService";
-
+import { Velocimetro } from "../VerPlaylist/VerPlaylistStyled";
 export default function VerCifra() {
   const { id } = useParams();
   const [cifra, setCifra] = useState({});
@@ -35,8 +35,32 @@ export default function VerCifra() {
   const [categorias, setCategorias] = useState([]);
   const [part1, setPart1] = useState("");
   const [part2, setPart2] = useState("");
+  const [scrolling, setScrolling] = useState(false);
+  const [velocity, setVelocity] = useState(5);
+  const intervalRef = useRef(null);
   const navigate = useNavigate();
 
+  function interruptor() {
+    setScrolling((s) => !s);
+  }
+
+  useEffect(() => {
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+
+    if (scrolling) {
+      const id = setInterval(() => {
+        scrollBy(0, 1);
+      }, velocity * 15);
+
+      intervalRef.current = id;
+    }
+
+    return () => {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    };
+  }, [scrolling, velocity]);
   async function getCifra() {
     const response = await getCifraById(id);
     let listaCategorias = [];
@@ -45,7 +69,6 @@ export default function VerCifra() {
     if (partes.length == 2) {
       setPart1(partes[0] || "");
       setPart2(partes[1] || "");
-      console.log(partes);
     } else {
       setPart1("");
       setPart2("");
@@ -56,20 +79,6 @@ export default function VerCifra() {
       listaCategorias.push(responseCat.data);
     }
     setEscolhidos(listaCategorias);
-    console.log(response.data.categorias);
-  }
-  function cortarTexto(texto, marcador) {
-    const partes = texto.split(marcador);
-
-    if (partes.length < 2) {
-      // Caso o marcador não seja encontrado
-      return { antes: texto, depois: "" };
-    }
-
-    const antes = partes[0].trim();
-    const depois = partes.slice(1).join(marcador).trim(); // junta caso tenha mais ocorrências
-
-    return { antes, depois };
   }
 
   async function handleUpdateCifra(event) {
@@ -107,7 +116,6 @@ export default function VerCifra() {
       return;
     }
     response = await searchCategoria(e.target.value);
-    console.log(response.data);
     setCategorias(response.data);
   }
 
@@ -127,6 +135,21 @@ export default function VerCifra() {
   return (
     <VerCifraContainer className={part1 != "" && "partes"}>
       <UsersHeader>
+        <Velocimetro>
+          <button onClick={() => setVelocity((v) => Math.min(9, v + 2))}>
+            -
+          </button>
+          <button onClick={interruptor}>
+            {scrolling ? (
+              <img src="/pause.svg" alt="pause" />
+            ) : (
+              <img src="/pause.svg" alt="play" />
+            )}
+          </button>
+          <button onClick={() => setVelocity((v) => Math.max(1, v - 2))}>
+            +
+          </button>
+        </Velocimetro>
         <button onClick={() => navigate(-1)}>
           <img
             src="/back.svg"
