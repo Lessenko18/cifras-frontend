@@ -57,8 +57,8 @@ export default function MultSeletor(props) {
   return (
     <MultSeletorContainer>
       <GuardaEscolhidos>
-        {escolhidos.map((item) => (
-          <p key={item._id}>
+        {escolhidos.map((item, index) => (
+          <p key={item._id || `${item.nome}-${index}`}>
             {item.nome}
             <span className="remove" onClick={() => removeSelect(item)}>
               X
