@@ -20,7 +20,9 @@ export default function MultSeletor(props) {
 
   function removeSelect(item) {
     setEscolhidos((prev) => {
-      const novaLista = prev.filter((i) => i._id !== item._id);
+      const novaLista = prev.filter(
+        (i) => i.id !== item.id || i._id !== item._id
+      );
       props.addItem(novaLista);
       return novaLista;
     });
@@ -66,16 +68,17 @@ export default function MultSeletor(props) {
           </p>
         ))}
       </GuardaEscolhidos>
-
       <h3>Adicionar {tipo}</h3>
       <Input
         type="text"
         placeholder={`Pesquisar a ${tipo}`}
         onChange={handleSearch}
       />
-
-      {items.map((item) => (
-        <p key={item._id} onClick={() => handleSelect(item)}>
+      {items.map((item, index) => (
+        <p
+          key={item._id || `${item.nome}-${index}`}
+          onClick={() => handleSelect(item)}
+        >
           {item.nome}
         </p>
       ))}

@@ -1,6 +1,5 @@
 import axios from "axios";
-
-export const baseURL = "https://cifrasbackend-main.onrender.com";
+import { baseURL } from "./cifraService";
 
 export async function getUsersService() {
   const response = await axios.get(`${baseURL}/user/`);

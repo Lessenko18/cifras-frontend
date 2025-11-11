@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import { useEffect, useState, useCallback } from "react";
+import toast from "react-hot-toast";
 import {
   createCifraService,
   getCifrasService,
@@ -11,6 +11,9 @@ import {
   CifrasContainer,
   ModalOverlay,
   CloseX,
+  PaginationContainer,
+  PaginationButton,
+  PaginationInfo,
 } from "./CifraStyled";
 import { Input } from "../../components/Input/Input";
 import { getCategoriasService } from "../../service/categoriaService";
@@ -25,73 +28,99 @@ export default function Cifras() {
   const [isCreating, setIsCreating] = useState(false);
   const [chosenCategorias, setChosenCategorias] = useState([]);
   const [sending, setSending] = useState(false);
+  const [itensPerpage] = useState(15);
+  const [currentPage, setCurrentPage] = useState(0);
   const navigate = useNavigate();
 
-  // CREATE
-  async function handleCreateCifra(event) {
-    setSending(true);
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData.entries());
+  // Paginação
+  const pages = Math.ceil(cifras.length / itensPerpage);
+  const startIndex = currentPage * itensPerpage;
+  const endIndex = startIndex + itensPerpage;
+  const cifraPaginated = cifras.slice(startIndex, endIndex);
 
-    const categoriasIds = formData.getAll("categoriaId[]");
-    if (categoriasIds.length) data.categorias = categoriasIds;
-
-    data.observacao = (data.observacao ?? "").trim();
-    data.nome = (data.nome ?? "").trim();
-    data.link = (data.link ?? "").trim();
-    data.categorias = chosenCategorias.map((c) => c._id);
-
-    if (!data.nome || !data.link) {
-      toast.warning("Preencha pelo menos Nome e Link da cifra.");
-      return;
+  const handlePageChange = (page) => {
+    if (page >= 0 && page < pages) {
+      setCurrentPage(page);
     }
+  };
 
-    try {
-      await createCifraService(data);
-      setIsCreating(false);
-      event.target.reset();
-      setChosenCategorias([]);
-      await getCifras();
-      setSending(false);
-      toast.success("Cifra cadastrada com sucesso!");
-    } catch (err) {
-      console.error(err);
-      setSending(false);
-      toast.error("Falha ao cadastrar a cifra.");
-    }
-  }
-
-  function UpdateCategoria(lista) {
-    setChosenCategorias(lista);
-  }
-  async function getCifras() {
+  // GET CIFRAS
+  const getCifras = useCallback(async () => {
     setSending(true);
     try {
       const response = await getCifrasService();
 
+      // 🔹 Filtra duplicados e nulos
+      // const unique = response.data.filter(
+      //   (cifra, index, self) =>
+      //     cifra &&
+      //     cifra._id &&
+      //     index === self.findIndex((t) => t._id === cifra._id)
+      // );
+
       setCifras(response.data);
-      setSending(false);
+      console.log(response.data);
     } catch (err) {
       console.error(err);
+    } finally {
       setSending(false);
     }
-  }
+  }, []);
 
-  async function getCategorias() {
+  // CREATE CIFRA
+  const handleCreateCifra = useCallback(
+    async (event) => {
+      event.preventDefault();
+      setSending(true);
+      const formData = new FormData(event.target);
+      const data = Object.fromEntries(formData.entries());
+
+      data.nome = (data.nome ?? "").trim();
+      data.link = (data.link ?? "").trim();
+      data.observacao = (data.observacao ?? "").trim();
+      data.categorias = chosenCategorias.map((c) => c._id);
+
+      if (!data.nome || !data.link) {
+        toast.warning("Preencha pelo menos Nome e Link da cifra.");
+        setSending(false);
+        return;
+      }
+
+      try {
+        await createCifraService(data);
+        setIsCreating(false);
+        event.target.reset();
+        setChosenCategorias([]);
+        await getCifras();
+        toast.success("Cifra cadastrada com sucesso!");
+      } catch (err) {
+        console.error(err);
+        toast.error("Falha ao cadastrar a cifra.");
+      } finally {
+        setSending(false);
+      }
+    },
+    [chosenCategorias, getCifras]
+  );
+
+  const UpdateCategoria = useCallback((lista) => {
+    setChosenCategorias(lista);
+  }, []);
+
+  const getCategorias = useCallback(async () => {
     try {
       const response = await getCategoriasService();
-
       setCategorias(response.data);
+      console.log(response.data);
     } catch (err) {
       console.error(err);
     }
-  }
+  }, []);
 
   useEffect(() => {
     getCifras();
     getCategorias();
-  }, []);
+  }, [getCifras, getCategorias]);
 
   return (
     <CifrasContainer>
@@ -106,14 +135,7 @@ export default function Cifras() {
           />
         </button>
         <Title>Cifras</Title>
-        <button
-          className="btn"
-          onClick={() => {
-            setIsCreating(true);
-            setModalEdit(false);
-            setChosenCifra(null);
-          }}
-        >
+        <button className="btn" onClick={() => setIsCreating(true)}>
           Adicionar Cifra
         </button>
       </UsersHeader>
@@ -158,7 +180,9 @@ export default function Cifras() {
                 required
               />
             </div>
+
             <p>Utilize "!!!" para separar a cifra em duas colunas</p>
+
             <div>
               <label htmlFor="observacao">Observação</label>
               <textarea name="observacao" style={{ resize: "vertical" }} />
@@ -191,18 +215,25 @@ export default function Cifras() {
 
       {/* LISTAGEM */}
       <CifrasBody>
-        {cifras.length > 0 &&
-          [...cifras]
+        {cifraPaginated.length > 0 &&
+          [...cifraPaginated]
             .sort((a, b) => a.nome.localeCompare(b.nome))
-            .map((cifra) => (
-              <Link to={"/home/cifra/" + cifra._id} key={cifra._id}>
+            .map((cifra, index) => (
+              <Link
+                to={`/home/cifra/${cifra._id}`}
+                key={`${cifra._id}-${index}`}
+              >
                 <AnCifra>
                   <div>
                     <h2>{cifra.nome}</h2>
                     <div>
-                      {cifra.categorias.length > 0 &&
+                      {cifra.categorias &&
+                        cifra.categorias.length > 0 &&
                         cifra.categorias.map((cat) => (
-                          <span key={cat} style={{ marginRight: 8 }}>
+                          <span
+                            key={`${cifra._id}-${cat}`}
+                            style={{ marginRight: 8 }}
+                          >
                             {categorias.find((item) => item._id === cat)?.nome}
                           </span>
                         ))}
@@ -212,6 +243,29 @@ export default function Cifras() {
               </Link>
             ))}
       </CifrasBody>
+
+      {/* PAGINAÇÃO */}
+      {pages > 1 && (
+        <PaginationContainer>
+          <PaginationButton
+            disabled={currentPage === 0}
+            onClick={() => handlePageChange(currentPage - 1)}
+          >
+            Anterior
+          </PaginationButton>
+
+          <PaginationInfo>
+            Página {currentPage + 1} de {pages}
+          </PaginationInfo>
+
+          <PaginationButton
+            disabled={currentPage + 1 === pages}
+            onClick={() => handlePageChange(currentPage + 1)}
+          >
+            Próxima
+          </PaginationButton>
+        </PaginationContainer>
+      )}
     </CifrasContainer>
   );
 }

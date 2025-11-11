@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Input } from "../../components/Input/Input";
 import {
   Page,
@@ -40,17 +40,17 @@ export default function Playlists() {
     return m;
   }, [cifras]);
 
-  function UpdateCifra(items) {
+  const UpdateCifra = useCallback((items) => {
     setChosenCifras(items);
-  }
-  async function fetchPlaylists() {
+  }, []);
+  const fetchPlaylists = useCallback(async () => {
     try {
       const res = await getPlaylistsService();
       setPlaylists(res.data || []);
     } catch (err) {
       alert("Falha ao carregar playlists.");
     }
-  }
+  }, []);
 
   async function handleClickEdit(item) {
     const response = await getPlaylistViewService(item._id);
@@ -59,72 +59,81 @@ export default function Playlists() {
     setModalEdit(true);
   }
 
-  async function fetchCifras() {
+  const fetchCifras = useCallback(async () => {
     try {
       const res = await getCifrasService();
       setCifras(res.data || []);
     } catch (err) {}
-  }
+  }, []);
   useEffect(() => {
     fetchPlaylists();
     fetchCifras();
   }, []);
 
   // Create
-  async function handleCreate(e) {
-    e.preventDefault();
-    const form = new FormData(e.target);
-    const data = Object.fromEntries(form.entries());
-    data.cifras = chosenCifras.map((c) => c._id);
+  const handleCreate = useCallback(
+    async (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const data = Object.fromEntries(form.entries());
+      data.cifras = chosenCifras.map((c) => c._id);
 
-    if (!data.nome?.trim()) {
-      toast.error("Informe o nome da playlist.");
-      return;
-    }
+      if (!data.nome?.trim()) {
+        toast.error("Informe o nome da playlist.");
+        return;
+      }
 
-    setIsCreating(true);
+      setIsCreating(true);
 
-    try {
-      await createPlaylistService(data);
-      toast.success("Playlist criada com sucesso!");
-      e.target.reset();
-      await fetchPlaylists();
-    } catch (err) {
-      console.error(err);
-      toast.error("Falha ao criar playlist.");
-    } finally {
-      setIsCreating(false);
-    }
-  }
+      try {
+        await createPlaylistService(data);
+        toast.success("Playlist criada com sucesso!");
+        e.target.reset();
+        await fetchPlaylists();
+      } catch (err) {
+        console.error(err);
+        toast.error("Falha ao criar playlist.");
+      } finally {
+        setIsCreating(false);
+      }
+    },
+    [chosenCifras, fetchPlaylists]
+  );
 
   // Edit
-  async function handleEdit(e) {
-    e.preventDefault();
-    if (!chosen?._id) return;
+  const handleEdit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!chosen?._id) return;
 
-    const form = new FormData(e.target);
-    const data = Object.fromEntries(form.entries());
-    data.cifras = chosenCifras.map((c) => c._id);
+      const form = new FormData(e.target);
+      const data = Object.fromEntries(form.entries());
 
-    if (!data.nome?.trim()) {
-      toast.error("Informe o nome da playlist.");
-      return;
-    }
+      data.cifras = chosenCifras.map((c) => c._id || c.id);
+      console.log(chosenCifras);
 
-    try {
-      await editPlaylistService(chosen._id, data);
-      setModalEdit(false);
-      setChosen(null);
-      toast.success("Playlist editada com sucesso!");
-      await fetchPlaylists();
-    } catch (err) {
-      console.error(err);
-      toast.error("Falha ao editar playlist.");
-    }
-  }
+      if (!data.nome?.trim()) {
+        toast.error("Informe o nome da playlist.");
+        return;
+      }
+
+      try {
+        await editPlaylistService(chosen._id, data);
+        setModalEdit(false);
+        setChosenCifras([]);
+        setChosen(null);
+        toast.success("Playlist editada com sucesso!");
+        await fetchPlaylists();
+      } catch (err) {
+        console.error(err);
+        toast.error("Falha ao editar playlist.");
+      }
+    },
+    [chosen, chosenCifras, fetchPlaylists]
+  );
 
   // Delete
-  async function handleDelete() {
+  const handleDelete = useCallback(async () => {
     if (!chosen?._id) return;
     try {
       await deletePlaylistService(chosen._id);
@@ -136,7 +145,7 @@ export default function Playlists() {
       console.error(err);
       toast.error("Falha ao excluir playlist.");
     }
-  }
+  }, [chosen, fetchPlaylists]);
 
   return (
     <Page>
@@ -262,7 +271,10 @@ export default function Playlists() {
             <button
               type="button"
               className="btn btn-danger"
-              onClick={() => setModalEdit(false)}
+              onClick={() => {
+                setModalEdit(false);
+                setChosenCifras([]);
+              }}
             >
               Cancelar
             </button>
