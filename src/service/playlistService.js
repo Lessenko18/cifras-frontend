@@ -1,6 +1,5 @@
 import axios from "axios";
-
-export const baseURL = "https://cifrasbackend-main.onrender.com";
+import { baseURL } from "./cifraService";
 
 export async function getPlaylistsService() {
   const response = await axios.get(`${baseURL}/playlist/`);
@@ -21,5 +20,5 @@ export async function editPlaylistService(id, data) {
 }
 export async function getPlaylistViewService(id) {
   const { data } = await axios.get(`${baseURL}/playlist/${id}/view`);
-  return data; 
+  return data;
 }
