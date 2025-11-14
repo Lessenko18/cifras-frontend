@@ -152,4 +152,8 @@ export const Sumario = styled.aside`
     background: #ccc;
     border-radius: 4px;
   }
+  .btn-some {
+    position: fixed;
+    top: 80px;
+  }
 `;

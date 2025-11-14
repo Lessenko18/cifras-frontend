@@ -19,7 +19,7 @@ export const CifraContent = styled.div`
   background: #fafafa;
   color: #222;
   border-radius: 10px;
-  padding: 30px;
+  padding: 20px;
   gap: 40px;
   max-width: 850px;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
@@ -53,13 +53,17 @@ export const CifraContent = styled.div`
     line-height: 1.4rem;
     white-space: pre-wrap;
     background-color: #fafafa;
-    padding: 15px;
+    padding: 10px;
     border-radius: 8px;
     border: 1px solid #030303;
     width: 100%;
     max-width: 750px;
     overflow-x: auto;
     color: #000;
+    @media only screen and (max-width: 580px) {
+      font-size: 13px;
+      line-height: 1.2rem;
+    }
   }
 `;
 

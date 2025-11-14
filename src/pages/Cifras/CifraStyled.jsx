@@ -15,6 +15,13 @@ export const CifrasBody = styled.div`
   justify-items: center;
   border-radius: 12px;
 
+  @media only screen and (max-width: 924px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media only screen and (max-width: 600px) {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
   a {
     width: 100%;
     max-width: 350px;

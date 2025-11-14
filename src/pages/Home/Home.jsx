@@ -58,9 +58,13 @@ export default function Home() {
                   <div>
                     <h2>{cifra.nome}</h2>
                     <div>
-                      {cifra.categorias.length > 0 &&
+                      {cifra.categorias &&
+                        cifra.categorias.length > 0 &&
                         cifra.categorias.map((cat) => (
-                          <span key={cat} style={{ marginRight: 8 }}>
+                          <span
+                            key={`${cifra._id}-${cat}`}
+                            style={{ marginRight: 8 }}
+                          >
                             {categorias.find((item) => item._id === cat)?.nome}
                           </span>
                         ))}

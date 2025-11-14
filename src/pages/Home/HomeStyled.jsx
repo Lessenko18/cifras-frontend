@@ -2,10 +2,17 @@ import styled from "styled-components";
 
 export const HomeContainer = styled.section`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 28px;
+  grid-template-columns: repeat(3, 1fr);
   justify-items: center;
   border-radius: 12px;
+
+  @media only screen and (max-width: 924px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media only screen and (max-width: 600px) {
+    grid-template-columns: repeat(1, 1fr);
+  }
 
   a {
     width: 100%;
