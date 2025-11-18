@@ -14,7 +14,7 @@ import {
   ModalDelete,
   ModalEdit,
   AnCategoria,
-} from "./CategoriaStyled"; // ou "./CategoriaStyled.jsx"
+} from "./CategoriaStyled";
 import { useNavigate } from "react-router-dom";
 import { UsersHeader } from "../Users/UsersStyled";
 import { Title } from "../Playlist/PlaylistStyled";

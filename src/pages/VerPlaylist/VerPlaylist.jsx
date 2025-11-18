@@ -23,6 +23,7 @@ export default function VerPlaylist() {
   const intervalRef = useRef(null);
   const navigate = useNavigate();
   const [musicaAtiva, setMusicaAtiva] = useState(0);
+  const [sumarioVisivel, setSumarioVisivel] = useState(true);
 
   function interruptor() {
     setScrolling((s) => !s);
@@ -136,17 +137,24 @@ export default function VerPlaylist() {
 
       <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
         {/* Sumário lateral */}
-        <Sumario>
-          {data.musicas?.map((m, i) => (
-            <button
-              key={`${m._id || m.nome}-${i}`}
-              onClick={() => scrollToMusica(i)}
-              className={i === musicaAtiva ? "ativo" : ""}
-            >
-              {m.nome}
-            </button>
-          ))}
-        </Sumario>
+        {sumarioVisivel ? (
+          <Sumario>
+            <button onClick={() => setSumarioVisivel(false)}>Esconder</button>
+            {data.musicas?.map((m, i) => (
+              <button
+                key={`${m._id || m.nome}-${i}`}
+                onClick={() => scrollToMusica(i)}
+                className={i === musicaAtiva ? "ativo" : ""}
+              >
+                {m.nome}
+              </button>
+            ))}
+          </Sumario>
+        ) : (
+          <button onClick={() => setSumarioVisivel(true)} id="btn-some">
+            Mostrar Sumário
+          </button>
+        )}
 
         {/* Lista de músicas */}
         <PlaylistBody>

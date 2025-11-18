@@ -7,6 +7,7 @@ export const NavContainer = styled.nav`
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
   gap: 20px;
   background: linear-gradient(to right, var(--dark), var(--main));
   padding: 0 20px;
@@ -18,7 +19,14 @@ export const NavContainer = styled.nav`
 `;
 export const NavContent = styled.div`
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 15px;
   color: var(--light);
   align-items: center;
+  padding: 20px 0;
+
+  @media only screen and (max-width: 528px) {
+    padding-top: 0;
+  }
 `;

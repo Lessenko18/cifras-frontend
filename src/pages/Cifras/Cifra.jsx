@@ -50,16 +50,7 @@ export default function Cifras() {
     try {
       const response = await getCifrasService();
 
-      // 🔹 Filtra duplicados e nulos
-      // const unique = response.data.filter(
-      //   (cifra, index, self) =>
-      //     cifra &&
-      //     cifra._id &&
-      //     index === self.findIndex((t) => t._id === cifra._id)
-      // );
-
       setCifras(response.data);
-      console.log(response.data);
     } catch (err) {
       console.error(err);
     } finally {
