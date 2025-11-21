@@ -139,7 +139,9 @@ export default function VerPlaylist() {
         {/* Sumário lateral */}
         {sumarioVisivel ? (
           <Sumario>
-            <button onClick={() => setSumarioVisivel(false)}>Esconder</button>
+            <button onClick={() => setSumarioVisivel(false)} id="Closeeye">
+              <img src="/closeeye.svg" alt="Esconder" title="Esconder" />
+            </button>
             {data.musicas?.map((m, i) => (
               <button
                 key={`${m._id || m.nome}-${i}`}
@@ -151,8 +153,8 @@ export default function VerPlaylist() {
             ))}
           </Sumario>
         ) : (
-          <button onClick={() => setSumarioVisivel(true)} id="btn-some">
-            Mostrar Sumário
+          <button onClick={() => setSumarioVisivel(true)} id="Openeye">
+            <img src="/openeye.svg" alt="Mostrar" title="Mostrar" />
           </button>
         )}
 

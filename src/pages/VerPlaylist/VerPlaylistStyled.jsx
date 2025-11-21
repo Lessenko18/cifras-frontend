@@ -5,6 +5,42 @@ export const Page = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+
+  #Openeye {
+    position: fixed;
+    height: 40px;
+    width: 40px;
+    padding: 5px;
+    bottom: 80px;
+    right: 20px;
+  }
+  #Closeeye {
+    position: fixed;
+    height: 40px;
+    width: 40px;
+    padding: 5px;
+    bottom: 80px;
+    right: 20px;
+  }
+
+  @media only screen and (max-width: 700px) {
+    #Closeeye {
+      position: fixed;
+      height: 40px;
+      width: 40px;
+      padding: 5px;
+      bottom: 80px;
+      right: 20px;
+    }
+    #Openeye {
+      position: fixed;
+      height: 40px;
+      width: 40px;
+      padding: 5px;
+      bottom: 80px;
+      right: 20px;
+    }
+  }
 `;
 export const PlaylistBody = styled.div`
   display: flex;
@@ -72,7 +108,7 @@ export const Empty = styled.div`
 export const Velocimetro = styled.div`
   position: fixed;
   bottom: 20px;
-  left: 20px;
+  right: 20px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -120,6 +156,10 @@ export const Sumario = styled.aside`
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  #eye {
+    width: 34px;
+    height: 32px;
+  }
 
   button {
     display: block;
@@ -151,9 +191,5 @@ export const Sumario = styled.aside`
   ::-webkit-scrollbar-thumb {
     background: #ccc;
     border-radius: 4px;
-  }
-  .btn-some {
-    position: fixed;
-    top: 80px;
   }
 `;

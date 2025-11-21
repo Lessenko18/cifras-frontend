@@ -246,22 +246,6 @@ export default function Playlists() {
                 escolhidos={chosenCifras}
                 addItem={UpdateCifra}
               />
-              {/* {cifras.length > 0 &&
-                cifras.map((c) => (
-                  <label key={c._id}>
-                    <strong>{c.nome}</strong>
-                    <input
-                      type="checkbox"
-                      name="cifras[]"
-                      value={c._id}
-                      defaultChecked={chosen.cifras?.some((it) =>
-                        typeof it === "string"
-                          ? it === c._id
-                          : it?._id === c._id
-                      )}
-                    />
-                  </label>
-                ))} */}
             </CifrasGrid>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
