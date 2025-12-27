@@ -14,6 +14,9 @@ import {
   PaginationContainer,
   PaginationButton,
   PaginationInfo,
+  FiltersContainer,
+  FilterInput,
+  FilterSelect,
 } from "./CifraStyled";
 import { Input } from "../../components/Input/Input";
 import { getCategoriasService } from "../../service/categoriaService";
@@ -28,15 +31,42 @@ export default function Cifras() {
   const [isCreating, setIsCreating] = useState(false);
   const [chosenCategorias, setChosenCategorias] = useState([]);
   const [sending, setSending] = useState(false);
+
+  const [searchNome, setSearchNome] = useState("");
+  const [categoriaFiltro, setCategoriaFiltro] = useState("");
+
   const [itensPerpage] = useState(15);
   const [currentPage, setCurrentPage] = useState(0);
+
   const navigate = useNavigate();
 
-  // Paginação
-  const pages = Math.ceil(cifras.length / itensPerpage);
+// Filtros
+
+  const normalize = (text = "") =>
+    text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+  const cifrasFiltradas = cifras.filter((cifra) => {
+    const matchNome = normalize(cifra.nome).includes(normalize(searchNome));
+
+    const matchCategoria =
+      !categoriaFiltro || cifra.categorias?.includes(categoriaFiltro);
+
+    return matchNome && matchCategoria;
+  });
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchNome, categoriaFiltro]);
+
+// Paginação
+
+  const pages = Math.ceil(cifrasFiltradas.length / itensPerpage);
   const startIndex = currentPage * itensPerpage;
   const endIndex = startIndex + itensPerpage;
-  const cifraPaginated = cifras.slice(startIndex, endIndex);
+  const cifraPaginated = cifrasFiltradas.slice(startIndex, endIndex);
 
   const handlePageChange = (page) => {
     if (page >= 0 && page < pages) {
@@ -44,25 +74,40 @@ export default function Cifras() {
     }
   };
 
-  // GET CIFRAS
+// API
+
   const getCifras = useCallback(async () => {
-    setSending(true);
     try {
       const response = await getCifrasService();
-
-      setCifras(response.data);
+      setCifras(response.data || []);
     } catch (err) {
       console.error(err);
-    } finally {
-      setSending(false);
     }
   }, []);
 
-  // CREATE CIFRA
+  const getCategorias = useCallback(async () => {
+    try {
+      const response = await getCategoriasService();
+      setCategorias(response.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    getCifras();
+    getCategorias();
+  }, [getCifras, getCategorias]);
+
+  /*
+     CREATE CIFRA
+ */
+
   const handleCreateCifra = useCallback(
     async (event) => {
       event.preventDefault();
       setSending(true);
+
       const formData = new FormData(event.target);
       const data = Object.fromEntries(formData.entries());
 
@@ -80,8 +125,8 @@ export default function Cifras() {
       try {
         await createCifraService(data);
         setIsCreating(false);
-        event.target.reset();
         setChosenCategorias([]);
+        event.target.reset();
         await getCifras();
         toast.success("Cifra cadastrada com sucesso!");
       } catch (err) {
@@ -98,20 +143,9 @@ export default function Cifras() {
     setChosenCategorias(lista);
   }, []);
 
-  const getCategorias = useCallback(async () => {
-    try {
-      const response = await getCategoriasService();
-      setCategorias(response.data);
-      console.log(response.data);
-    } catch (err) {
-      console.error(err);
-    }
-  }, []);
 
-  useEffect(() => {
-    getCifras();
-    getCategorias();
-  }, [getCifras, getCategorias]);
+    //  RENDER
+
 
   return (
     <CifrasContainer>
@@ -131,6 +165,28 @@ export default function Cifras() {
         </button>
       </UsersHeader>
 
+      {/* FILTROS */}
+      <FiltersContainer>
+        <FilterInput
+          type="text"
+          placeholder="Pesquisar música"
+          value={searchNome}
+          onChange={(e) => setSearchNome(e.target.value)}
+        />
+
+        <FilterSelect
+          value={categoriaFiltro}
+          onChange={(e) => setCategoriaFiltro(e.target.value)}
+        >
+          <option value="">Todas as categorias</option>
+          {categorias.map((cat) => (
+            <option key={cat._id} value={cat._id}>
+              {cat.nome}
+            </option>
+          ))}
+        </FilterSelect>
+      </FiltersContainer>
+
       {/* MODAL CREATE */}
       {isCreating && (
         <>
@@ -140,6 +196,7 @@ export default function Cifras() {
               setChosenCategorias([]);
             }}
           />
+
           <ModalCifra onSubmit={handleCreateCifra}>
             <CloseX
               type="button"
@@ -150,41 +207,32 @@ export default function Cifras() {
             >
               ×
             </CloseX>
+
             <h3>Adicionar Nova Cifra</h3>
 
             <div>
-              <label htmlFor="nome">Título da Música *</label>
-              <Input
-                type="text"
-                name="nome"
-                placeholder="Digite o título da música..."
-                required
-              />
+              <label>Título da Música *</label>
+              <Input name="nome" required />
             </div>
 
             <div>
-              <label htmlFor="link">Link da Cifra *</label>
-              <Input
-                type="url"
-                name="link"
-                placeholder="https://..."
-                required
-              />
+              <label>Link da Cifra *</label>
+              <Input name="link" type="url" required />
             </div>
 
             <p>Utilize "!!!" para separar a cifra em duas colunas</p>
 
             <div>
-              <label htmlFor="observacao">Observação</label>
-              <textarea name="observacao" style={{ resize: "vertical" }} />
+              <label>Observação</label>
+              <textarea name="observacao" />
             </div>
 
             <MultSeletor tipo="categoria" addItem={UpdateCategoria} />
 
             <div className="actions">
               <button
-                className="btn btn-danger"
                 type="button"
+                className="btn btn-danger"
                 onClick={() => {
                   setIsCreating(false);
                   setChosenCategorias([]);
@@ -192,8 +240,9 @@ export default function Cifras() {
               >
                 Cancelar
               </button>
+
               {!sending ? (
-                <button className="btn" type="submit">
+                <button type="submit" className="btn">
                   Adicionar
                 </button>
               ) : (
@@ -206,33 +255,22 @@ export default function Cifras() {
 
       {/* LISTAGEM */}
       <CifrasBody>
-        {cifraPaginated.length > 0 &&
-          [...cifraPaginated]
-            .sort((a, b) => a.nome.localeCompare(b.nome))
-            .map((cifra, index) => (
-              <Link
-                to={`/home/cifra/${cifra._id}`}
-                key={`${cifra._id}-${index}`}
-              >
-                <AnCifra>
-                  <div>
-                    <h2>{cifra.nome}</h2>
-                    <div>
-                      {cifra.categorias &&
-                        cifra.categorias.length > 0 &&
-                        cifra.categorias.map((cat) => (
-                          <span
-                            key={`${cifra._id}-${cat}`}
-                            style={{ marginRight: 8 }}
-                          >
-                            {categorias.find((item) => item._id === cat)?.nome}
-                          </span>
-                        ))}
-                    </div>
-                  </div>
-                </AnCifra>
-              </Link>
-            ))}
+        {cifraPaginated
+          .sort((a, b) => a.nome.localeCompare(b.nome))
+          .map((cifra) => (
+            <Link key={cifra._id} to={`/home/cifra/${cifra._id}`}>
+              <AnCifra>
+                <h2>{cifra.nome}</h2>
+                <div>
+                  {cifra.categorias?.map((catId) => (
+                    <span key={catId}>
+                      {categorias.find((c) => c._id === catId)?.nome}
+                    </span>
+                  ))}
+                </div>
+              </AnCifra>
+            </Link>
+          ))}
       </CifrasBody>
 
       {/* PAGINAÇÃO */}

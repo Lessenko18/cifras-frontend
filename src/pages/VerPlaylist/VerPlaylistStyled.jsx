@@ -83,14 +83,34 @@ export const CifraCard = styled.section`
 export const TextoCifra = styled.pre`
   margin-top: 8px;
   margin-bottom: 0;
+
+  font-family: "italic", monospace;
   font-size: 1rem;
-  line-height: 1.35rem;
-  white-space: pre-wrap;
-  overflow-x: auto;
+  line-height: 1.4rem;
+
   background: #fafafa;
   border-radius: 8px;
   padding: 12px 14px;
+
+  white-space: pre;
+  overflow-x: auto;
+  overflow-y: hidden;
+
   text-align: left;
+
+  // scrollbar
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+
+  @media (max-width: 600px) {
+    font-size: 0.9rem;
+    line-height: 1.3rem;
+  }
 `;
 
 export const TituloMusica = styled.h3`

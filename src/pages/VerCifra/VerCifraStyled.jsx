@@ -32,7 +32,7 @@ export const CifraContent = styled.div`
     color: #0070f3;
     text-decoration: underline;
     font-style: italic;
-    margin-left: auto;  
+    margin-left: auto;
   }
 
   .cifra-partes {
