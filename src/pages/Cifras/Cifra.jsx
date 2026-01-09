@@ -40,7 +40,7 @@ export default function Cifras() {
 
   const navigate = useNavigate();
 
-// Filtros
+  // Filtros
 
   const normalize = (text = "") =>
     text
@@ -61,7 +61,7 @@ export default function Cifras() {
     setCurrentPage(0);
   }, [searchNome, categoriaFiltro]);
 
-// Paginação
+  // Paginação
 
   const pages = Math.ceil(cifrasFiltradas.length / itensPerpage);
   const startIndex = currentPage * itensPerpage;
@@ -74,7 +74,7 @@ export default function Cifras() {
     }
   };
 
-// API
+  // API
 
   const getCifras = useCallback(async () => {
     try {
@@ -142,11 +142,7 @@ export default function Cifras() {
   const UpdateCategoria = useCallback((lista) => {
     setChosenCategorias(lista);
   }, []);
-
-
-    //  RENDER
-
-
+  //  RENDER
   return (
     <CifrasContainer>
       {/* HEADER */}
@@ -223,7 +219,7 @@ export default function Cifras() {
             <p>Utilize "!!!" para separar a cifra em duas colunas</p>
 
             <div>
-              <label>Observação</label>
+              <label>Cifra</label>
               <textarea name="observacao" />
             </div>
 

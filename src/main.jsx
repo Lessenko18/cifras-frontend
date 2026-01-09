@@ -4,7 +4,9 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Navbar } from "./components/Navbar/Navbar.jsx";
 import Home from "./pages/Home/Home.jsx";
 import { GlobalStyled } from "./GlobalStyled.jsx";
-import Authentication from "./pages/Authentication/Authentication.jsx";
+import Login from "./pages/Authentication/Login.jsx";
+import Signup from "./pages/Authentication/Signup.jsx";
+import ForgotPassword from "./pages/Authentication/ForgotPassword.jsx";
 import Users from "./pages/Users/Users.jsx";
 import Categorias from "./pages/Categoria/Categoria.jsx";
 import Cifras from "./pages/Cifras/Cifra.jsx";
@@ -16,7 +18,19 @@ import VerPlaylist from "./pages/VerPlaylist/VerPlaylist.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Authentication />,
+    element: <Login />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/signup",
+    element: <Signup />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
   },
   {
     path: "/home",

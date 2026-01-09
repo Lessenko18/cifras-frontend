@@ -20,7 +20,7 @@ export const Background = styled.section`
   }
 `;
 
-export const Login = styled.div`
+export const SignupContainer = styled.div`
   position: relative;
   z-index: 2;
 
@@ -31,7 +31,7 @@ export const Login = styled.div`
   border-radius: 16px;
 
   padding: 40px 35px;
-  width: 380px;
+  width: 400px;
 
   color: #fff;
   text-align: center;
@@ -46,7 +46,7 @@ export const Login = styled.div`
     position: relative;
     width: 100%;
     height: 50px;
-    margin-bottom: 28px;
+    margin-bottom: 20px;
   }
 
   input {
@@ -84,42 +84,10 @@ export const Login = styled.div`
     opacity: 0.9;
   }
 
-  .recall-forget {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    font-size: 14px;
-    margin: -10px 0 25px 0;
-
-    label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      accent-color: #fff;
-    }
-
-    a {
-      color: #fff;
-      text-decoration: none;
-      opacity: 0.9;
-      transition: 0.2s;
-
-      &:hover {
-        opacity: 1;
-        text-decoration: underline;
-      }
-    }
-  }
-
   button[type="submit"] {
     width: 100%;
     padding: 14px;
+    margin-top: 10px;
 
     border: none;
     border-radius: 40px;
@@ -137,7 +105,7 @@ export const Login = styled.div`
     }
   }
 
-  .signup-link {
+  .login-link {
     margin-top: 25px;
     font-size: 15px;
 

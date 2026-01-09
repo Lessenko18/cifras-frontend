@@ -1,24 +1,35 @@
 import { FaUser, FaLock } from "react-icons/fa";
-import { Background, Login } from "./AuthenticationStyled";
+import { Background, LoginContainer } from "./LoginStyled";
 import { useState } from "react";
 import { loginRequest } from "../../service/auth.service";
+import { useNavigate } from "react-router-dom";
 
-export default function Authentication() {
-  const [username, setUsername] = useState("");
+export default function Login() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (!email || !password) {
+      alert("Por favor, preencha todos os campos.");
+      return;
+    }
+
     try {
-      const result = await loginRequest(username, password);
+      const result = await loginRequest(email, password);
 
       console.log("Login OK:", result);
 
-      // salva o token no navegador
-      localStorage.setItem("token", result.token.token);
-
-      alert("Login realizado com sucesso!");
+      // Salva o token de forma segura no localStorage
+      if (result.token) {
+        localStorage.setItem("token", result.token);
+        alert("Login realizado com sucesso!");
+        navigate("/home"); // Redireciona para a home após login
+      } else {
+        alert("Erro ao receber token de autenticação.");
+      }
     } catch (error) {
       alert(error);
     }
@@ -26,7 +37,7 @@ export default function Authentication() {
 
   return (
     <Background>
-      <Login>
+      <LoginContainer>
         <form onSubmit={handleSubmit}>
           <h1>Acesse o sistema</h1>
 
@@ -34,7 +45,8 @@ export default function Authentication() {
             <input
               type="email"
               placeholder="E-mail"
-              onChange={(e) => setUsername(e.target.value)}
+              required
+              onChange={(e) => setEmail(e.target.value)}
             />
             <FaUser className="icon" />
           </div>
@@ -43,6 +55,7 @@ export default function Authentication() {
             <input
               type="password"
               placeholder="Senha"
+              required
               onChange={(e) => setPassword(e.target.value)}
             />
             <FaLock className="icon" />
@@ -62,7 +75,7 @@ export default function Authentication() {
             <a href="/signup">Cadastre-se</a>
           </div>
         </form>
-      </Login>
+      </LoginContainer>
     </Background>
   );
 }
