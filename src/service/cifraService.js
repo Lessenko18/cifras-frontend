@@ -1,7 +1,7 @@
 import axios from "axios";
 
-export const baseURL = "http://localhost:3000";
-// export const baseURL = "https://cifrasbackend-main.onrender.com";
+// export const baseURL = "http://localhost:3000";
+export const baseURL = "https://cifrasbackend-main.onrender.com";
 
 export async function getCifrasService() {
   const response = await axios.get(`${baseURL}/cifra/`);
