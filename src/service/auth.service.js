@@ -1,23 +1,26 @@
-import axios from "axios";
-import { baseURL } from "./cifraService";
+import api from "./api";
 
-// Função de Login
+// LOGIN
 export async function loginRequest(email, password) {
   try {
-    const response = await axios.post(`${baseURL}/auth/login`, {
+    const response = await api.post("/auth/login", {
       email,
       password,
     });
+
     return response.data;
   } catch (err) {
-    throw err.response?.data?.message || "Erro ao fazer login. Verifique suas credenciais.";
+    throw (
+      err.response?.data?.message ||
+      "Erro ao fazer login. Verifique suas credenciais."
+    );
   }
 }
 
-// Função de Recuperação de Senha
+// ESQUECI MINHA SENHA
 export async function forgotPasswordService(email) {
   try {
-    const response = await axios.post(`${baseURL}/auth/forgot-password`, {
+    const response = await api.post("/auth/forgot-password", {
       email,
     });
 
@@ -27,10 +30,10 @@ export async function forgotPasswordService(email) {
   }
 }
 
-// Função de Registro (opcional, já que usamos axios direto no componente, mas bom ter aqui)
+// REGISTRO
 export async function registerRequest(data) {
   try {
-    const response = await axios.post(`${baseURL}/auth/register`, data);
+    const response = await api.post("/auth/register", data);
     return response.data;
   } catch (err) {
     throw err.response?.data?.message || "Erro ao realizar cadastro.";

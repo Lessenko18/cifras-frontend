@@ -17,15 +17,13 @@ export default function ForgotPassword() {
     }
 
     try {
-      // O backend precisa ter uma rota para /auth/forgot-password
       await forgotPasswordService(email);
 
       alert("Se um e-mail cadastrado for encontrado, instruções de recuperação serão enviadas.");
       navigate("/login");
     } catch (error) {
-      // Para segurança, não confirme se o e-mail existe ou não
       alert("Se um e-mail cadastrado for encontrado, instruções de recuperação serão enviadas.");
-      console.error(error); // Log do erro para debug
+      console.error(error); 
       navigate("/login");
     }
   };

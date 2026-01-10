@@ -26,7 +26,7 @@ export default function Login() {
       if (result.token) {
         localStorage.setItem("token", result.token);
         alert("Login realizado com sucesso!");
-        navigate("/home"); // Redireciona para a home após login
+        navigate("/home"); 
       } else {
         alert("Erro ao receber token de autenticação.");
       }

@@ -1,9 +1,8 @@
 import { FaUser, FaLock, FaEnvelope } from "react-icons/fa";
 import { Background, SignupContainer } from "./SignupStyled";
 import { useState } from "react";
-import axios from "axios";
-import { baseURL } from "../../service/cifraService";
 import { useNavigate } from "react-router-dom";
+import { registerRequest } from "../../service/auth.service";
 
 export default function Signup() {
   const [nome, setNome] = useState("");
@@ -21,18 +20,17 @@ export default function Signup() {
     }
 
     try {
-      // Usando a rota de registro do backend analisado
-      const response = await axios.post(`${baseURL}/auth/register`, {
+      await registerRequest({
         nome,
         email,
         password,
-        level: "user" 
+        level: "USER",
       });
 
-      alert(response.data.message || "Cadastro realizado com sucesso!");
+      alert("Cadastro realizado com sucesso!");
       navigate("/login");
     } catch (error) {
-      alert(error.response?.data?.message || "Erro ao realizar cadastro");
+      alert(error || "Erro ao realizar cadastro");
     }
   };
 
