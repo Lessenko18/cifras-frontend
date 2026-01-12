@@ -1,6 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import {
+  RouterProvider,
+  createBrowserRouter,
+  Navigate,
+} from "react-router-dom";
 import { Navbar } from "./components/Navbar/Navbar.jsx";
 import Home from "./pages/Home/Home.jsx";
 import { GlobalStyled } from "./GlobalStyled.jsx";
@@ -14,6 +18,16 @@ import Playlist from "./pages/Playlist/Playlist.jsx";
 import VerCifra from "./pages/VerCifra/VerCifra.jsx";
 import { Toaster } from "react-hot-toast";
 import VerPlaylist from "./pages/VerPlaylist/VerPlaylist.jsx";
+
+function AdminRoute({ children }) {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (!user || user.level !== "ADM") {
+    return <Navigate to="/home" replace />;
+  }
+
+  return children;
+}
 
 const router = createBrowserRouter([
   {
@@ -42,12 +56,21 @@ const router = createBrowserRouter([
       },
       {
         path: "/home/users",
-        element: <Users />,
+        element: (
+          <AdminRoute>
+            <Users />
+          </AdminRoute>
+        ),
       },
       {
         path: "/home/categorias",
-        element: <Categorias />,
+        element: (
+          <AdminRoute>
+            <Categorias />
+          </AdminRoute>
+        ),
       },
+
       {
         path: "/home/cifras",
         element: <Cifras />,

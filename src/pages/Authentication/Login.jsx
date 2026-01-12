@@ -18,18 +18,17 @@ export default function Login() {
     }
 
     try {
-      const result = await loginRequest(email, password);
+      const user = await loginRequest(email, password);
 
-      console.log("Login OK:", result);
+      console.log("Login OK:", user);
 
-      // Salva o token de forma segura no localStorage
-      if (result.token) {
-        localStorage.setItem("token", result.token);
-        alert("Login realizado com sucesso!");
-        navigate("/home"); 
-      } else {
-        alert("Erro ao receber token de autenticação.");
+      if (!user) {
+        alert("Erro ao realizar login.");
+        return;
       }
+
+      alert("Login realizado com sucesso!");
+      navigate("/home");
     } catch (error) {
       alert(error);
     }
