@@ -19,10 +19,10 @@ export default function ForgotPassword() {
     try {
       await forgotPasswordService(email);
 
-      alert("(Entre em contato com o ADM se não receber o e-mail).");
+      alert("Entre em contato com o ADM se não receber o e-mail");
       navigate("/login");
     } catch (error) {
-      alert("Entre em contato com o ADM se não receber o e-mail.");
+      alert("Entre em contato com o ADM se não receber o e-mail");
       console.error(error);
       navigate("/login");
     }
