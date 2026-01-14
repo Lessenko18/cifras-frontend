@@ -3,6 +3,7 @@ import { Background, SignupContainer } from "./SignupStyled";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerRequest } from "../../service/auth.service";
+import toast from "react-hot-toast";
 
 export default function Signup() {
   const [nome, setNome] = useState("");
@@ -15,7 +16,7 @@ export default function Signup() {
     event.preventDefault();
 
     if (password !== confirmPassword) {
-      alert("As senhas não coincidem!");
+      toast.error("As senhas não coincidem!");
       return;
     }
 
@@ -27,10 +28,10 @@ export default function Signup() {
         level: "USER",
       });
 
-      alert("Cadastro realizado com sucesso!");
+      toast.success("Cadastro realizado com sucesso!");
       navigate("/login");
     } catch (error) {
-      alert(error || "Erro ao realizar cadastro");
+      toast.error(error || "Erro ao realizar cadastro");
     }
   };
 

@@ -53,7 +53,8 @@ export const LoginContainer = styled.div`
     width: 100%;
     height: 100%;
 
-    padding: 16px 50px 16px 20px;
+    /* Padding ajustado: 45px nas laterais para dar espaço aos ícones */
+    padding: 16px 45px; 
     font-size: 16px;
 
     border-radius: 40px;
@@ -77,11 +78,27 @@ export const LoginContainer = styled.div`
 
   .icon {
     position: absolute;
-    right: 18px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 18px;
-    opacity: 0.9;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-left {
+    left: 18px;
+  }
+
+  .icon-right {
+    right: 18px;
+    cursor: pointer;
+    transition: 0.2s;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 
   .recall-forget {
@@ -96,6 +113,7 @@ export const LoginContainer = styled.div`
       display: flex;
       align-items: center;
       gap: 6px;
+      cursor: pointer;
     }
 
     input[type="checkbox"] {

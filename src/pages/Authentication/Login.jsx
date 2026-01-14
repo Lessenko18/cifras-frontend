@@ -1,33 +1,38 @@
-import { FaUser, FaLock } from "react-icons/fa";
+import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Background, LoginContainer } from "./LoginStyled";
 import { useState } from "react";
 import { loginRequest } from "../../service/auth.service";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!email || !password) {
-      alert("Por favor, preencha todos os campos.");
+      toast.error("Por favor, preencha todos os campos.");
       return;
     }
 
     try {
       const user = await loginRequest(email, password);
-
       console.log("Login OK:", user);
 
       if (!user) {
-        alert("Erro ao realizar login.");
+        toast.error("Erro ao realizar login.");
         return;
       }
 
-      alert("Login realizado com sucesso!");
+      toast.success("Login realizado com sucesso!");
       navigate("/home");
     } catch (error) {
       alert(error);
@@ -47,17 +52,20 @@ export default function Login() {
               required
               onChange={(e) => setEmail(e.target.value)}
             />
-            <FaUser className="icon" />
+            <FaUser className="icon icon-left" />
           </div>
 
           <div className="input-field">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Senha"
               required
               onChange={(e) => setPassword(e.target.value)}
             />
-            <FaLock className="icon" />
+            <FaLock className="icon icon-left" />
+            <div className="icon icon-right" onClick={togglePasswordVisibility}>
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </div>
           </div>
 
           <div className="recall-forget">

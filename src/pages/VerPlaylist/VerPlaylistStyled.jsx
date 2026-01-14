@@ -6,40 +6,33 @@ export const Page = styled.div`
   margin: 0 auto;
   width: 100%;
 
-  #Openeye {
-    position: fixed;
-    height: 40px;
-    width: 40px;
-    padding: 5px;
-    bottom: 80px;
-    right: 20px;
-  }
-  #Closeeye {
-    position: fixed;
-    height: 40px;
-    width: 40px;
-    padding: 5px;
-    bottom: 80px;
-    right: 20px;
+  .main-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+
+    @media (max-width: 850px) {
+      display: block; 
+    }
   }
 
-  @media only screen and (max-width: 700px) {
-    #Closeeye {
-      position: fixed;
-      height: 40px;
-      width: 40px;
-      padding: 5px;
-      bottom: 80px;
-      right: 20px;
-    }
-    #Openeye {
-      position: fixed;
-      height: 40px;
-      width: 40px;
-      padding: 5px;
-      bottom: 80px;
-      right: 20px;
-    }
+  #Openeye,
+  #Closeeye {
+    position: fixed;
+    height: 45px;
+    width: 45px;
+    padding: 8px;
+    bottom: 85px;
+    right: 20px;
+    z-index: 1001;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border: 1px solid #ddd;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 `;
 export const PlaylistBody = styled.div`
@@ -172,44 +165,38 @@ export const Sumario = styled.aside`
   border: 1px solid #ddd;
   border-radius: 12px;
   padding: 12px;
-  width: 230px;
+  width: 250px; /* Largura fixa para desktop */
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  #eye {
-    width: 34px;
-    height: 32px;
+  z-index: 1000;
+
+  @media (max-width: 850px) {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 85%; /* No celular, ele vira um "modal" centralizado */
+    max-height: 70vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
   }
 
   button {
     display: block;
     width: 100%;
     text-align: left;
-    padding: 8px 10px;
+    padding: 10px;
     border: none;
     background: none;
     cursor: pointer;
     font-size: 15px;
     color: #333;
     border-radius: 8px;
-    transition: 0.2s ease;
-
-    &:hover {
-      background: #f5f5f5;
-    }
+    margin-bottom: 4px;
 
     &.ativo {
       background: #222;
       color: #fff;
-      font-weight: 600;
     }
-  }
-
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
   }
 `;

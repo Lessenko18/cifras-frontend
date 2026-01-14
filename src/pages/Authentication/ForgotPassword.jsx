@@ -12,18 +12,18 @@ export default function ForgotPassword() {
     event.preventDefault();
 
     if (!email) {
-      alert("Por favor, insira seu e-mail.");
+      toast.alert("Por favor, insira seu e-mail.");
       return;
     }
 
     try {
       await forgotPasswordService(email);
 
-      alert("Se um e-mail cadastrado for encontrado, instruções de recuperação serão enviadas.");
+      alert("(Entre em contato com o ADM se não receber o e-mail).");
       navigate("/login");
     } catch (error) {
-      alert("Se um e-mail cadastrado for encontrado, instruções de recuperação serão enviadas.");
-      console.error(error); 
+      alert("Entre em contato com o ADM se não receber o e-mail.");
+      console.error(error);
       navigate("/login");
     }
   };
@@ -34,7 +34,8 @@ export default function ForgotPassword() {
         <form onSubmit={handleSubmit}>
           <h1>Recuperar Senha</h1>
           <p>
-            Insira seu e-mail para receber as instruções de recuperação de senha.
+            Insira seu e-mail para receber as instruções de recuperação de
+            senha.
           </p>
 
           <div className="input-field">
