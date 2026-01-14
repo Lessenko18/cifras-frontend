@@ -88,7 +88,6 @@ export default function VerPlaylist() {
         <img src="/back.svg" alt="Voltar" />
       </button>
 
-      {/* 1. VELOCÍMETRO (FIXO NO CANTO) */}
       <Velocimetro>
         <button onClick={() => setVelocity((v) => Math.min(9, v + 2))}>
           {" "}
@@ -102,9 +101,6 @@ export default function VerPlaylist() {
           +{" "}
         </button>
       </Velocimetro>
-
-      {/* 2. O OLHO (TRAVADO SEMPRE NO MESMO LUGAR) */}
-      {/* Colocado aqui fora para o position: fixed do CSS obedecer o canto da tela */}
       <button
         id={sumarioVisivel ? "Closeeye" : "Openeye"}
         onClick={() => setSumarioVisivel(!sumarioVisivel)}
@@ -121,7 +117,6 @@ export default function VerPlaylist() {
       </Header>
 
       <div className="main-layout">
-        {/* SUMÁRIO (APENAS A LISTA) */}
         {sumarioVisivel && (
           <Sumario>
             <div style={{ fontWeight: "bold", padding: "10px", color: "#666" }}>
