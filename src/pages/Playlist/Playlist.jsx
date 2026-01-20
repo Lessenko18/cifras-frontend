@@ -32,75 +32,93 @@ export default function Playlists() {
   const [modalDelete, setModalDelete] = useState(false);
   const [chosen, setChosen] = useState(null);
   const [chosenCifras, setChosenCifras] = useState([]);
+
   const navigate = useNavigate();
 
+  /* ======================
+     MAP DE CIFRAS (opcional)
+  ====================== */
   const cifrasById = useMemo(() => {
     const m = new Map();
-    cifras.length > 0 && cifras.forEach((c) => m.set(c._id, c));
+    cifras.forEach((c) => m.set(c._id, c));
     return m;
   }, [cifras]);
 
-  const UpdateCifra = useCallback((items) => {
+  /* ======================
+     HANDLERS
+  ====================== */
+
+  const updateCifra = useCallback((items) => {
     setChosenCifras(items);
   }, []);
+
   const fetchPlaylists = useCallback(async () => {
     try {
       const res = await getPlaylistsService();
       setPlaylists(res.data || []);
-    } catch (err) {
-      alert("Falha ao carregar playlists.");
+    } catch {
+      toast.error("Falha ao carregar playlists.");
     }
   }, []);
-
-  async function handleClickEdit(item) {
-    const response = await getPlaylistViewService(item._id);
-    setChosenCifras(response.musicas);
-    setChosen(item);
-    setModalEdit(true);
-  }
 
   const fetchCifras = useCallback(async () => {
     try {
       const res = await getCifrasService();
       setCifras(res.data || []);
-    } catch (err) {}
+    } catch {
+      toast.error("Falha ao carregar cifras.");
+    }
   }, []);
+
   useEffect(() => {
     fetchPlaylists();
     fetchCifras();
-  }, []);
+  }, [fetchPlaylists, fetchCifras]);
 
-  // Create
+  async function handleClickEdit(item) {
+    const response = await getPlaylistViewService(item._id);
+    setChosen(item);
+    setChosenCifras(response.musicas || []);
+    setModalEdit(true);
+  }
+
+  /* ======================
+     CREATE
+  ====================== */
+
   const handleCreate = useCallback(
     async (e) => {
       e.preventDefault();
+
       const form = new FormData(e.target);
       const data = Object.fromEntries(form.entries());
-      data.cifras = chosenCifras.map((c) => c._id);
 
       if (!data.nome?.trim()) {
         toast.error("Informe o nome da playlist.");
         return;
       }
 
-      setIsCreating(true);
+      data.cifras = chosenCifras.map((c) => c._id);
 
       try {
         await createPlaylistService(data);
         toast.success("Playlist criada com sucesso!");
         e.target.reset();
+        setChosenCifras([]);
+        setIsCreating(false);
         await fetchPlaylists();
       } catch (err) {
         console.error(err);
         toast.error("Falha ao criar playlist.");
-      } finally {
-        setIsCreating(false);
       }
     },
     [chosenCifras, fetchPlaylists]
   );
 
-  // Edit
+  /* ======================
+     EDIT
+  ====================== */
+
   const handleEdit = useCallback(
     async (e) => {
       e.preventDefault();
@@ -109,20 +127,19 @@ export default function Playlists() {
       const form = new FormData(e.target);
       const data = Object.fromEntries(form.entries());
 
-      data.cifras = chosenCifras.map((c) => c._id || c.id);
-      console.log(chosenCifras);
-
       if (!data.nome?.trim()) {
         toast.error("Informe o nome da playlist.");
         return;
       }
 
+      data.cifras = chosenCifras.map((c) => c._id || c.id);
+
       try {
         await editPlaylistService(chosen._id, data);
-        setModalEdit(false);
-        setChosenCifras([]);
-        setChosen(null);
         toast.success("Playlist editada com sucesso!");
+        setModalEdit(false);
+        setChosen(null);
+        setChosenCifras([]);
         await fetchPlaylists();
       } catch (err) {
         console.error(err);
@@ -132,14 +149,14 @@ export default function Playlists() {
     [chosen, chosenCifras, fetchPlaylists]
   );
 
-  // Delete
   const handleDelete = useCallback(async () => {
     if (!chosen?._id) return;
+
     try {
       await deletePlaylistService(chosen._id);
+      toast.success("Playlist excluída com sucesso!");
       setModalDelete(false);
       setChosen(null);
-      toast.success("Playlist excluída com sucesso!");
       await fetchPlaylists();
     } catch (err) {
       console.error(err);
@@ -151,65 +168,73 @@ export default function Playlists() {
     <Page>
       <UsersHeader>
         <button onClick={() => navigate(-1)}>
-          <img
-            src="/back.svg"
-            alt="Voltar"
-            title="Voltar"
-            className="img-hover"
-          />
+          <img src="/back.svg" alt="Voltar" className="img-hover" />
         </button>
         <Title>Minhas Playlists</Title>
-        <button className="btn" onClick={() => setIsCreating(true)}>
+        <button
+          className="btn"
+          onClick={() => {
+            setChosenCifras([]);
+            setIsCreating(true);
+          }}
+        >
           Criar Nova Playlist
         </button>
       </UsersHeader>
+
       <CardsGrid>
-        {playlists.length > 0 &&
-          [...playlists]
-            .sort((a, b) => a.nome.localeCompare(b.nome))
-            .map((pl) => (
-              <Card key={pl._id}>
-                <h3>{pl.nome}</h3>
-                <div className="count">{pl.cifras?.length || 0} música(s)</div>
-                <div className="actions">
-                  <button
-                    className="btn"
-                    onClick={() => navigate(`/home/playlists/${pl._id}/ver`)}
-                  >
-                    Ver Músicas
-                  </button>
-                  <button
-                    className=" btn btn-success"
-                    onClick={() => handleClickEdit(pl)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className=" btn btn-danger"
-                    onClick={() => {
-                      setChosen(pl);
-                      setModalDelete(true);
-                    }}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </Card>
-            ))}
+        {[...playlists]
+          .sort((a, b) => a.nome.localeCompare(b.nome))
+          .map((pl) => (
+            <Card key={pl._id}>
+              <h3>{pl.nome}</h3>
+              <div className="count">{pl.cifras?.length || 0} música(s)</div>
+              <div className="actions">
+                <button
+                  className="btn"
+                  onClick={() => navigate(`/home/playlists/${pl._id}/ver`)}
+                >
+                  Ver Músicas
+                </button>
+                <button
+                  className="btn btn-success"
+                  onClick={() => handleClickEdit(pl)}
+                >
+                  Editar
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => {
+                    setChosen(pl);
+                    setModalDelete(true);
+                  }}
+                >
+                  Excluir
+                </button>
+              </div>
+            </Card>
+          ))}
       </CardsGrid>
 
-      {/* Modal Create */}
+      {/* CREATE */}
       {isCreating && (
         <ModalBox onSubmit={handleCreate}>
           <h3>Criar Playlist</h3>
+
           <div>
             <label>Nome da Playlist</label>
-            <Input type="text" name="nome" required />
+            <Input name="nome" required />
           </div>
+
           <div>
             <label>Músicas</label>
-            <MultSeletor tipo="cifra" addItem={UpdateCifra} />
+            <MultSeletor
+              tipo="cifra"
+              escolhidos={chosenCifras}
+              addItem={updateCifra}
+            />
           </div>
+
           <div style={{ display: "flex", gap: 8 }}>
             <button type="submit" className="btn">
               Salvar
@@ -217,7 +242,10 @@ export default function Playlists() {
             <button
               type="button"
               className="btn btn-danger"
-              onClick={() => setIsCreating(false)}
+              onClick={() => {
+                setIsCreating(false);
+                setChosenCifras([]);
+              }}
             >
               Cancelar
             </button>
@@ -225,29 +253,31 @@ export default function Playlists() {
         </ModalBox>
       )}
 
-      {/* Modal Edit */}
+      {/* EDIT */}
       {modalEdit && chosen && (
         <ModalBox onSubmit={handleEdit}>
           <h3>Editar Playlist</h3>
+
           <div>
             <label>Nome da Playlist</label>
             <Input
-              type="text"
               name="nome"
               defaultValue={chosen.nome}
               required
             />
           </div>
+
           <div>
             <label>Músicas</label>
             <CifrasGrid>
               <MultSeletor
                 tipo="cifra"
                 escolhidos={chosenCifras}
-                addItem={UpdateCifra}
+                addItem={updateCifra}
               />
             </CifrasGrid>
           </div>
+
           <div style={{ display: "flex", gap: 8 }}>
             <button type="submit" className="btn">
               Salvar
@@ -266,7 +296,7 @@ export default function Playlists() {
         </ModalBox>
       )}
 
-      {/* Modal Delete */}
+      {/* DELETE */}
       {modalDelete && chosen && (
         <ModalDelete>
           <h3>Excluir “{chosen.nome}”?</h3>
@@ -274,7 +304,10 @@ export default function Playlists() {
             <button onClick={handleDelete} className="btn btn-danger">
               Excluir
             </button>
-            <button className="btn" onClick={() => setModalDelete(false)}>
+            <button
+              className="btn"
+              onClick={() => setModalDelete(false)}
+            >
               Cancelar
             </button>
           </div>

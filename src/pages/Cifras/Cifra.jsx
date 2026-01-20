@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import {
   createCifraService,
@@ -35,12 +35,14 @@ export default function Cifras() {
   const [searchNome, setSearchNome] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
 
-  const [itensPerpage] = useState(15);
+  const [itensPerPage] = useState(15);
   const [currentPage, setCurrentPage] = useState(0);
 
   const navigate = useNavigate();
 
-  // Filtros
+  /* ======================
+     HELPERS
+  ====================== */
 
   const normalize = (text = "") =>
     text
@@ -48,24 +50,38 @@ export default function Cifras() {
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-  const cifrasFiltradas = cifras.filter((cifra) => {
-    const matchNome = normalize(cifra.nome).includes(normalize(searchNome));
+  /* ======================
+     FILTROS
+  ====================== */
 
-    const matchCategoria =
-      !categoriaFiltro || cifra.categorias?.includes(categoriaFiltro);
+  const cifrasFiltradas = useMemo(() => {
+    return cifras.filter((cifra) => {
+      const matchNome = normalize(cifra.nome).includes(normalize(searchNome));
 
-    return matchNome && matchCategoria;
-  });
+      const matchCategoria =
+        !categoriaFiltro ||
+        cifra.categorias?.some((cat) => {
+          if (typeof cat === "string") return cat === categoriaFiltro;
+          if (typeof cat === "object" && cat._id)
+            return cat._id === categoriaFiltro;
+          return false;
+        });
+
+      return matchNome && matchCategoria;
+    });
+  }, [cifras, searchNome, categoriaFiltro]);
 
   useEffect(() => {
     setCurrentPage(0);
   }, [searchNome, categoriaFiltro]);
 
-  // Paginação
+  /* ======================
+     PAGINAÇÃO
+  ====================== */
 
-  const pages = Math.ceil(cifrasFiltradas.length / itensPerpage);
-  const startIndex = currentPage * itensPerpage;
-  const endIndex = startIndex + itensPerpage;
+  const pages = Math.ceil(cifrasFiltradas.length / itensPerPage);
+  const startIndex = currentPage * itensPerPage;
+  const endIndex = startIndex + itensPerPage;
   const cifraPaginated = cifrasFiltradas.slice(startIndex, endIndex);
 
   const handlePageChange = (page) => {
@@ -74,7 +90,9 @@ export default function Cifras() {
     }
   };
 
-  // API
+  /* ======================
+     API
+  ====================== */
 
   const getCifras = useCallback(async () => {
     try {
@@ -99,9 +117,9 @@ export default function Cifras() {
     getCategorias();
   }, [getCifras, getCategorias]);
 
-  /*
+  /* ======================
      CREATE CIFRA
- */
+  ====================== */
 
   const handleCreateCifra = useCallback(
     async (event) => {
@@ -139,21 +157,19 @@ export default function Cifras() {
     [chosenCategorias, getCifras]
   );
 
-  const UpdateCategoria = useCallback((lista) => {
+  const updateCategoria = useCallback((lista) => {
     setChosenCategorias(lista);
   }, []);
-  //  RENDER
+
+  /* ======================
+     RENDER
+  ====================== */
+
   return (
     <CifrasContainer>
-      {/* HEADER */}
       <UsersHeader>
         <button onClick={() => navigate(-1)}>
-          <img
-            src="/back.svg"
-            alt="Voltar"
-            title="Voltar"
-            className="img-hover"
-          />
+          <img src="/back.svg" alt="Voltar" className="img-hover" />
         </button>
         <Title>Cifras</Title>
         <button className="btn" onClick={() => setIsCreating(true)}>
@@ -161,7 +177,6 @@ export default function Cifras() {
         </button>
       </UsersHeader>
 
-      {/* FILTROS */}
       <FiltersContainer>
         <FilterInput
           type="text"
@@ -183,7 +198,6 @@ export default function Cifras() {
         </FilterSelect>
       </FiltersContainer>
 
-      {/* MODAL CREATE */}
       {isCreating && (
         <>
           <ModalOverlay
@@ -223,7 +237,12 @@ export default function Cifras() {
               <textarea name="observacao" />
             </div>
 
-            <MultSeletor tipo="categoria" addItem={UpdateCategoria} />
+            {/* ✅ AJUSTE AQUI */}
+            <MultSeletor
+              tipo="categoria"
+              escolhidos={chosenCategorias}
+              addItem={updateCategoria}
+            />
 
             <div className="actions">
               <button
@@ -249,7 +268,6 @@ export default function Cifras() {
         </>
       )}
 
-      {/* LISTAGEM */}
       <CifrasBody>
         {cifraPaginated
           .sort((a, b) => a.nome.localeCompare(b.nome))
@@ -258,18 +276,17 @@ export default function Cifras() {
               <AnCifra>
                 <h2>{cifra.nome}</h2>
                 <div>
-                  {cifra.categorias?.map((catId) => (
-                    <span key={catId}>
-                      {categorias.find((c) => c._id === catId)?.nome}
-                    </span>
-                  ))}
+                  {cifra.categorias?.map((cat) => {
+                    const catId = typeof cat === "string" ? cat : cat?._id;
+                    const categoria = categorias.find((c) => c._id === catId);
+                    return <span key={catId}>{categoria?.nome || "—"}</span>;
+                  })}
                 </div>
               </AnCifra>
             </Link>
           ))}
       </CifrasBody>
 
-      {/* PAGINAÇÃO */}
       {pages > 1 && (
         <PaginationContainer>
           <PaginationButton

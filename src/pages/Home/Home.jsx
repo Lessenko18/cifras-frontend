@@ -10,7 +10,6 @@ import {
   PaginationInfo,
 } from "./HomeStyled";
 
-// 👉 reutiliza a mesma lógica da tela de Cifras
 const normalize = (text = "") =>
   text
     .toLowerCase()
