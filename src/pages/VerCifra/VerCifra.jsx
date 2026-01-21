@@ -125,6 +125,9 @@ export default function VerCifra() {
       toast.success("Cifra excluída com sucesso!");
       navigate("/home/cifras");
     } catch (err) {
+      const message = err.response?.data?.message || "Erro ao excluir a cifra";
+
+      toast.error(message);
       toast.error("Falha ao excluir a cifra.");
     }
   }

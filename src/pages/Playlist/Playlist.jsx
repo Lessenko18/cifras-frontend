@@ -112,7 +112,7 @@ export default function Playlists() {
         toast.error("Falha ao criar playlist.");
       }
     },
-    [chosenCifras, fetchPlaylists]
+    [chosenCifras, fetchPlaylists],
   );
 
   /* ======================
@@ -146,7 +146,7 @@ export default function Playlists() {
         toast.error("Falha ao editar playlist.");
       }
     },
-    [chosen, chosenCifras, fetchPlaylists]
+    [chosen, chosenCifras, fetchPlaylists],
   );
 
   const handleDelete = useCallback(async () => {
@@ -159,7 +159,10 @@ export default function Playlists() {
       setChosen(null);
       await fetchPlaylists();
     } catch (err) {
-      console.error(err);
+      const message = err.response?.data?.message || "Erro ao excluir playlist";
+
+      toast.error(message);
+
       toast.error("Falha ao excluir playlist.");
     }
   }, [chosen, fetchPlaylists]);
@@ -260,11 +263,7 @@ export default function Playlists() {
 
           <div>
             <label>Nome da Playlist</label>
-            <Input
-              name="nome"
-              defaultValue={chosen.nome}
-              required
-            />
+            <Input name="nome" defaultValue={chosen.nome} required />
           </div>
 
           <div>
@@ -304,10 +303,7 @@ export default function Playlists() {
             <button onClick={handleDelete} className="btn btn-danger">
               Excluir
             </button>
-            <button
-              className="btn"
-              onClick={() => setModalDelete(false)}
-            >
+            <button className="btn" onClick={() => setModalDelete(false)}>
               Cancelar
             </button>
           </div>

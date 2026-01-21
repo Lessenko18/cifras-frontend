@@ -90,10 +90,6 @@ export default function Cifras() {
     }
   };
 
-  /* ======================
-     API
-  ====================== */
-
   const getCifras = useCallback(async () => {
     try {
       const response = await getCifrasService();
@@ -161,9 +157,6 @@ export default function Cifras() {
     setChosenCategorias(lista);
   }, []);
 
-  /* ======================
-     RENDER
-  ====================== */
 
   return (
     <CifrasContainer>
@@ -237,7 +230,6 @@ export default function Cifras() {
               <textarea name="observacao" />
             </div>
 
-            {/* ✅ AJUSTE AQUI */}
             <MultSeletor
               tipo="categoria"
               escolhidos={chosenCategorias}
