@@ -1,11 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import {
+  RouterProvider,
+  createBrowserRouter,
+  Navigate,
+} from "react-router-dom";
 import { Navbar } from "./components/Navbar/Navbar.jsx";
 import Home from "./pages/Home/Home.jsx";
 import { GlobalStyled } from "./GlobalStyled.jsx";
-import Authentication from "./pages/Authentication/Authentication.jsx";
+import Login from "./pages/Authentication/Login.jsx";
+import Signup from "./pages/Authentication/Signup.jsx";
+import ForgotPassword from "./pages/Authentication/ForgotPassword.jsx";
 import Users from "./pages/Users/Users.jsx";
+import Profile from "./pages/Users/Profile.jsx";
 import Categorias from "./pages/Categoria/Categoria.jsx";
 import Cifras from "./pages/Cifras/Cifra.jsx";
 import Playlist from "./pages/Playlist/Playlist.jsx";
@@ -13,10 +20,32 @@ import VerCifra from "./pages/VerCifra/VerCifra.jsx";
 import { Toaster } from "react-hot-toast";
 import VerPlaylist from "./pages/VerPlaylist/VerPlaylist.jsx";
 
+function AdminRoute({ children }) {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (!user || user.level !== "ADM") {
+    return <Navigate to="/home" replace />;
+  }
+
+  return children;
+}
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Authentication />,
+    element: <Login />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/signup",
+    element: <Signup />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
   },
   {
     path: "/home",
@@ -27,13 +56,26 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
+        path: "/home/profile",
+        element: <Profile />,
+      },
+      {
         path: "/home/users",
-        element: <Users />,
+        element: (
+          <AdminRoute>
+            <Users />
+          </AdminRoute>
+        ),
       },
       {
         path: "/home/categorias",
-        element: <Categorias />,
+        element: (
+          <AdminRoute>
+            <Categorias />
+          </AdminRoute>
+        ),
       },
+
       {
         path: "/home/cifras",
         element: <Cifras />,
@@ -59,5 +101,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <GlobalStyled />
     <RouterProvider router={router} />
     <Toaster />
-  </React.StrictMode>
+  </React.StrictMode>,
 );

@@ -30,6 +30,11 @@ export const UsersHeader = styled.header`
     img {
       max-width: 35px;
     }
+    @media only screen and (max-width: 700px) {
+      img {
+        max-width: 25px;
+      }
+    }
   }
 `;
 export const UsersBody = styled.div`

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import {
   createCifraService,
@@ -14,6 +14,9 @@ import {
   PaginationContainer,
   PaginationButton,
   PaginationInfo,
+  FiltersContainer,
+  FilterInput,
+  FilterSelect,
 } from "./CifraStyled";
 import { Input } from "../../components/Input/Input";
 import { getCategoriasService } from "../../service/categoriaService";
@@ -28,15 +31,58 @@ export default function Cifras() {
   const [isCreating, setIsCreating] = useState(false);
   const [chosenCategorias, setChosenCategorias] = useState([]);
   const [sending, setSending] = useState(false);
-  const [itensPerpage] = useState(15);
+
+  const [searchNome, setSearchNome] = useState("");
+  const [categoriaFiltro, setCategoriaFiltro] = useState("");
+
+  const [itensPerPage] = useState(15);
   const [currentPage, setCurrentPage] = useState(0);
+
   const navigate = useNavigate();
 
-  // Paginação
-  const pages = Math.ceil(cifras.length / itensPerpage);
-  const startIndex = currentPage * itensPerpage;
-  const endIndex = startIndex + itensPerpage;
-  const cifraPaginated = cifras.slice(startIndex, endIndex);
+  /* ======================
+     HELPERS
+  ====================== */
+
+  const normalize = (text = "") =>
+    text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+  /* ======================
+     FILTROS
+  ====================== */
+
+  const cifrasFiltradas = useMemo(() => {
+    return cifras.filter((cifra) => {
+      const matchNome = normalize(cifra.nome).includes(normalize(searchNome));
+
+      const matchCategoria =
+        !categoriaFiltro ||
+        cifra.categorias?.some((cat) => {
+          if (typeof cat === "string") return cat === categoriaFiltro;
+          if (typeof cat === "object" && cat._id)
+            return cat._id === categoriaFiltro;
+          return false;
+        });
+
+      return matchNome && matchCategoria;
+    });
+  }, [cifras, searchNome, categoriaFiltro]);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchNome, categoriaFiltro]);
+
+  /* ======================
+     PAGINAÇÃO
+  ====================== */
+
+  const pages = Math.ceil(cifrasFiltradas.length / itensPerPage);
+  const startIndex = currentPage * itensPerPage;
+  const endIndex = startIndex + itensPerPage;
+  const cifraPaginated = cifrasFiltradas.slice(startIndex, endIndex);
 
   const handlePageChange = (page) => {
     if (page >= 0 && page < pages) {
@@ -44,25 +90,38 @@ export default function Cifras() {
     }
   };
 
-  // GET CIFRAS
   const getCifras = useCallback(async () => {
-    setSending(true);
     try {
       const response = await getCifrasService();
-
-      setCifras(response.data);
+      setCifras(response.data || []);
     } catch (err) {
       console.error(err);
-    } finally {
-      setSending(false);
     }
   }, []);
 
-  // CREATE CIFRA
+  const getCategorias = useCallback(async () => {
+    try {
+      const response = await getCategoriasService();
+      setCategorias(response.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    getCifras();
+    getCategorias();
+  }, [getCifras, getCategorias]);
+
+  /* ======================
+     CREATE CIFRA
+  ====================== */
+
   const handleCreateCifra = useCallback(
     async (event) => {
       event.preventDefault();
       setSending(true);
+
       const formData = new FormData(event.target);
       const data = Object.fromEntries(formData.entries());
 
@@ -80,8 +139,8 @@ export default function Cifras() {
       try {
         await createCifraService(data);
         setIsCreating(false);
-        event.target.reset();
         setChosenCategorias([]);
+        event.target.reset();
         await getCifras();
         toast.success("Cifra cadastrada com sucesso!");
       } catch (err) {
@@ -94,36 +153,16 @@ export default function Cifras() {
     [chosenCategorias, getCifras]
   );
 
-  const UpdateCategoria = useCallback((lista) => {
+  const updateCategoria = useCallback((lista) => {
     setChosenCategorias(lista);
   }, []);
 
-  const getCategorias = useCallback(async () => {
-    try {
-      const response = await getCategoriasService();
-      setCategorias(response.data);
-      console.log(response.data);
-    } catch (err) {
-      console.error(err);
-    }
-  }, []);
-
-  useEffect(() => {
-    getCifras();
-    getCategorias();
-  }, [getCifras, getCategorias]);
 
   return (
     <CifrasContainer>
-      {/* HEADER */}
       <UsersHeader>
         <button onClick={() => navigate(-1)}>
-          <img
-            src="/back.svg"
-            alt="Voltar"
-            title="Voltar"
-            className="img-hover"
-          />
+          <img src="/back.svg" alt="Voltar" className="img-hover" />
         </button>
         <Title>Cifras</Title>
         <button className="btn" onClick={() => setIsCreating(true)}>
@@ -131,7 +170,27 @@ export default function Cifras() {
         </button>
       </UsersHeader>
 
-      {/* MODAL CREATE */}
+      <FiltersContainer>
+        <FilterInput
+          type="text"
+          placeholder="Pesquisar música"
+          value={searchNome}
+          onChange={(e) => setSearchNome(e.target.value)}
+        />
+
+        <FilterSelect
+          value={categoriaFiltro}
+          onChange={(e) => setCategoriaFiltro(e.target.value)}
+        >
+          <option value="">Todas as categorias</option>
+          {categorias.map((cat) => (
+            <option key={cat._id} value={cat._id}>
+              {cat.nome}
+            </option>
+          ))}
+        </FilterSelect>
+      </FiltersContainer>
+
       {isCreating && (
         <>
           <ModalOverlay
@@ -140,6 +199,7 @@ export default function Cifras() {
               setChosenCategorias([]);
             }}
           />
+
           <ModalCifra onSubmit={handleCreateCifra}>
             <CloseX
               type="button"
@@ -150,41 +210,36 @@ export default function Cifras() {
             >
               ×
             </CloseX>
+
             <h3>Adicionar Nova Cifra</h3>
 
             <div>
-              <label htmlFor="nome">Título da Música *</label>
-              <Input
-                type="text"
-                name="nome"
-                placeholder="Digite o título da música..."
-                required
-              />
+              <label>Título da Música *</label>
+              <Input name="nome" required />
             </div>
 
             <div>
-              <label htmlFor="link">Link da Cifra *</label>
-              <Input
-                type="url"
-                name="link"
-                placeholder="https://..."
-                required
-              />
+              <label>Link da Cifra *</label>
+              <Input name="link" type="url" required />
             </div>
 
             <p>Utilize "!!!" para separar a cifra em duas colunas</p>
 
             <div>
-              <label htmlFor="observacao">Observação</label>
-              <textarea name="observacao" style={{ resize: "vertical" }} />
+              <label>Cifra</label>
+              <textarea name="observacao" />
             </div>
 
-            <MultSeletor tipo="categoria" addItem={UpdateCategoria} />
+            <MultSeletor
+              tipo="categoria"
+              escolhidos={chosenCategorias}
+              addItem={updateCategoria}
+            />
 
             <div className="actions">
               <button
-                className="btn btn-danger"
                 type="button"
+                className="btn btn-danger"
                 onClick={() => {
                   setIsCreating(false);
                   setChosenCategorias([]);
@@ -192,8 +247,9 @@ export default function Cifras() {
               >
                 Cancelar
               </button>
+
               {!sending ? (
-                <button className="btn" type="submit">
+                <button type="submit" className="btn">
                   Adicionar
                 </button>
               ) : (
@@ -204,38 +260,25 @@ export default function Cifras() {
         </>
       )}
 
-      {/* LISTAGEM */}
       <CifrasBody>
-        {cifraPaginated.length > 0 &&
-          [...cifraPaginated]
-            .sort((a, b) => a.nome.localeCompare(b.nome))
-            .map((cifra, index) => (
-              <Link
-                to={`/home/cifra/${cifra._id}`}
-                key={`${cifra._id}-${index}`}
-              >
-                <AnCifra>
-                  <div>
-                    <h2>{cifra.nome}</h2>
-                    <div>
-                      {cifra.categorias &&
-                        cifra.categorias.length > 0 &&
-                        cifra.categorias.map((cat) => (
-                          <span
-                            key={`${cifra._id}-${cat}`}
-                            style={{ marginRight: 8 }}
-                          >
-                            {categorias.find((item) => item._id === cat)?.nome}
-                          </span>
-                        ))}
-                    </div>
-                  </div>
-                </AnCifra>
-              </Link>
-            ))}
+        {cifraPaginated
+          .sort((a, b) => a.nome.localeCompare(b.nome))
+          .map((cifra) => (
+            <Link key={cifra._id} to={`/home/cifra/${cifra._id}`}>
+              <AnCifra>
+                <h2>{cifra.nome}</h2>
+                <div>
+                  {cifra.categorias?.map((cat) => {
+                    const catId = typeof cat === "string" ? cat : cat?._id;
+                    const categoria = categorias.find((c) => c._id === catId);
+                    return <span key={catId}>{categoria?.nome || "—"}</span>;
+                  })}
+                </div>
+              </AnCifra>
+            </Link>
+          ))}
       </CifrasBody>
 
-      {/* PAGINAÇÃO */}
       {pages > 1 && (
         <PaginationContainer>
           <PaginationButton

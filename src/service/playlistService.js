@@ -1,24 +1,26 @@
-import axios from "axios";
-import { baseURL } from "./cifraService";
+import api from "./api";
 
 export async function getPlaylistsService() {
-  const response = await axios.get(`${baseURL}/playlist/`);
+  const response = await api.get("/playlist/");
   return response;
 }
 
 export async function createPlaylistService(data) {
-  const response = await axios.post(`${baseURL}/playlist/create`, data);
+  const response = await api.post("/playlist/create", data);
   return response;
 }
+
 export async function deletePlaylistService(id) {
-  const response = await axios.delete(`${baseURL}/playlist/delete/${id}`);
+  const response = await api.delete(`/playlist/delete/${id}`);
   return response;
 }
+
 export async function editPlaylistService(id, data) {
-  const response = await axios.patch(`${baseURL}/playlist/update/${id}`, data);
+  const response = await api.patch(`/playlist/update/${id}`, data);
   return response;
 }
+
 export async function getPlaylistViewService(id) {
-  const { data } = await axios.get(`${baseURL}/playlist/${id}/view`);
+  const { data } = await api.get(`/playlist/${id}/view`);
   return data;
 }

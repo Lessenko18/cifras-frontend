@@ -29,23 +29,14 @@ export default function VerPlaylist() {
     setScrolling((s) => !s);
   }
 
-  // auto scroll
   useEffect(() => {
     clearInterval(intervalRef.current);
-    intervalRef.current = null;
-
     if (scrolling) {
-      const id = setInterval(() => {
-        scrollBy(0, 1);
+      intervalRef.current = setInterval(() => {
+        window.scrollBy(0, 1);
       }, velocity * 15);
-
-      intervalRef.current = id;
     }
-
-    return () => {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    };
+    return () => clearInterval(intervalRef.current);
   }, [scrolling, velocity]);
 
   useEffect(() => {
@@ -54,7 +45,6 @@ export default function VerPlaylist() {
         const res = await getPlaylistViewService(id);
         setData(res);
       } catch (e) {
-        console.error(e);
         setErr("Não foi possível carregar a playlist.");
       } finally {
         setLoading(false);
@@ -62,7 +52,6 @@ export default function VerPlaylist() {
     })();
   }, [id]);
 
-  // rolar até música específica
   function scrollToMusica(index) {
     const elemento = document.getElementById(`musica-${index}`);
     if (elemento) {
@@ -70,10 +59,8 @@ export default function VerPlaylist() {
     }
   }
 
-  // destacar música ativa conforme rolagem
   useEffect(() => {
     if (!data?.musicas) return;
-
     const handler = () => {
       let ativo = 0;
       data.musicas.forEach((_, i) => {
@@ -85,78 +72,72 @@ export default function VerPlaylist() {
       });
       setMusicaAtiva(ativo);
     };
-
     window.addEventListener("scroll", handler);
     return () => window.removeEventListener("scroll", handler);
   }, [data?.musicas]);
 
   if (loading) return <Page>Carregando…</Page>;
   if (err) return <Page>{err}</Page>;
-  if (!data)
-    return (
-      <Page>
-        <Empty>Nada encontrado.</Empty>
-      </Page>
-    );
 
   return (
     <Page>
-      <button onClick={() => navigate(-1)}>
-        <img
-          src="/back.svg"
-          alt="Voltar"
-          title="Voltar"
-          className="img-hover"
-        />
+      <button
+        onClick={() => navigate(-1)}
+        style={{ background: "none", border: "none", cursor: "pointer" }}
+      >
+        <img src="/back.svg" alt="Voltar" />
       </button>
 
       <Velocimetro>
         <button onClick={() => setVelocity((v) => Math.min(9, v + 2))}>
-          -
+          {" "}
+          -{" "}
         </button>
         <button onClick={interruptor}>
-          {scrolling ? (
-            <img src="/pause.svg" alt="pause" />
-          ) : (
-            <img src="/pause.svg" alt="play" />
-          )}
+          <img src="/pause.svg" alt="toggle" />
         </button>
         <button onClick={() => setVelocity((v) => Math.max(1, v - 2))}>
-          +
+          {" "}
+          +{" "}
         </button>
       </Velocimetro>
+      <button
+        id={sumarioVisivel ? "Closeeye" : "Openeye"}
+        onClick={() => setSumarioVisivel(!sumarioVisivel)}
+      >
+        <img
+          src={sumarioVisivel ? "/closeeye.svg" : "/openeye.svg"}
+          alt="toggle sumario"
+        />
+      </button>
 
       <Header>
         <h2>{data.nome}</h2>
         <span>{data.musicas?.length || 0} música(s)</span>
       </Header>
 
-      {(!data.musicas || data.musicas.length === 0) && (
-        <Empty>Esta playlist ainda não tem músicas.</Empty>
-      )}
-
-      <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-        {/* Sumário lateral */}
-        {sumarioVisivel ? (
+      <div className="main-layout">
+        {sumarioVisivel && (
           <Sumario>
-            <button onClick={() => setSumarioVisivel(false)}>Esconder</button>
+            <div style={{ fontWeight: "bold", padding: "10px", color: "#666" }}>
+              Músicas
+            </div>
             {data.musicas?.map((m, i) => (
               <button
                 key={`${m._id || m.nome}-${i}`}
-                onClick={() => scrollToMusica(i)}
+                onClick={() => {
+                  scrollToMusica(i);
+                  if (window.innerWidth < 850) setSumarioVisivel(false);
+                }}
                 className={i === musicaAtiva ? "ativo" : ""}
               >
                 {m.nome}
               </button>
             ))}
           </Sumario>
-        ) : (
-          <button onClick={() => setSumarioVisivel(true)} id="btn-some">
-            Mostrar Sumário
-          </button>
         )}
 
-        {/* Lista de músicas */}
+        {/* CORPO DA PLAYLIST */}
         <PlaylistBody>
           {data.musicas?.map((m, i) => (
             <CifraCard key={`${m._id || m.nome}-${i}`} id={`musica-${i}`}>
@@ -164,6 +145,9 @@ export default function VerPlaylist() {
               <TextoCifra>{m.descricao || ""}</TextoCifra>
             </CifraCard>
           ))}
+          {(!data.musicas || data.musicas.length === 0) && (
+            <Empty>Esta playlist ainda não tem músicas.</Empty>
+          )}
         </PlaylistBody>
       </div>
     </Page>

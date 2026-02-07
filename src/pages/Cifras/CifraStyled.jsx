@@ -1,5 +1,6 @@
 import styled from "styled-components";
 
+// Container principal
 export const CifrasContainer = styled.section`
   max-width: 1200px;
   width: 100%;
@@ -8,28 +9,97 @@ export const CifrasContainer = styled.section`
   gap: 40px;
 `;
 
+// Filtros
+export const FiltersContainer = styled.div`
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+
+  background: #ffffff;
+  padding: 14px 16px;
+  border-radius: 16px;
+
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px -14px rgba(0, 0, 0, 0.25);
+
+  transition: box-shadow 0.2s ease;
+
+  &:focus-within {
+    box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.35);
+  }
+`;
+
+export const FilterInput = styled.input`
+  flex: 1;
+  min-width: 240px;
+  height: 44px;
+  padding: 0 14px;
+
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #0f172a;
+
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+  }
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+`;
+
+export const FilterSelect = styled.select`
+  min-width: 200px;
+  height: 44px;
+  padding: 0 14px;
+
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+  }
+`;
+
+// Grid das cifras
 export const CifrasBody = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 28px;
   justify-items: center;
-  border-radius: 12px;
 
-  @media only screen and (max-width: 924px) {
+  @media (max-width: 924px) {
     grid-template-columns: repeat(2, 1fr);
   }
-  @media only screen and (max-width: 600px) {
-    grid-template-columns: repeat(1, 1fr);
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
   }
 
   a {
     width: 100%;
     max-width: 350px;
-    transition: 0.3s;
-    border-radius: 8px;
     display: flex;
-    background: transparent;
-    padding: 0;
+    transition: 0.25s;
 
     &:hover {
       transform: scale(1.01);
@@ -37,7 +107,42 @@ export const CifrasBody = styled.div`
   }
 `;
 
-/* overlay escurecido  */
+// Card da cifra
+export const AnCifra = styled.article`
+  background-color: var(--light);
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  min-height: 105px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px -5px #1a1a1a8d;
+  transition: 0.3s;
+
+  h2 {
+    font-weight: 700;
+    font-size: 18px;
+    color: #000;
+  }
+
+  div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    span {
+      font-weight: 500;
+      background-color: #000;
+      font-size: 15px;
+      color: #fff;
+      border-radius: 40px;
+      padding: 5px 10px;
+    }
+  }
+`;
+
+// Overlay
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
@@ -45,15 +150,15 @@ export const ModalOverlay = styled.div`
   z-index: 9;
 `;
 
-/* MODAL CREATE*/
+// Modal criar/editar
 export const ModalCifra = styled.form`
   background: #fff;
-  width: 440px; /* mais fino */
+  width: 440px;
   max-width: calc(100% - 24px);
   padding: 22px 24px;
   border-radius: 14px;
-  box-shadow: 0 5px 15px -5px #1a1a1a8d;
   border: 1px solid #e5e7eb;
+  box-shadow: 0 5px 15px -5px #1a1a1a8d;
 
   position: fixed;
   top: 50%;
@@ -64,22 +169,16 @@ export const ModalCifra = styled.form`
   display: grid;
   gap: 14px;
 
-  p {
-    text-align: center;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
   h3 {
     font-size: 20px;
     font-weight: 800;
-    margin: 0 28px 8px 0; /* espaço pro botão X */
+    margin-right: 28px;
     color: #0f172a;
   }
 
   label {
     font-weight: 600;
     color: #0f172a;
-    margin-bottom: 4px;
   }
 
   input,
@@ -93,6 +192,7 @@ export const ModalCifra = styled.form`
 
   textarea {
     min-height: 90px;
+    resize: vertical;
   }
 
   .actions {
@@ -102,9 +202,6 @@ export const ModalCifra = styled.form`
     margin-top: 8px;
   }
 `;
-
-/* Reutilize o mesmo para editar */
-export const ModalEdit = ModalCifra;
 
 export const CloseX = styled.button`
   position: absolute;
@@ -124,96 +221,7 @@ export const CloseX = styled.button`
   }
 `;
 
-/* grid de categorias em "pílulas"*/
-export const CategoriesGroup = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-
-  @media (max-width: 560px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-export const CategoryItem = styled.label`
-  display: grid;
-  grid-template-columns: 18px 1fr;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-
-  input {
-    margin: 0;
-  }
-  span {
-    color: #0f172a;
-    font-weight: 600;
-  }
-`;
-
-/* Item da lista  */
-export const AnCifra = styled.article`
-  background-color: var(--light);
-  padding: 25px;
-  display: flex;
-  justify-content: start;
-  flex-direction: column;
-  align-items: left;
-  gap: 15px;
-  max-width: 350px;
-  transition: 0.3s;
-  min-height: 105px;
-  width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px -5px #1a1a1a8d;
-  h2 {
-    font-weight: 700;
-    font-size: 18px;
-    color: #000000;
-  }
-  div {
-    span {
-      font-weight: 500;
-      background-color: #000;
-      font-size: 15px;
-      color: #fff;
-      border-radius: 40px;
-      padding: 5px 10px;
-    }
-  }
-`;
-
-/* Modal de delete que você já tinha */
-export const ModalDelete = styled.div`
-  background-color: var(--light);
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px -5px #1a1a1a8d;
-  max-width: 300px;
-  width: 100%;
-  margin: 15px auto;
-  text-align: center;
-  border: 1px solid #000;
-  display: grid;
-  gap: 15px;
-
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  z-index: 10;
-  transform: translate(-50%, -50%);
-
-  div {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-  }
-`;
-/* PAGINAÇÃO */
+// Paginação
 export const PaginationContainer = styled.div`
   display: flex;
   justify-content: center;

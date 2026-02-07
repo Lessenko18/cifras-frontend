@@ -1,31 +1,31 @@
-import axios from "axios";
-
-// export const baseURL = "http://localhost:3000";
-export const baseURL = "https://cifrasbackend-main.onrender.com";
+import api from "./api";
 
 export async function getCifrasService() {
-  const response = await axios.get(`${baseURL}/cifra/`);
+  const response = await api.get("/cifra/");
   return response;
 }
 
 export async function getCifraById(id) {
-  const response = await axios.get(`${baseURL}/cifra/${id}`);
+  const response = await api.get(`/cifra/${id}`);
   return response;
 }
 
 export async function createCifraService(data) {
-  const response = await axios.post(`${baseURL}/cifra/create`, data);
+  const response = await api.post("/cifra/create", data);
   return response;
 }
+
 export async function deleteCifraService(id) {
-  const response = await axios.delete(`${baseURL}/cifra/delete/${id}`);
+  const response = await api.delete(`/cifra/delete/${id}`);
   return response;
 }
+
 export async function editCifraService(id, data) {
-  const response = await axios.patch(`${baseURL}/cifra/update/${id}`, data);
+  const response = await api.patch(`/cifra/update/${id}`, data);
   return response;
 }
+
 export async function searchCifra(data) {
-  const response = await axios.get(`${baseURL}/cifra/search?nome=${data}`);
+  const response = await api.get(`/cifra/search?nome=${data}`);
   return response;
 }
