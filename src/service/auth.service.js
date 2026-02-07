@@ -64,9 +64,6 @@ export async function registerRequest(data) {
 
     const response = await api.post("/auth/register", data);
 
-    console.log("✅ Register response:", response.data);
-    console.log("===================");
-
     return response.data;
   } catch (err) {
     console.error("❌ Register Error:", err.response?.data || err.message);
