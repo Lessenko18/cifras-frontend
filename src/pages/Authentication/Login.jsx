@@ -23,9 +23,14 @@ export default function Login() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Por favor, insira um email válido.");
+      return;
+    }
+
     try {
       const user = await loginRequest(email, password);
-      console.log("Login OK:", user);
 
       if (!user) {
         toast.error("Erro ao realizar login.");
@@ -35,7 +40,7 @@ export default function Login() {
       toast.success("Login realizado com sucesso!");
       navigate("/home");
     } catch (error) {
-      alert(error);
+      toast.error(error || "Erro ao realizar login.");
     }
   };
 
@@ -48,8 +53,12 @@ export default function Login() {
           <div className="input-field">
             <input
               type="email"
+              id="email"
+              name="email"
               placeholder="E-mail"
+              autoComplete="email"
               required
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
             <FaUser className="icon icon-left" />
@@ -58,8 +67,12 @@ export default function Login() {
           <div className="input-field">
             <input
               type={showPassword ? "text" : "password"}
+              id="password"
+              name="password"
               placeholder="Senha"
+              autoComplete="current-password"
               required
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
             <FaLock className="icon icon-left" />
@@ -69,8 +82,9 @@ export default function Login() {
           </div>
 
           <div className="recall-forget">
-            <label>
-              <input type="checkbox" /> Lembrar-me
+            <label htmlFor="remember-me">
+              <input type="checkbox" id="remember-me" name="remember" />{" "}
+              Lembrar-me
             </label>
             <a href="/forgot-password">Esqueci minha senha</a>
           </div>

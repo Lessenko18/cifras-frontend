@@ -12,6 +12,7 @@ import Login from "./pages/Authentication/Login.jsx";
 import Signup from "./pages/Authentication/Signup.jsx";
 import ForgotPassword from "./pages/Authentication/ForgotPassword.jsx";
 import Users from "./pages/Users/Users.jsx";
+import Profile from "./pages/Users/Profile.jsx";
 import Categorias from "./pages/Categoria/Categoria.jsx";
 import Cifras from "./pages/Cifras/Cifra.jsx";
 import Playlist from "./pages/Playlist/Playlist.jsx";
@@ -55,6 +56,10 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
+        path: "/home/profile",
+        element: <Profile />,
+      },
+      {
         path: "/home/users",
         element: (
           <AdminRoute>
@@ -96,5 +101,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <GlobalStyled />
     <RouterProvider router={router} />
     <Toaster />
-  </React.StrictMode>
+  </React.StrictMode>,
 );

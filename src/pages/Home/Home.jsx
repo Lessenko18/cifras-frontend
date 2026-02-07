@@ -28,7 +28,7 @@ export default function Home() {
   const [itensPerpage] = useState(15);
   const [currentPage, setCurrentPage] = useState(0);
 
-  // 🔎 FILTRO (igual ao da tela Cifras)
+  //  FILTRO 
   const cifrasFiltradas = cifras.filter((cifra) => {
     const matchNome = normalize(cifra.nome).includes(normalize(searchNome));
 
@@ -75,7 +75,7 @@ export default function Home() {
 
   return (
     <HomeContainer>
-      {/* FILTRO (mesma ideia da outra tela) */}
+      {/* FILTRO */}
       <div
         style={{
           display: "flex",

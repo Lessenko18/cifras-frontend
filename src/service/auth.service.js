@@ -3,32 +3,38 @@ import api from "./api";
 // LOGIN
 export async function loginRequest(email, password) {
   try {
-    // 1️⃣ faz login e recebe o token
+    console.log("=== LOGIN DEBUG ===");
+    console.log("📧 Email:", email);
+
     const response = await api.post("/auth/login", {
       email,
       password,
     });
 
+    console.log("✅ Response do /auth/login:", response.data);
     const token = response.data.token;
+    console.log("🔑 Token recebido:", token);
 
-    // 2️⃣ salva o token
     localStorage.setItem("token", token);
+    console.log("✅ Token salvo no localStorage");
 
-    // 3️⃣ busca o usuário logado usando o token
     const meResponse = await api.get("/auth/me", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
+    console.log("✅ Response do /auth/me:", meResponse.data);
     const user = meResponse.data;
 
-    // 4️⃣ salva o usuário
     localStorage.setItem("user", JSON.stringify(user));
+    console.log("✅ User salvo no localStorage:", user);
+    console.log("===================");
 
-    // 5️⃣ retorna o usuário (opcional, mas útil)
     return user;
   } catch (err) {
+    console.error("❌ Login Error:", err.response?.data || err.message);
+    console.error("❌ Full error object:", err);
     throw (
       err.response?.data?.message ||
       "Erro ao fazer login. Verifique suas credenciais."
@@ -52,14 +58,24 @@ export async function forgotPasswordService(email) {
 // REGISTRO
 export async function registerRequest(data) {
   try {
+    console.log("=== REGISTER DEBUG ===");
+    console.log("📝 Data being sent:", data);
+    console.log("📝 Data stringified:", JSON.stringify(data));
+
     const response = await api.post("/auth/register", data);
+
+    console.log("✅ Register response:", response.data);
+    console.log("===================");
+
     return response.data;
   } catch (err) {
+    console.error("❌ Register Error:", err.response?.data || err.message);
+    console.error("❌ Full error object:", err);
     throw err.response?.data?.message || "Erro ao realizar cadastro.";
   }
 }
 
-// LOGOUT (boa prática)
+// LOGOUT
 export function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");

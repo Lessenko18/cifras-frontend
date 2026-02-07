@@ -16,6 +16,10 @@ export async function deleteUserService(id) {
 }
 
 export async function editUserService(id, data) {
-  const response = await api.patch(`/user/update/${id}`, data);
+  // Se for FormData, deixa axios detectar automaticamente
+  // Se for objeto, manda como JSON
+  const config = data instanceof FormData ? {} : {};
+
+  const response = await api.patch(`/user/update/${id}`, data, config);
   return response;
 }

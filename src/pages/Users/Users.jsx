@@ -43,7 +43,7 @@ export default function Users() {
       data.level = "USER";
     }
     if (
-      data.nome.trim() === "" ||
+      data.name.trim() === "" ||
       data.email.trim() === "" ||
       data.password.trim() === ""
     ) {
@@ -146,10 +146,10 @@ export default function Users() {
         <ModalUser onSubmit={handleCreateUser}>
           <h3>Cadastrar Usuário</h3>
           <div>
-            <label htmlFor="nome">Nome do Usuário</label>
+            <label htmlFor="name">Nome do Usuário</label>
             <Input
               type="text"
-              name="nome"
+              name="name"
               required
               placeholder="Nome do usuário"
             />
@@ -193,7 +193,7 @@ export default function Users() {
       {/* MODAL DELETE */}
       {modalDelete && chosenUser && (
         <ModalDelete>
-          <h3>Deseja excluir {chosenUser.nome}?</h3>
+          <h3>Deseja excluir {chosenUser.name || chosenUser.nome}?</h3>
           <div>
             <button onClick={handleDeleteUser} className="btn btn-danger">
               Excluir
@@ -216,11 +216,11 @@ export default function Users() {
         <ModalEdit key={chosenUser._id} onSubmit={handleEditUser}>
           <h3>Editar Usuário</h3>
           <div>
-            <label htmlFor="nome">Nome do Usuário</label>
+            <label htmlFor="name">Nome do Usuário</label>
             <Input
               type="text"
-              name="nome"
-              defaultValue={chosenUser.nome || ""}
+              name="name"
+              defaultValue={chosenUser.name || ""}
               required
             />
           </div>
@@ -272,10 +272,14 @@ export default function Users() {
       <UsersBody>
         {users.length > 0 &&
           [...users]
-            .sort((a, b) => a.nome.localeCompare(b.nome))
+            .sort((a, b) => {
+              const nameA = a.name || a.nome || "";
+              const nameB = b.name || b.nome || "";
+              return nameA.localeCompare(nameB);
+            })
             .map((user) => (
               <AnUser key={user._id || user.email}>
-                <h2>{user.nome}</h2>
+                <h2>{user.name || user.nome}</h2>
                 <div>
                   <button className="btn" onClick={() => editClick(user)}>
                     Editar
