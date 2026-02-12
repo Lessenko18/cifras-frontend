@@ -16,6 +16,13 @@ export const NavContainer = styled.nav`
     max-width: 110px;
     filter: drop-shadow(0 2px 2px #0000007b);
   }
+
+  @media only screen and (max-width: 400px) {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 12px 16px;
+  }
 `;
 export const NavContent = styled.div`
   display: flex;
@@ -29,6 +36,13 @@ export const NavContent = styled.div`
 
   @media only screen and (max-width: 528px) {
     padding-top: 0;
+  }
+
+  @media only screen and (max-width: 400px) {
+    width: 100%;
+    justify-content: center;
+    gap: 10px;
+    padding: 6px 0 0;
   }
 `;
 
@@ -52,6 +66,23 @@ export const UserArea = styled.div`
     height: 56px;
     border-radius: 50%;
     object-fit: cover;
+  }
+
+  @media only screen and (max-width: 400px) {
+    .user-btn {
+      gap: 6px;
+    }
+
+    img {
+      width: 42px;
+      height: 42px;
+    }
+
+    .initials {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
   }
 
   .initials {

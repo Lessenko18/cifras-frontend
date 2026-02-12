@@ -33,11 +33,33 @@ export default function VerPlaylist() {
     clearInterval(intervalRef.current);
     if (scrolling) {
       intervalRef.current = setInterval(() => {
+        const maxScroll =
+          document.documentElement.scrollHeight - window.innerHeight;
+        if (window.scrollY >= maxScroll - 2) {
+          setScrolling(false);
+          return;
+        }
         window.scrollBy(0, 1);
       }, velocity * 15);
     }
     return () => clearInterval(intervalRef.current);
   }, [scrolling, velocity]);
+
+  useEffect(() => {
+    const handleWheel = (event) => {
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      const current = window.scrollY;
+      const atBottom = current >= maxScroll - 2;
+
+      if (atBottom && event.deltaY > 0) {
+        window.scrollTo({ top: 0, behavior: "auto" });
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: true });
+    return () => window.removeEventListener("wheel", handleWheel);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -55,7 +77,9 @@ export default function VerPlaylist() {
   function scrollToMusica(index) {
     const elemento = document.getElementById(`musica-${index}`);
     if (elemento) {
-      elemento.scrollIntoView({ behavior: "smooth", block: "start" });
+      setScrolling(false);
+      const offsetTop = elemento.offsetTop - 8;
+      window.scrollTo({ top: offsetTop, behavior: "smooth" });
     }
   }
 

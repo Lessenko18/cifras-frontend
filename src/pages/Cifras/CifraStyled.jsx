@@ -6,7 +6,7 @@ export const CifrasContainer = styled.section`
   width: 100%;
   margin: 0 auto 50px;
   display: grid;
-  gap: 40px;
+  gap: 24px;
 `;
 
 // Filtros
@@ -115,15 +115,22 @@ export const AnCifra = styled.article`
   flex-direction: column;
   gap: 15px;
   width: 100%;
-  min-height: 105px;
+  min-height: 140px;
   border-radius: 8px;
   box-shadow: 0 5px 15px -5px #1a1a1a8d;
   transition: 0.3s;
+
+  justify-content: space-between;
 
   h2 {
     font-weight: 700;
     font-size: 18px;
     color: #000;
+    min-height: 44px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   div {

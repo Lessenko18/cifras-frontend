@@ -8,6 +8,9 @@ import {
   PaginationContainer,
   PaginationButton,
   PaginationInfo,
+  FiltersContainer,
+  FilterInput,
+  FilterSelect,
 } from "./HomeStyled";
 
 const normalize = (text = "") =>
@@ -28,7 +31,7 @@ export default function Home() {
   const [itensPerpage] = useState(15);
   const [currentPage, setCurrentPage] = useState(0);
 
-  //  FILTRO 
+  //  FILTRO
   const cifrasFiltradas = cifras.filter((cifra) => {
     const matchNome = normalize(cifra.nome).includes(normalize(searchNome));
 
@@ -76,49 +79,17 @@ export default function Home() {
   return (
     <HomeContainer>
       {/* FILTRO */}
-      <div
-        style={{
-          display: "flex",
-          gap: 14,
-          alignItems: "center",
-          flexWrap: "wrap",
-          background: "#fff",
-          padding: "14px 16px",
-          borderRadius: 16,
-          border: "1px solid #e5e7eb",
-          boxShadow: "0 8px 24px -14px rgba(0,0,0,0.25)",
-          marginBottom: 30,
-        }}
-      >
-        <input
+      <FiltersContainer>
+        <FilterInput
           type="text"
           placeholder="Pesquisar música"
           value={searchNome}
           onChange={(e) => setSearchNome(e.target.value)}
-          style={{
-            flex: 1,
-            minWidth: 240,
-            height: 44,
-            padding: "0 14px",
-            borderRadius: 14,
-            border: "1px solid #d1d5db",
-            fontSize: "0.95rem",
-          }}
         />
 
-        <select
+        <FilterSelect
           value={categoriaFiltro}
           onChange={(e) => setCategoriaFiltro(e.target.value)}
-          style={{
-            minWidth: 200,
-            height: 44,
-            padding: "0 14px",
-            borderRadius: 14,
-            border: "1px solid #d1d5db",
-            fontSize: "0.95rem",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
         >
           <option value="">Todas as categorias</option>
           {categorias.map((cat) => (
@@ -126,8 +97,8 @@ export default function Home() {
               {cat.nome}
             </option>
           ))}
-        </select>
-      </div>
+        </FilterSelect>
+      </FiltersContainer>
 
       {/* LISTAGEM */}
       {cifraPaginated.length > 0 ? (

@@ -24,3 +24,18 @@ export async function getPlaylistViewService(id) {
   const { data } = await api.get(`/playlist/${id}/view`);
   return data;
 }
+
+export async function getPlaylistByIdService(id) {
+  const { data } = await api.get(`/playlist/${id}`);
+  return data;
+}
+
+export async function sharePlaylistService(id, payload) {
+  const response = await api.post(`/playlist/${id}/share`, payload);
+  return response;
+}
+
+export async function unsharePlaylistService(id, payload) {
+  const response = await api.delete(`/playlist/${id}/share`, { data: payload });
+  return response;
+}

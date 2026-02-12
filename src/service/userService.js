@@ -23,3 +23,8 @@ export async function editUserService(id, data) {
   const response = await api.patch(`/user/update/${id}`, data, config);
   return response;
 }
+
+export async function searchUsersService(query) {
+  const response = await api.get(`/user/search?q=${encodeURIComponent(query)}`);
+  return response;
+}

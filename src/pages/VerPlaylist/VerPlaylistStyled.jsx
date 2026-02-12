@@ -12,7 +12,7 @@ export const Page = styled.div`
     align-items: flex-start;
 
     @media (max-width: 850px) {
-      display: block; 
+      display: block;
     }
   }
 
@@ -44,6 +44,7 @@ export const PlaylistBody = styled.div`
   max-width: 700px;
   margin: 0 auto;
   width: 100%;
+  padding-bottom: 50px;
 `;
 export const Header = styled.div`
   display: flex;
@@ -178,7 +179,7 @@ export const Sumario = styled.aside`
     transform: translate(-50%, -50%);
     width: 85%; /* No celular, ele vira um "modal" centralizado */
     max-height: 70vh;
-    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   }
 
   button {

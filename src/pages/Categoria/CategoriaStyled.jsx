@@ -31,6 +31,9 @@ export const CategoriasBody = styled.div`
   grid-template-columns: 1fr 1fr;
   justify-items: center;
   gap: 10px;
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 export const ModalCategoria = styled.form`
