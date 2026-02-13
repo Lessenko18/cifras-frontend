@@ -87,7 +87,7 @@ export const TextoCifra = styled.pre`
   padding: 12px 14px;
 
   white-space: pre;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: hidden;
 
   text-align: left;
@@ -101,9 +101,45 @@ export const TextoCifra = styled.pre`
     border-radius: 4px;
   }
 
-  @media (max-width: 600px) {
-    font-size: 0.9rem;
+  @media (max-width: 675px) {
+    font-size: 0.95rem;
     line-height: 1.3rem;
+    padding: 10px 12px;
+  }
+
+  @media (max-width: 632px) {
+    font-size: clamp(0.78rem, 2.7vw, 0.98rem);
+    line-height: 1.26rem;
+    padding: 10px 12px;
+    white-space: pre;
+    overflow-x: hidden;
+    letter-spacing: -0.01em;
+  }
+
+  @media (max-width: 580px) {
+    font-size: clamp(0.75rem, 2.6vw, 0.96rem);
+    line-height: 1.22rem;
+    padding: 8px 10px;
+    white-space: pre;
+    letter-spacing: -0.015em;
+    transform: scaleX(0.97);
+    transform-origin: left top;
+  }
+
+  @media (max-width: 430px) {
+    font-size: clamp(0.68rem, 2.3vw, 0.9rem);
+    line-height: 1.16rem;
+    padding: 7px 8px;
+    letter-spacing: -0.02em;
+    transform: scaleX(0.95);
+  }
+
+  @media (max-width: 400px) {
+    font-size: clamp(0.64rem, 2.1vw, 0.86rem);
+    line-height: 1.12rem;
+    padding: 6px 8px;
+    letter-spacing: -0.025em;
+    transform: scaleX(0.93);
   }
 `;
 
