@@ -11,18 +11,30 @@ export const CategoriasContainer = styled.section`
 
 export const CategoriaHeader = styled.header`
   display: grid;
-  grid-template-columns: 0.5fr 1fr 0.5fr;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   text-align: center;
   gap: 20px;
+
+  > :first-child {
+    justify-self: start;
+  }
+
+  > :nth-child(2) {
+    justify-self: center;
+    margin: 0;
+  }
+
+  > :last-child {
+    justify-self: end;
+  }
 
   button {
     max-width: fit-content;
   }
 
   .btn {
-    margin-left: auto;
-    margin-right: 0;
+    margin: 0;
   }
 `;
 

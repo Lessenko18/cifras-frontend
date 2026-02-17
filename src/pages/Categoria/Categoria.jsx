@@ -120,7 +120,7 @@ export default function Categorias() {
         </button>
         <Title>Categorias</Title>
         <button
-          className="btn"
+          className="btn category-btn"
           onClick={() => {
             setIsCreating(!isCreating);
             setIsEditing(false);

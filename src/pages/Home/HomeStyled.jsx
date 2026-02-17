@@ -35,41 +35,58 @@ export const HomeContainer = styled.section`
 `;
 
 export const AnCifra = styled.article`
-  background-color: var(--light);
-  padding: 25px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
 
   max-width: 350px;
   width: 100%;
-  min-height: 140px;
+  min-height: 170px;
 
-  border-radius: 8px;
-  box-shadow: 0 5px 15px -5px #1a1a1a8d;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   transition: 0.3s;
 
-  justify-content: space-between;
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+  }
 
-  h2 {
-    font-weight: 700;
+  > div > h2 {
+    min-height: 56px;
+    padding: 14px 24px;
+    margin: -22px -24px 0;
+    background: #e9e3ff;
+    color: #4c3fb3;
+    font-weight: 400;
     font-size: 18px;
-    color: #000000;
-    min-height: 44px;
+    line-height: 1.2;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
-  div {
+  > div > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
     span {
-      font-weight: 500;
-      background-color: #000;
+      display: inline-flex;
+      align-items: center;
+      color: #6b7280;
       font-size: 15px;
-      color: #fff;
-      border-radius: 40px;
-      padding: 5px 10px;
+      font-weight: 800;
+      background: transparent;
+      border-radius: 0;
+      padding: 0;
+      margin-right: 0 !important;
     }
   }
 `;

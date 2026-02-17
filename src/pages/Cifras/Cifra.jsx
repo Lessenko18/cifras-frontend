@@ -150,13 +150,12 @@ export default function Cifras() {
         setSending(false);
       }
     },
-    [chosenCategorias, getCifras]
+    [chosenCategorias, getCifras],
   );
 
   const updateCategoria = useCallback((lista) => {
     setChosenCategorias(lista);
   }, []);
-
 
   return (
     <CifrasContainer>
@@ -165,7 +164,7 @@ export default function Cifras() {
           <img src="/back.svg" alt="Voltar" className="img-hover" />
         </button>
         <Title>Cifras</Title>
-        <button className="btn" onClick={() => setIsCreating(true)}>
+        <button className="btn cifra-btn" onClick={() => setIsCreating(true)}>
           Adicionar Cifra
         </button>
       </UsersHeader>

@@ -130,7 +130,7 @@ export default function Users() {
         </button>
         <Title>Usuários</Title>
         <button
-          className="btn"
+          className="btn user-btn"
           onClick={() => {
             setCreateUser(!createUser);
             setModalEdit(false);
