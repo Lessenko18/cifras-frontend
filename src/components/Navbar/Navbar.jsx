@@ -2,10 +2,18 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { NavContainer, NavContent, UserArea } from "./NavbarStyled";
 import { logout } from "../../service/auth.service";
+import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
 
 export function Navbar() {
   const [user, setUser] = useState(() => {
-    return JSON.parse(localStorage.getItem("user"));
+    const stored = JSON.parse(localStorage.getItem("user"));
+    if (!stored) return stored;
+
+    return {
+      ...stored,
+      avatar: normalizeAvatarUrl(stored.avatar),
+      photo: normalizeAvatarUrl(stored.photo),
+    };
   });
 
   const navigate = useNavigate();
@@ -33,8 +41,19 @@ export function Navbar() {
 
   useEffect(() => {
     function syncUser() {
-      setUser(JSON.parse(localStorage.getItem("user")));
+      const stored = JSON.parse(localStorage.getItem("user"));
+      if (!stored) {
+        setUser(stored);
+        return;
+      }
+
+      setUser({
+        ...stored,
+        avatar: normalizeAvatarUrl(stored.avatar),
+        photo: normalizeAvatarUrl(stored.photo),
+      });
     }
+    JSON.parse(localStorage.getItem("user"))?.avatar;
 
     window.addEventListener("userUpdated", syncUser);
     window.addEventListener("storage", syncUser);
@@ -51,14 +70,11 @@ export function Navbar() {
     navigate("/login");
   };
 
-  console.log("USER LOGADO:", user);
-  console.log("LEVEL:", user?.level);
-
   return (
     <>
       <NavContainer>
         <Link id="logo" to="/home">
-          <img src="/LogoCaritas.png" alt="Logo Cáritas" />
+          <img src="/tlcifras.png" alt="Logo TLCifras" />
         </Link>
 
         <NavContent>

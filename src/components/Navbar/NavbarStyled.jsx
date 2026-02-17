@@ -9,11 +9,11 @@ export const NavContainer = styled.nav`
   align-items: center;
   flex-wrap: wrap;
   gap: 20px;
-  background: linear-gradient(to right, var(--dark), var(--main));
+  background: linear-gradient(90deg, #000000 0%, #2f2a7a 45%, #5a4ad9 100%);
   padding: 0 20px;
   border-radius: 10px;
   #logo {
-    max-width: 110px;
+    max-width: 250px;
     filter: drop-shadow(0 2px 2px #0000007b);
   }
 

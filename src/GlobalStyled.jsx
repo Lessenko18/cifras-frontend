@@ -6,6 +6,7 @@ export const GlobalStyled = createGlobalStyle`
 /* 17a1f1 */
 :root {
   --main: #4f46e5;
+  --nav: #17a1f1;
   --light: #fff;
   --gray: #eeeeee;
   --dark: #000;

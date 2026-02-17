@@ -19,6 +19,28 @@ export const UsersHeader = styled.header`
     margin-left: auto;
     margin-right: 0;
   }
+
+  .btn.playlist-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #6b5cff, #5a4ad9);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 6px 14px rgba(107, 92, 255, 0.3);
+    cursor: pointer;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .btn.playlist-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(107, 92, 255, 0.35);
+  }
   gap: 20px;
 
   .btns-header {

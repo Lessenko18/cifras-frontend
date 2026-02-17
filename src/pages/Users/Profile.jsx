@@ -10,15 +10,19 @@ import {
 import { logout } from "../../service/auth.service";
 import { editUserService } from "../../service/userService";
 import { uploadToS3ViaBackend } from "../../service/s3Service";
+import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
 import toast from "react-hot-toast";
 
 export default function Profile() {
   const navigate = useNavigate();
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const normalizedStoredUser = {
+    ...storedUser,
+    avatar: normalizeAvatarUrl(storedUser.avatar),
+    photo: normalizeAvatarUrl(storedUser.photo),
+  };
 
-  console.log("Usuário do localStorage:", storedUser);
-
-  const [user, setUser] = useState(storedUser);
+  const [user, setUser] = useState(normalizedStoredUser);
   const [editing, setEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [preview, setPreview] = useState(user.avatar || user.photo || null);
@@ -39,6 +43,7 @@ export default function Profile() {
         .join("")
         .toUpperCase()
     : (user?.email?.charAt(0) || "U").toUpperCase();
+  const avatarSrc = preview || user.avatar || user.photo || null;
 
   const handleLogout = () => {
     logout();
@@ -104,7 +109,6 @@ export default function Profile() {
           toast.loading("📤 Enviando foto para o servidor...");
           avatarUrl = await uploadToS3ViaBackend(form.avatarFile);
           toast.dismiss(); // Remove o loading toast
-          console.log("Avatar URL do S3:", avatarUrl);
         } catch (uploadErr) {
           toast.dismiss();
           toast.error("❌ " + uploadErr.message);
@@ -134,36 +138,31 @@ export default function Profile() {
       }
 
       if (avatarUrl) {
-        payload.avatar = avatarUrl; // URL do S3
+        payload.avatar = normalizeAvatarUrl(avatarUrl); // URL do S3
       }
-
-      console.log("Enviando dados para o backend:", { id, payload });
 
       toast.loading("💾 Salvando perfil...");
       const response = await editUserService(id, payload);
-      console.log("✅ Resposta do servidor:", response);
       toast.dismiss(); // Remove o loading toast
 
       let updatedFromServer = response?.data || null;
-      console.log("📦 updatedFromServer:", updatedFromServer);
 
       // Trata diferentes formatos de resposta do backend
       if (updatedFromServer?.user) {
         updatedFromServer = updatedFromServer.user;
-        console.log("✅ Extraído user da resposta");
       } else if (updatedFromServer?.data) {
         updatedFromServer = updatedFromServer.data;
-        console.log("✅ Extraído data da resposta");
       }
 
       let finalUser = {
         ...user,
         name: updatedFromServer?.name || updatedFromServer?.nome || form.name,
         email: updatedFromServer?.email || form.email,
-        avatar: avatarUrl || updatedFromServer?.avatar || user.avatar,
+        avatar: normalizeAvatarUrl(
+          avatarUrl || updatedFromServer?.avatar || user.avatar,
+        ),
       };
 
-      console.log("💾 Salvando finalUser no localStorage:", finalUser);
       localStorage.setItem("user", JSON.stringify(finalUser));
       window.dispatchEvent(new Event("userUpdated"));
       setUser(finalUser);
@@ -193,8 +192,8 @@ export default function Profile() {
     <ProfileContainer>
       <Card onSubmit={handleSave}>
         <Avatar>
-          {preview ? (
-            <img src={preview} alt={user.name || user.nome || "Usuário"} />
+          {avatarSrc ? (
+            <img src={avatarSrc} alt={user.name || user.nome || "Usuário"} />
           ) : (
             <div className="initials">{initials}</div>
           )}

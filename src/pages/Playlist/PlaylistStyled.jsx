@@ -4,12 +4,13 @@ export const Page = styled.section`
   max-width: 1200px;
   width: 100%;
   margin: 0 auto 50px;
+  font-size: 14px;
 `;
 
 export const Title = styled.h1`
   text-align: center;
   line-height: 1.2em;
-  font-size: 44px;
+  font-size: 28px;
   font-weight: 800;
   margin: 0 0 24px;
   color: #0f172a;
@@ -34,6 +35,7 @@ export const Card = styled.article`
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 22px 24px;
+  padding-right: 72px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   transition: 0.3s;
   position: relative;
@@ -44,33 +46,99 @@ export const Card = styled.article`
     transform: scale(1.01);
   }
 
-  h3 {
-    font-size: 24px;
+  .playlist-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-radius: 0;
+    background: #e9e3ff;
+    color: #4c3fb3;
     font-weight: 800;
-    margin: 0 0 8px;
-    color: #0f172a;
-    min-height: 58px;
+    margin: -22px -72px 12px -24px;
+    align-self: stretch;
+    justify-content: flex-start;
+    height: 56px;
+  }
+
+  .playlist-title span {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+    line-height: 1.2;
+    max-height: calc(1.2em * 2);
   }
 
-  .count {
+  .playlist-count {
+    display: inline-flex;
+    align-items: center;
     color: #6b7280;
-    margin-bottom: 14px;
+    font-weight: 500;
+    margin: 0 0 16px;
+    max-width: calc(100% - 40px);
+    align-self: flex-start;
+    justify-content: flex-start;
+  }
+
+  .playlist-title img {
+    width: 16px;
+    height: 16px;
   }
 
   .actions {
     display: flex;
     gap: 12px;
     margin-top: auto;
+    justify-content: center;
   }
 
-  .share-corner {
+  .playlist-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 7px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #6b5cff, #5a4ad9);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 6px 14px rgba(107, 92, 255, 0.3);
+    cursor: pointer;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .playlist-action img {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1);
+  }
+
+  .playlist-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(107, 92, 255, 0.35);
+  }
+
+  .share-actions {
     position: absolute;
-    top: 12px;
+    top: 70px;
     right: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transform: none;
+  }
+
+  .icon-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
   }
 `;
 
@@ -131,7 +199,6 @@ export const CifrasGrid = styled.div`
   label a {
     display: block;
     margin-top: 8px;
-    font-size: 0.85rem;
     color: #4f46e5;
     text-decoration: none;
   }
@@ -165,10 +232,18 @@ export const ModalBox = styled.form`
   h3 {
     margin: 0 0 6px 0;
     text-align: center;
+    font-size: 18px;
+    font-weight: 800;
   }
 
   div {
     display: grid;
+  }
+
+  .playlist-mult h3 {
+    font-size: 14px;
+    font-weight: 100;
+    text-align: left;
   }
 `;
 
@@ -193,7 +268,6 @@ export const ShareList = styled.div`
     border-radius: 999px;
     background: #f1f5f9;
     border: 1px solid #e2e8f0;
-    font-size: 0.9rem;
   }
 
   .chip button {
@@ -221,7 +295,6 @@ export const SuggestList = styled.div`
     border: 1px solid #e2e8f0;
     background: #fff;
     cursor: pointer;
-    font-size: 0.92rem;
   }
 
   button:hover {

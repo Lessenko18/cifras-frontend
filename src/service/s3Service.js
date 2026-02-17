@@ -40,10 +40,8 @@ export async function uploadToS3(file) {
       throw new Error(`Erro ao fazer upload: ${uploadResponse.statusText}`);
     }
 
-    console.log("Upload no S3 realizado com sucesso!");
     return imageUrl; // Retorna a URL pública da imagem no S3
   } catch (err) {
-    console.error("Erro ao fazer upload para S3:", err);
     throw err;
   }
 }
@@ -63,12 +61,17 @@ export async function uploadToS3ViaBackend(file) {
       },
     });
 
-    if (!response.data.imageUrl) {
+    const imageUrl =
+      response.data?.imageUrl ||
+      response.data?.Location ||
+      response.data?.location ||
+      response.headers?.location;
+
+    if (!imageUrl) {
       throw new Error("URL da imagem não retornada pelo servidor");
     }
 
-    console.log("Avatar enviado com sucesso!");
-    return response.data.imageUrl; // Retorna a URL da imagem no S3
+    return imageUrl; // Retorna a URL da imagem no S3
   } catch (err) {
     console.error("Erro ao fazer upload:", err);
 

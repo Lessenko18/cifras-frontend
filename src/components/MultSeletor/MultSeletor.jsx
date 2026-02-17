@@ -4,7 +4,12 @@ import { GuardaEscolhidos, MultSeletorContainer } from "./MultSeletorStyled";
 import { searchCategoria } from "../../service/categoriaService";
 import { searchCifra } from "../../service/cifraService";
 
-export default function MultSeletor({ tipo, addItem, escolhidos = [] }) {
+export default function MultSeletor({
+  tipo,
+  addItem,
+  escolhidos = [],
+  className,
+}) {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -45,12 +50,12 @@ export default function MultSeletor({ tipo, addItem, escolhidos = [] }) {
 
   function removeSelect(item) {
     addItem(
-      escolhidos.filter((i) => (i._id || i.id) !== (item._id || item.id))
+      escolhidos.filter((i) => (i._id || i.id) !== (item._id || item.id)),
     );
   }
 
   return (
-    <MultSeletorContainer>
+    <MultSeletorContainer className={className}>
       {/* ESCOLHIDOS */}
       {escolhidos.length > 0 && (
         <GuardaEscolhidos>
