@@ -2,11 +2,12 @@ import api from "./api";
 import { normalizeAvatarUrl } from "../utils/normalizeAvatarUrl";
 
 // LOGIN
-export async function loginRequest(email, password) {
+export async function loginRequest(email, password, remember = false) {
   try {
     const response = await api.post("/auth/login", {
       email,
       password,
+      remember,
     });
 
     const token = response.data.token;
@@ -47,6 +48,20 @@ export async function forgotPasswordService(email) {
     return response.data;
   } catch (err) {
     throw err.response?.data?.message || "Erro ao processar solicitação.";
+  }
+}
+
+// RESET DE SENHA
+export async function resetPasswordService(token, newPassword) {
+  try {
+    const response = await api.post("/auth/reset-password", {
+      token,
+      newPassword,
+    });
+
+    return response.data;
+  } catch (err) {
+    throw err.response?.data?.message || "Erro ao redefinir senha.";
   }
 }
 

@@ -2,12 +2,13 @@ import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Background, LoginContainer } from "./LoginStyled";
 import { useState } from "react";
 import { loginRequest } from "../../service/auth.service";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -30,7 +31,7 @@ export default function Login() {
     }
 
     try {
-      const user = await loginRequest(email, password);
+      const user = await loginRequest(email, password, remember);
 
       if (!user) {
         toast.error("Erro ao realizar login.");
@@ -83,17 +84,23 @@ export default function Login() {
 
           <div className="recall-forget">
             <label htmlFor="remember-me">
-              <input type="checkbox" id="remember-me" name="remember" />{" "}
+              <input
+                type="checkbox"
+                id="remember-me"
+                name="remember"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+              />{" "}
               Lembrar-me
             </label>
-            <a href="/forgot-password">Esqueci minha senha</a>
+            <Link to="/forgot-password">Esqueci minha senha</Link>
           </div>
 
           <button type="submit">Entrar</button>
 
           <div className="signup-link">
             <p>Não tem uma conta?</p>
-            <a href="/signup">Cadastre-se</a>
+            <Link to="/signup">Cadastre-se</Link>
           </div>
         </form>
       </LoginContainer>

@@ -2,7 +2,8 @@ import { FaEnvelope } from "react-icons/fa";
 import { Background, ForgotContainer } from "./ForgotPasswordStyled";
 import { useState } from "react";
 import { forgotPasswordService } from "../../service/auth.service";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -12,19 +13,25 @@ export default function ForgotPassword() {
     event.preventDefault();
 
     if (!email) {
-      toast.alert("Por favor, insira seu e-mail.");
+      toast.error("Por favor, insira seu e-mail.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Por favor, insira um e-mail válido.");
       return;
     }
 
     try {
-      await forgotPasswordService(email);
-
-      alert("Entre em contato com o ADM se não receber o e-mail");
+      const result = await forgotPasswordService(email);
+      toast.success(
+        result?.message ||
+          "Se o e-mail existir, você receberá um link para redefinir a senha.",
+      );
       navigate("/login");
     } catch (error) {
-      alert("Entre em contato com o ADM se não receber o e-mail");
-      console.error(error);
-      navigate("/login");
+      toast.error(error || "Erro ao processar solicitação.");
     }
   };
 
@@ -51,7 +58,7 @@ export default function ForgotPassword() {
           <button type="submit">Enviar Instruções</button>
 
           <div className="back-link">
-            <a href="/login">Voltar ao Login</a>
+            <Link to="/login">Voltar ao Login</Link>
           </div>
         </form>
       </ForgotContainer>

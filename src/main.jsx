@@ -11,6 +11,7 @@ import { GlobalStyled } from "./GlobalStyled.jsx";
 import Login from "./pages/Authentication/Login.jsx";
 import Signup from "./pages/Authentication/Signup.jsx";
 import ForgotPassword from "./pages/Authentication/ForgotPassword.jsx";
+import ResetPassword from "./pages/Authentication/ResetPassword.jsx";
 import Users from "./pages/Users/Users.jsx";
 import Profile from "./pages/Users/Profile.jsx";
 import Categorias from "./pages/Categoria/Categoria.jsx";
@@ -46,6 +47,10 @@ const router = createBrowserRouter([
   {
     path: "/forgot-password",
     element: <ForgotPassword />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
   },
   {
     path: "/home",
