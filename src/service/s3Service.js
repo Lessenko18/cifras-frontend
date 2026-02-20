@@ -1,51 +1,5 @@
 import api from "./api";
 
-const BUCKET_NAME = "cifras-caritas";
-const REGION = "us-east-2";
-
-export async function uploadToS3(file) {
-  try {
-    if (!file) {
-      throw new Error("Arquivo não fornecido");
-    }
-
-    // Gera um nome único para o arquivo
-    const timestamp = Date.now();
-    const ext = file.name.split(".").pop();
-    const fileName = `avatar-${timestamp}.${ext}`;
-
-    // Pede ao backend uma URL pré-assinada do S3
-    const presignedResponse = await api.post("/user/get-presigned-url", {
-      fileName: fileName,
-      fileType: file.type,
-    });
-
-    const presignedUrl = presignedResponse.data.presignedUrl;
-    const imageUrl = presignedResponse.data.imageUrl;
-
-    if (!presignedUrl) {
-      throw new Error("Falha ao obter URL pré-assinada");
-    }
-
-    // Faz upload do arquivo direto no S3 usando a URL pré-assinada
-    const uploadResponse = await fetch(presignedUrl, {
-      method: "PUT",
-      body: file,
-      headers: {
-        "Content-Type": file.type,
-      },
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error(`Erro ao fazer upload: ${uploadResponse.statusText}`);
-    }
-
-    return imageUrl; // Retorna a URL pública da imagem no S3
-  } catch (err) {
-    throw err;
-  }
-}
-
 export async function uploadToS3ViaBackend(file) {
   try {
     if (!file) {
