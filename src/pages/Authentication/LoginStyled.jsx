@@ -7,7 +7,7 @@ export const Background = styled.section`
   justify-content: center;
   align-items: center;
 
-  background-image: url("/caritas.jpg");
+  background-image: url("/backgroundLogin.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -36,9 +36,23 @@ export const LoginContainer = styled.div`
   color: #fff;
   text-align: center;
 
+  .title-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 32px;
+
+    .logo {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+    }
+  }
+
   h1 {
     font-size: 28px;
-    margin-bottom: 32px;
+    margin: 0;
     font-weight: 600;
   }
 
@@ -54,12 +68,12 @@ export const LoginContainer = styled.div`
     height: 100%;
 
     /* Padding ajustado: 45px nas laterais para dar espaço aos ícones */
-    padding: 16px 45px; 
+    padding: 16px 45px;
     font-size: 16px;
 
     border-radius: 40px;
     border: 2px solid rgba(255, 255, 255, 0.35);
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(255, 255, 255, 0.08);
 
     color: #fff;
     outline: none;
@@ -68,11 +82,22 @@ export const LoginContainer = styled.div`
 
     &:focus {
       border-color: #fff;
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(255, 255, 255, 0.12);
     }
 
     &::placeholder {
       color: #e8e8e8;
+    }
+
+    /* Remove fundo branco do autocomplete do navegador */
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus,
+    &:-webkit-autofill:active {
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: #fff;
+      transition: background-color 5000s ease-in-out 0s;
+      box-shadow: inset 0 0 20px 20px rgba(255, 255, 255, 0.08);
     }
   }
 
@@ -142,8 +167,8 @@ export const LoginContainer = styled.div`
     border: none;
     border-radius: 40px;
 
-    background: #ffffff;
-    color: #000;
+    background: linear-gradient(90deg, #8b5cf6 0%, #3b82f6 100%);
+    color: #fff;
     font-size: 16px;
     cursor: pointer;
     font-weight: 600;
@@ -151,7 +176,8 @@ export const LoginContainer = styled.div`
     transition: 0.25s;
 
     &:hover {
-      background: #eaeaea;
+      background: linear-gradient(90deg, #7c3aed 0%, #2563eb 100%);
+      transform: scale(1.02);
     }
   }
 

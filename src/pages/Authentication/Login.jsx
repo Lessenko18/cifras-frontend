@@ -49,7 +49,14 @@ export default function Login() {
     <Background>
       <LoginContainer>
         <form onSubmit={handleSubmit}>
-          <h1>Acesse o sistema</h1>
+          <div className="title-container">
+            <img
+              src="/logotlcifras.png"
+              alt="TL Cifras Logo"
+              className="logo"
+            />
+            <h1>TL Cifras</h1>
+          </div>
 
           <div className="input-field">
             <input
