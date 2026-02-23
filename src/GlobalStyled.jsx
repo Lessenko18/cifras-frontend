@@ -186,6 +186,16 @@ button,
 svg path {
   transition: 0.3s;
 }
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--main);
+  outline-offset: 2px;
+}
+
 #root {
  display: flex;
  flex-direction: column;
@@ -201,6 +211,47 @@ svg path {
   &:hover {
     background-color: var(--light);
     color: var(--main);
+  }
+}
+.btn.adicionar-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #6b5cff, #5a4ad9);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 700;
+  box-shadow: 0 6px 14px rgba(107, 92, 255, 0.3);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(107, 92, 255, 0.35);
+    color: #fff;
+  }
+}
+
+@media only screen and (max-width: 700px) {
+  .btn.adicionar-primary {
+    padding: 4px 10px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+}
+
+@media only screen and (max-width: 420px) {
+  .btn.adicionar-primary {
+    padding: 2px 8px;
+    font-size: 12px;
+    white-space: nowrap;
   }
 }
 .btn-danger {
@@ -224,6 +275,26 @@ svg path {
     color: green;
   }
 }
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.modal-actions .btn,
+.modal-actions .btn-danger,
+.modal-actions .btn-success {
+  min-width: 104px;
+  height: 34px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 12px;
+}
+
 /* ===== Tipos de toast ===== */
 .toast[data-type="success"] {
   border-left: 5px solid #22c55e; /* verde */

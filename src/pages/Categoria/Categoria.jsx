@@ -120,7 +120,7 @@ export default function Categorias() {
         </button>
         <Title>Categorias</Title>
         <button
-          className="btn category-btn"
+          className="btn adicionar-primary"
           onClick={() => {
             setIsCreating(!isCreating);
             setIsEditing(false);
@@ -144,16 +144,16 @@ export default function Categorias() {
               placeholder="Digite o nome da categoria"
             />
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" className="btn">
-              Cadastrar
-            </button>
+          <div className="modal-actions">
             <button
               type="button"
               className="btn btn-danger"
               onClick={() => setIsCreating(false)}
             >
               Cancelar
+            </button>
+            <button type="submit" className="btn">
+              Cadastrar
             </button>
           </div>
         </ModalCategoria>
@@ -162,12 +162,13 @@ export default function Categorias() {
       {/* MODAL DELETE */}
       {isDeleting && chosenCategoria && (
         <ModalDelete>
-          <h3>Deseja excluir {chosenCategoria.nome}?</h3>
-          <div>
-            <button onClick={handleDeleteCategoria} className="btn btn-danger">
-              Excluir
-            </button>
+          <h3>Excluir “{chosenCategoria.nome}”?</h3>
+          <p>
+            Essa ação é irreversível e removerá a categoria permanentemente.
+          </p>
+          <div className="modal-actions">
             <button
+              type="button"
               className="btn"
               onClick={() => {
                 setIsDeleting(false);
@@ -175,6 +176,13 @@ export default function Categorias() {
               }}
             >
               Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteCategoria}
+              className="btn btn-danger"
+            >
+              Excluir
             </button>
           </div>
         </ModalDelete>
@@ -193,10 +201,7 @@ export default function Categorias() {
               required
             />
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" className="btn">
-              Salvar
-            </button>
+          <div className="modal-actions">
             <button
               type="button"
               className="btn btn-danger"
@@ -206,6 +211,9 @@ export default function Categorias() {
               }}
             >
               Cancelar
+            </button>
+            <button type="submit" className="btn">
+              Salvar
             </button>
           </div>
         </ModalEdit>

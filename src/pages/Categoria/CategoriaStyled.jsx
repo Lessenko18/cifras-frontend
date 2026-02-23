@@ -68,6 +68,15 @@ export const ModalCategoria = styled.form`
     display: grid;
     gap: 3px;
   }
+
+  .modal-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
   h2,
   h3 {
     text-align: center;
@@ -152,6 +161,15 @@ export const ModalEdit = styled.form`
   div {
     display: grid;
     gap: 3px;
+  }
+
+  .modal-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
   }
 
   input {

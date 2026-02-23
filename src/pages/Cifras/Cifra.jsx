@@ -33,6 +33,7 @@ export default function Cifras() {
   const [sending, setSending] = useState(false);
 
   const [searchNome, setSearchNome] = useState("");
+  const [debouncedSearchNome, setDebouncedSearchNome] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
 
   const [itensPerPage] = useState(15);
@@ -56,7 +57,9 @@ export default function Cifras() {
 
   const cifrasFiltradas = useMemo(() => {
     return cifras.filter((cifra) => {
-      const matchNome = normalize(cifra.nome).includes(normalize(searchNome));
+      const matchNome = normalize(cifra.nome).includes(
+        normalize(debouncedSearchNome),
+      );
 
       const matchCategoria =
         !categoriaFiltro ||
@@ -69,11 +72,19 @@ export default function Cifras() {
 
       return matchNome && matchCategoria;
     });
-  }, [cifras, searchNome, categoriaFiltro]);
+  }, [cifras, debouncedSearchNome, categoriaFiltro]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchNome(searchNome);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchNome]);
 
   useEffect(() => {
     setCurrentPage(0);
-  }, [searchNome, categoriaFiltro]);
+  }, [debouncedSearchNome, categoriaFiltro]);
 
   /* ======================
      PAGINAÇÃO
@@ -164,7 +175,10 @@ export default function Cifras() {
           <img src="/back.svg" alt="Voltar" className="img-hover" />
         </button>
         <Title>Cifras</Title>
-        <button className="btn cifra-btn" onClick={() => setIsCreating(true)}>
+        <button
+          className="btn adicionar-primary"
+          onClick={() => setIsCreating(true)}
+        >
           Adicionar Cifra
         </button>
       </UsersHeader>
@@ -174,11 +188,13 @@ export default function Cifras() {
           type="text"
           placeholder="Pesquisar música"
           value={searchNome}
+          aria-label="Pesquisar música"
           onChange={(e) => setSearchNome(e.target.value)}
         />
 
         <FilterSelect
           value={categoriaFiltro}
+          aria-label="Filtrar por categoria"
           onChange={(e) => setCategoriaFiltro(e.target.value)}
         >
           <option value="">Todas as categorias</option>
@@ -188,6 +204,20 @@ export default function Cifras() {
             </option>
           ))}
         </FilterSelect>
+
+        {(searchNome || categoriaFiltro) && (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              setSearchNome("");
+              setDebouncedSearchNome("");
+              setCategoriaFiltro("");
+            }}
+          >
+            Limpar filtro
+          </button>
+        )}
       </FiltersContainer>
 
       {isCreating && (
@@ -213,20 +243,39 @@ export default function Cifras() {
             <h3>Adicionar Nova Cifra</h3>
 
             <div>
-              <label>Título da Música *</label>
-              <Input name="nome" required />
+              <label htmlFor="cifra-nome">Título da Música *</label>
+              <Input
+                id="cifra-nome"
+                name="nome"
+                required
+                placeholder="Preencha o nome da música"
+              />
             </div>
 
             <div>
-              <label>Link da Cifra *</label>
-              <Input name="link" type="url" required />
+              <label htmlFor="cifra-link">Link da Cifra *</label>
+              <Input
+                id="cifra-link"
+                name="link"
+                type="url"
+                required
+                placeholder="https://exemplo.com.br/sua-cifra"
+              />
             </div>
 
             <p>Utilize "!!!" para separar a cifra em duas colunas</p>
 
             <div>
-              <label>Cifra</label>
-              <textarea name="observacao" />
+              <label htmlFor="cifra-observacao">Cifra</label>
+              <textarea
+                id="cifra-observacao"
+                name="observacao"
+                placeholder={`Cole sua cifra aqui:
+      Am
+Doente de amor procurei remédio
+     G
+Na vida noturna`}
+              />
             </div>
 
             <MultSeletor
@@ -235,7 +284,7 @@ export default function Cifras() {
               addItem={updateCategoria}
             />
 
-            <div className="actions">
+            <div className="actions modal-actions">
               <button
                 type="button"
                 className="btn btn-danger"

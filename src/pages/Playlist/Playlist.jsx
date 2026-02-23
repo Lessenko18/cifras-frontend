@@ -31,6 +31,9 @@ import toast from "react-hot-toast";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
 import { getUsersService, searchUsersService } from "../../service/userService";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+
 export default function Playlists() {
   const [playlists, setPlaylists] = useState([]);
   const [cifras, setCifras] = useState([]);
@@ -53,8 +56,6 @@ export default function Playlists() {
   const createSearchTimer = useRef(null);
 
   const navigate = useNavigate();
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const objectIdPattern = /^[a-f\d]{24}$/i;
   const currentUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("user")) || {};
@@ -105,7 +106,7 @@ export default function Playlists() {
       }
 
       const invalid = filteredEmails.filter(
-        (email) => !emailPattern.test(email),
+        (email) => !EMAIL_PATTERN.test(email),
       );
       if (invalid.length > 0) {
         toast.error(`Email(s) inválido(s): ${invalid.join(", ")}`);
@@ -120,7 +121,7 @@ export default function Playlists() {
 
       setCurrent(next);
     },
-    [currentUserEmail, emailPattern, parseEmails],
+    [currentUserEmail, parseEmails],
   );
 
   const buildSuggestionList = useCallback(
@@ -134,10 +135,10 @@ export default function Playlists() {
         (email) =>
           email !== currentUserEmail &&
           !blocked.includes(email) &&
-          emailPattern.test(email),
+          EMAIL_PATTERN.test(email),
       );
     },
-    [currentUserEmail, emailPattern],
+    [currentUserEmail],
   );
 
   const fetchSuggestions = useCallback(
@@ -230,7 +231,7 @@ export default function Playlists() {
 
       const normalized = rawValues.filter(Boolean).map((value) => value);
       const hasIds = normalized.some(
-        (value) => typeof value === "string" && objectIdPattern.test(value),
+        (value) => typeof value === "string" && OBJECT_ID_PATTERN.test(value),
       );
 
       if (!hasIds) {
@@ -248,8 +249,9 @@ export default function Playlists() {
 
         const emails = normalized.map((value) => {
           if (typeof value !== "string") return null;
-          if (emailPattern.test(value)) return value.toLowerCase();
-          if (objectIdPattern.test(value)) return userById.get(value) || value;
+          if (EMAIL_PATTERN.test(value)) return value.toLowerCase();
+          if (OBJECT_ID_PATTERN.test(value))
+            return userById.get(value) || value;
           return value;
         });
 
@@ -259,7 +261,7 @@ export default function Playlists() {
         return extractSharedEmails({ sharedWith: normalized });
       }
     },
-    [emailPattern, extractSharedEmails, getSharedList, objectIdPattern],
+    [extractSharedEmails, getSharedList],
   );
 
   const isSharedWithUser = useCallback(
@@ -581,7 +583,7 @@ export default function Playlists() {
           <img src="/back.svg" alt="Voltar" className="img-hover" />
         </button>
         <Title>Minhas Playlists</Title>
-        <button className="btn playlist-primary" onClick={handleOpenCreate}>
+        <button className="btn adicionar-primary" onClick={handleOpenCreate}>
           Criar Nova Playlist
         </button>
       </UsersHeader>
@@ -667,8 +669,13 @@ export default function Playlists() {
           <h3>Criar Playlist</h3>
 
           <div>
-            <label>Nome da Playlist</label>
-            <Input name="nome" required />
+            <label htmlFor="create-playlist-nome">Nome da Playlist</label>
+            <Input
+              id="create-playlist-nome"
+              name="nome"
+              required
+              placeholder="Nome da Playlist"
+            />
           </div>
 
           <div>
@@ -681,9 +688,12 @@ export default function Playlists() {
           </div>
 
           <div>
-            <label>Compartilhar com (emails)</label>
+            <label htmlFor="create-share-input">
+              Compartilhar com (emails)
+            </label>
             <ShareInputRow>
               <Input
+                id="create-share-input"
                 type="text"
                 placeholder="email@exemplo.com"
                 value={createShareInput}
@@ -747,6 +757,7 @@ export default function Playlists() {
                     <span>{email}</span>
                     <button
                       type="button"
+                      aria-label={`Remover ${email}`}
                       onClick={() =>
                         removeEmailFromList(email, setCreateShareEmails)
                       }
@@ -759,10 +770,7 @@ export default function Playlists() {
             )}
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" className="btn">
-              Salvar
-            </button>
+          <div className="modal-actions">
             <button
               type="button"
               className="btn btn-danger"
@@ -776,6 +784,9 @@ export default function Playlists() {
             >
               Cancelar
             </button>
+            <button type="submit" className="btn">
+              Salvar
+            </button>
           </div>
         </ModalBox>
       )}
@@ -786,8 +797,13 @@ export default function Playlists() {
           <h3>Editar Playlist</h3>
 
           <div>
-            <label>Nome da Playlist</label>
-            <Input name="nome" defaultValue={chosen.nome} required />
+            <label htmlFor="edit-playlist-nome">Nome da Playlist</label>
+            <Input
+              id="edit-playlist-nome"
+              name="nome"
+              defaultValue={chosen.nome}
+              required
+            />
           </div>
 
           <div>
@@ -802,10 +818,7 @@ export default function Playlists() {
             </CifrasGrid>
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" className="btn">
-              Salvar
-            </button>
+          <div className="modal-actions">
             <button
               type="button"
               className="btn btn-danger"
@@ -815,6 +828,9 @@ export default function Playlists() {
               }}
             >
               Cancelar
+            </button>
+            <button type="submit" className="btn">
+              Salvar
             </button>
           </div>
         </ModalBox>
@@ -826,9 +842,10 @@ export default function Playlists() {
           <h3>Compartilhar “{shareTarget.nome}”</h3>
 
           <div>
-            <label>Emails</label>
+            <label htmlFor="share-input">Emails</label>
             <ShareInputRow>
               <Input
+                id="share-input"
                 type="text"
                 placeholder="email@exemplo.com"
                 value={shareInput}
@@ -900,6 +917,7 @@ export default function Playlists() {
                         canRemove && (
                           <button
                             type="button"
+                            aria-label={`Remover compartilhamento de ${email}`}
                             onClick={() => handleUnshare(email)}
                           >
                             ×
@@ -919,6 +937,7 @@ export default function Playlists() {
                     <span>{email}</span>
                     <button
                       type="button"
+                      aria-label={`Remover ${email}`}
                       onClick={() => removeEmailFromList(email, setShareEmails)}
                     >
                       ×
@@ -929,10 +948,7 @@ export default function Playlists() {
             )}
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" className="btn">
-              Compartilhar
-            </button>
+          <div className="modal-actions">
             <button
               type="button"
               className="btn btn-danger"
@@ -947,6 +963,9 @@ export default function Playlists() {
             >
               Cancelar
             </button>
+            <button type="submit" className="btn">
+              Compartilhar
+            </button>
           </div>
         </ModalBox>
       )}
@@ -955,12 +974,21 @@ export default function Playlists() {
       {modalDelete && chosen && (
         <ModalDelete>
           <h3>Excluir “{chosen.nome}”?</h3>
-          <div>
-            <button onClick={handleDelete} className="btn btn-danger">
-              Excluir
-            </button>
-            <button className="btn" onClick={() => setModalDelete(false)}>
+          <p>Essa ação é irreversível e removerá a playlist permanentemente.</p>
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setModalDelete(false)}
+            >
               Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="btn btn-danger"
+            >
+              Excluir
             </button>
           </div>
         </ModalDelete>

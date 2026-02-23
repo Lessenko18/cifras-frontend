@@ -33,6 +33,7 @@ export default function VerCifra() {
   const [modalDelete, setModalDelete] = useState(false);
   const [escolhidos, setEscolhidos] = useState([]);
   const [categorias, setCategorias] = useState([]);
+  const [categoriaQuery, setCategoriaQuery] = useState("");
   const [part1, setPart1] = useState("");
   const [part2, setPart2] = useState("");
   const [scrolling, setScrolling] = useState(false);
@@ -109,15 +110,26 @@ export default function VerCifra() {
     lista = lista.filter((i) => i._id != item._id);
     setEscolhidos(lista);
   }
-  async function handleSearch(e) {
-    var response = {};
-    if (e.target.value.trim() == "") {
-      setItems([]);
+  useEffect(() => {
+    const query = categoriaQuery.trim();
+
+    if (!query) {
+      setCategorias([]);
       return;
     }
-    response = await searchCategoria(e.target.value);
-    setCategorias(response.data);
-  }
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await searchCategoria(query);
+        setCategorias(response.data || []);
+      } catch (err) {
+        console.error(err);
+        setCategorias([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [categoriaQuery]);
 
   async function handleDeleteCifra() {
     try {
@@ -139,21 +151,33 @@ export default function VerCifra() {
     <VerCifraContainer className={part1 != "" && "partes"}>
       <UsersHeader>
         <Velocimetro>
-          <button onClick={() => setVelocity((v) => Math.min(9, v + 2))}>
+          <button
+            type="button"
+            aria-label="Diminuir velocidade da rolagem"
+            onClick={() => setVelocity((v) => Math.min(9, v + 2))}
+          >
             -
           </button>
-          <button onClick={interruptor}>
+          <button
+            type="button"
+            aria-label="Iniciar ou pausar rolagem"
+            onClick={interruptor}
+          >
             {scrolling ? (
               <img src="/pause.svg" alt="pause" />
             ) : (
               <img src="/pause.svg" alt="play" />
             )}
           </button>
-          <button onClick={() => setVelocity((v) => Math.max(1, v - 2))}>
+          <button
+            type="button"
+            aria-label="Aumentar velocidade da rolagem"
+            onClick={() => setVelocity((v) => Math.max(1, v - 2))}
+          >
             +
           </button>
         </Velocimetro>
-        <button onClick={() => navigate(-1)}>
+        <button type="button" aria-label="Voltar" onClick={() => navigate(-1)}>
           <img
             src="/back.svg"
             alt="Voltar"
@@ -163,10 +187,18 @@ export default function VerCifra() {
         </button>
         <Title>{cifra.nome}</Title>
         <div className="btns-header">
-          <button onClick={() => setUpdate(!update)}>
+          <button
+            type="button"
+            aria-label="Editar cifra"
+            onClick={() => setUpdate(!update)}
+          >
             <img src="/update.svg" alt="Update" title="editar" />
           </button>
-          <button onClick={() => setModalDelete(!modalDelete)}>
+          <button
+            type="button"
+            aria-label="Excluir cifra"
+            onClick={() => setModalDelete(!modalDelete)}
+          >
             <img src="/delete.svg" alt="Delete" title="Excluir" />
           </button>
         </div>
@@ -204,12 +236,14 @@ export default function VerCifra() {
                   escolhidos.map((item) => (
                     <p key={item._id}>
                       {item.nome}
-                      <span
+                      <button
+                        type="button"
                         className="remove"
+                        aria-label={`Remover categoria ${item.nome}`}
                         onClick={() => removeSelect(item)}
                       >
                         X
-                      </span>
+                      </button>
                     </p>
                   ))}
               </GuardaEscolhidos>
@@ -217,11 +251,36 @@ export default function VerCifra() {
               <Input
                 type="text"
                 placeholder="Pesquisar a categoria"
-                onChange={(e) => handleSearch(e)}
+                value={categoriaQuery}
+                aria-label="Pesquisar categoria"
+                onChange={(e) => setCategoriaQuery(e.target.value)}
               />
+              {categoriaQuery && (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    setCategoriaQuery("");
+                    setCategorias([]);
+                  }}
+                >
+                  Limpar filtro
+                </button>
+              )}
               {categorias.length > 0 &&
                 categorias.map((item) => (
-                  <p key={item._id} onClick={() => handleSelect(item)}>
+                  <p
+                    key={item._id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleSelect(item)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleSelect(item);
+                      }
+                    }}
+                  >
                     {item.nome}
                   </p>
                 ))}
@@ -239,18 +298,24 @@ export default function VerCifra() {
       {/* MODAL DELETE  */}
       {modalDelete && (
         <ModalDelete>
-          <h3>Deseja excluir “{cifra.nome}”?</h3>
-          <div>
-            <button onClick={handleDeleteCifra} className="btn btn-danger">
-              Excluir
-            </button>
+          <h3>Excluir “{cifra.nome}”?</h3>
+          <p>Essa ação é irreversível e removerá a cifra permanentemente.</p>
+          <div className="modal-actions">
             <button
+              type="button"
               className="btn"
               onClick={() => {
                 setModalDelete(false);
               }}
             >
               Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteCifra}
+              className="btn btn-danger"
+            >
+              Excluir
             </button>
           </div>
         </ModalDelete>

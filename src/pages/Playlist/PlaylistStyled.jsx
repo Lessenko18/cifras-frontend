@@ -5,6 +5,10 @@ export const Page = styled.section`
   width: 100%;
   margin: 0 auto 50px;
   font-size: 14px;
+
+  > header {
+    margin-bottom: 12px;
+  }
 `;
 
 export const Title = styled.h1`
@@ -77,7 +81,7 @@ export const Card = styled.article`
     align-items: center;
     color: #6b7280;
     font-weight: 500;
-    margin: 0 0 16px;
+    margin: 12px 0 16px;
     max-width: calc(100% - 40px);
     align-self: flex-start;
     justify-content: flex-start;
@@ -238,6 +242,14 @@ export const ModalBox = styled.form`
 
   div {
     display: grid;
+  }
+
+  .modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
   }
 
   .playlist-mult h3 {

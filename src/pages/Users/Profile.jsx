@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ProfileContainer,
+  BackRow,
   Card,
   Avatar,
   Field,
@@ -190,6 +191,12 @@ export default function Profile() {
 
   return (
     <ProfileContainer>
+      <BackRow>
+        <button type="button" onClick={() => navigate(-1)}>
+          <img src="/back.svg" alt="Voltar" className="img-hover" />
+        </button>
+      </BackRow>
+
       <Card onSubmit={handleSave}>
         <Avatar>
           {avatarSrc ? (

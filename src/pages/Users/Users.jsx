@@ -130,7 +130,7 @@ export default function Users() {
         </button>
         <Title>Usuários</Title>
         <button
-          className="btn user-btn"
+          className="btn adicionar-primary"
           onClick={() => {
             setCreateUser(!createUser);
             setModalEdit(false);
@@ -176,10 +176,7 @@ export default function Users() {
             <input type="checkbox" name="level" id="level" />
             <label htmlFor="level">ADM</label>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" className="btn">
-              Cadastrar
-            </button>
+          <div className="modal-actions">
             <button
               type="button"
               className="btn btn-danger"
@@ -187,18 +184,20 @@ export default function Users() {
             >
               Cancelar
             </button>
+            <button type="submit" className="btn">
+              Cadastrar
+            </button>
           </div>
         </ModalUser>
       )}
       {/* MODAL DELETE */}
       {modalDelete && chosenUser && (
         <ModalDelete>
-          <h3>Deseja excluir {chosenUser.name || chosenUser.nome}?</h3>
+          <h3>Excluir “{chosenUser.name || chosenUser.nome}”?</h3>
+          <p>Essa ação é irreversível e removerá o usuário permanentemente.</p>
           <div>
-            <button onClick={handleDeleteUser} className="btn btn-danger">
-              Excluir
-            </button>
             <button
+              type="button"
               className="btn"
               onClick={() => {
                 setModalDelete(false);
@@ -206,6 +205,13 @@ export default function Users() {
               }}
             >
               Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteUser}
+              className="btn btn-danger"
+            >
+              Excluir
             </button>
           </div>
         </ModalDelete>
@@ -250,10 +256,7 @@ export default function Users() {
             />
             <label htmlFor="level_edit">ADM</label>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="submit" className="btn">
-              Salvar
-            </button>
+          <div className="modal-actions">
             <button
               type="button"
               className="btn btn-danger"
@@ -263,6 +266,9 @@ export default function Users() {
               }}
             >
               Cancelar
+            </button>
+            <button type="submit" className="btn">
+              Salvar
             </button>
           </div>
         </ModalEdit>

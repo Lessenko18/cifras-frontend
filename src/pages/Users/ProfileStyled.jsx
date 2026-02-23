@@ -1,10 +1,20 @@
 import styled from "styled-components";
 
 export const ProfileContainer = styled.section`
-  max-width: 900px;
+  max-width: 1200px;
   width: 100%;
-  margin: 40px auto;
+  margin: 24px auto;
   padding: 0 20px;
+`;
+
+export const BackRow = styled.div`
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+
+  button {
+    max-width: fit-content;
+  }
 `;
 
 export const Card = styled.form`
@@ -15,6 +25,9 @@ export const Card = styled.form`
   display: grid;
   gap: 20px;
   border: 1px solid #000;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
 
   .info {
     display: grid;

@@ -34,58 +34,6 @@ export const UsersHeader = styled.header`
     margin: 0;
   }
 
-  .btn.cifra-btn {
-    white-space: nowrap;
-  }
-
-  .btn.user-btn,
-  .btn.category-btn,
-  .btn.playlist-primary {
-    white-space: nowrap;
-  }
-
-  .btn.playlist-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, #6b5cff, #5a4ad9);
-    color: #fff;
-    font-weight: 700;
-    box-shadow: 0 6px 14px rgba(107, 92, 255, 0.3);
-    cursor: pointer;
-    transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
-  }
-
-  .btn.playlist-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(107, 92, 255, 0.35);
-  }
-
-  @media only screen and (max-width: 700px) {
-    .btn.cifra-btn,
-    .btn.user-btn,
-    .btn.category-btn,
-    .btn.playlist-primary {
-      padding: 4px 10px;
-      font-size: 14px;
-    }
-  }
-
-  @media only screen and (max-width: 420px) {
-    .btn.cifra-btn,
-    .btn.user-btn,
-    .btn.category-btn,
-    .btn.playlist-primary {
-      padding: 2px 8px;
-      font-size: 12px;
-    }
-  }
-
   gap: 20px;
 
   .btns-header {
@@ -129,6 +77,15 @@ export const ModalUser = styled.form`
   div {
     display: grid;
     gap: 3px;
+  }
+
+  .modal-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
   }
 
   h3 {
@@ -201,6 +158,15 @@ export const ModalEdit = styled.form`
   div {
     display: grid;
     gap: 10px;
+  }
+
+  .modal-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
   }
 
   #inputLevel {

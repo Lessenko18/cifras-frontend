@@ -25,6 +25,7 @@ export default function Home() {
 
   // Filtros
   const [searchNome, setSearchNome] = useState("");
+  const [debouncedSearchNome, setDebouncedSearchNome] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
 
   // Paginação
@@ -33,7 +34,9 @@ export default function Home() {
 
   //  FILTRO
   const cifrasFiltradas = cifras.filter((cifra) => {
-    const matchNome = normalize(cifra.nome).includes(normalize(searchNome));
+    const matchNome = normalize(cifra.nome).includes(
+      normalize(debouncedSearchNome),
+    );
 
     const matchCategoria =
       !categoriaFiltro || cifra.categorias?.includes(categoriaFiltro);
@@ -44,7 +47,15 @@ export default function Home() {
   // Reset de página ao filtrar
   useEffect(() => {
     setCurrentPage(0);
-  }, [searchNome, categoriaFiltro]);
+  }, [debouncedSearchNome, categoriaFiltro]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchNome(searchNome);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchNome]);
 
   // Paginação baseada no FILTRO
   const pages = Math.ceil(cifrasFiltradas.length / itensPerpage);
@@ -84,11 +95,13 @@ export default function Home() {
           type="text"
           placeholder="Pesquisar música"
           value={searchNome}
+          aria-label="Pesquisar música"
           onChange={(e) => setSearchNome(e.target.value)}
         />
 
         <FilterSelect
           value={categoriaFiltro}
+          aria-label="Filtrar por categoria"
           onChange={(e) => setCategoriaFiltro(e.target.value)}
         >
           <option value="">Todas as categorias</option>
@@ -98,6 +111,20 @@ export default function Home() {
             </option>
           ))}
         </FilterSelect>
+
+        {(searchNome || categoriaFiltro) && (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              setSearchNome("");
+              setDebouncedSearchNome("");
+              setCategoriaFiltro("");
+            }}
+          >
+            Limpar filtro
+          </button>
+        )}
       </FiltersContainer>
 
       {/* LISTAGEM */}
