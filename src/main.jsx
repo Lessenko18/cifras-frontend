@@ -20,6 +20,7 @@ import Playlist from "./pages/Playlist/Playlist.jsx";
 import VerCifra from "./pages/VerCifra/VerCifra.jsx";
 import { Toaster } from "react-hot-toast";
 import VerPlaylist from "./pages/VerPlaylist/VerPlaylist.jsx";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 function AdminRoute({ children }) {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -106,5 +107,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <GlobalStyled />
     <RouterProvider router={router} />
     <Toaster />
+    <SpeedInsights />
   </React.StrictMode>,
 );
