@@ -1,13 +1,16 @@
 import styled from "styled-components";
 
 export const Background = styled.section`
+  position: relative;
+  isolation: isolate;
   width: 100vw;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: #0f0f0f;
 
-  background-image: url("/public/padrao-de-notas-musicais-em-fundo-preto_1017-32303.avif");
+  background-image: url("/padrao-de-notas-musicais-em-fundo-preto_1017-32303.avif");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
