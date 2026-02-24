@@ -1,5 +1,6 @@
 import api from "./api";
 import { normalizeAvatarUrl } from "../utils/normalizeAvatarUrl";
+import { getPublicAppUrl } from "../utils/getPublicAppUrl";
 
 // LOGIN
 export async function loginRequest(email, password, remember = false) {
@@ -41,8 +42,13 @@ export async function loginRequest(email, password, remember = false) {
 // ESQUECI MINHA SENHA
 export async function forgotPasswordService(email) {
   try {
+    const appUrl = getPublicAppUrl();
+
     const response = await api.post("/auth/forgot-password", {
       email,
+      appUrl,
+      frontendUrl: appUrl,
+      resetPasswordUrl: appUrl ? `${appUrl}/reset-password` : undefined,
     });
 
     return response.data;

@@ -30,6 +30,7 @@ import { UsersHeader } from "../Users/UsersStyled";
 import toast from "react-hot-toast";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
 import { getUsersService, searchUsersService } from "../../service/userService";
+import { getPublicAppUrl } from "../../utils/getPublicAppUrl";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
@@ -389,6 +390,12 @@ export default function Playlists() {
       }
 
       data.cifras = chosenCifras.map((c) => c._id);
+      const appUrl = getPublicAppUrl();
+
+      if (appUrl) {
+        data.appUrl = appUrl;
+        data.frontendUrl = appUrl;
+      }
 
       if (createShareEmails.length > 0) {
         data.sharedWithEmails = createShareEmails;
@@ -536,8 +543,19 @@ export default function Playlists() {
       }
 
       try {
+        const appUrl = getPublicAppUrl();
+        const playlistViewUrl = appUrl
+          ? `${appUrl}/home/playlists/${shareTarget._id}/ver`
+          : undefined;
+
         await sharePlaylistService(shareTarget._id, {
           emails: shareEmails,
+          appUrl,
+          frontendUrl: appUrl,
+          playlistBasePath: appUrl ? `${appUrl}/home/playlists` : undefined,
+          playlistUrl: playlistViewUrl,
+          playlistViewUrl,
+          frontendPlaylistUrl: playlistViewUrl,
         });
         toast.success("Playlist compartilhada com sucesso!");
         setShareModalOpen(false);
