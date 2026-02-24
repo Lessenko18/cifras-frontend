@@ -548,7 +548,7 @@ export default function Playlists() {
           ? `${appUrl}/home/playlists/${shareTarget._id}/ver`
           : undefined;
 
-        await sharePlaylistService(shareTarget._id, {
+        const response = await sharePlaylistService(shareTarget._id, {
           emails: shareEmails,
           appUrl,
           frontendUrl: appUrl,
@@ -557,7 +557,26 @@ export default function Playlists() {
           playlistViewUrl,
           frontendPlaylistUrl: playlistViewUrl,
         });
-        toast.success("Playlist compartilhada com sucesso!");
+        const result = response?.data || {};
+        const failedEmails = Array.isArray(result?.failedEmails)
+          ? result.failedEmails
+          : Array.isArray(result?.notSent)
+            ? result.notSent
+            : Array.isArray(result?.failed)
+              ? result.failed
+              : [];
+
+        if (failedEmails.length > 0) {
+          toast.error(
+            result?.message ||
+              `Alguns e-mails não foram enviados: ${failedEmails.join(", ")}`,
+          );
+        } else {
+          toast.success(
+            result?.message || "Playlist compartilhada com sucesso!",
+          );
+        }
+
         setShareModalOpen(false);
         setShareTarget(null);
         setSharedExistingEmails([]);
