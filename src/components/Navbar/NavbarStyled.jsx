@@ -17,7 +17,7 @@ export const NavContainer = styled.nav`
     filter: drop-shadow(0 2px 2px #0000007b);
   }
 
-  @media only screen and (max-width: 400px) {
+  @media only screen and (max-width: 420px) {
     flex-direction: column;
     align-items: center;
     gap: 10px;
@@ -38,7 +38,7 @@ export const NavContent = styled.div`
     padding-top: 0;
   }
 
-  @media only screen and (max-width: 400px) {
+  @media only screen and (max-width: 420px) {
     width: 100%;
     justify-content: center;
     gap: 10px;
@@ -68,7 +68,7 @@ export const UserArea = styled.div`
     object-fit: cover;
   }
 
-  @media only screen and (max-width: 400px) {
+  @media only screen and (max-width: 420px) {
     .user-btn {
       gap: 6px;
     }

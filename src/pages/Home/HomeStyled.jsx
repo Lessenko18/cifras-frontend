@@ -3,13 +3,12 @@ import styled from "styled-components";
 export const HomeContainer = styled.section`
   max-width: 1200px;
   width: 100%;
-  margin: 0 auto;
+  margin: 0 auto 50px;
 
   display: grid;
-  gap: 28px;
+  gap: 38px;
   grid-template-columns: repeat(3, 1fr);
-  justify-items: center;
-  border-radius: 12px;
+  justify-items: stretch;
 
   @media only screen and (max-width: 924px) {
     grid-template-columns: repeat(2, 1fr);
@@ -21,7 +20,6 @@ export const HomeContainer = styled.section`
 
   a {
     width: 100%;
-    max-width: 350px;
     transition: 0.3s;
     border-radius: 8px;
     display: flex;
@@ -37,16 +35,18 @@ export const HomeContainer = styled.section`
 export const AnCifra = styled.article`
   background: #fff;
   border: 1px solid #e5e7eb;
-  padding: 22px 24px;
+  padding: 10px 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 
-  max-width: 350px;
+  max-width: 340px;
   width: 100%;
-  min-height: 170px;
+  justify-self: center;
+  min-height: 120px;
 
   border-radius: 12px;
+  overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   transition: 0.3s;
 
@@ -59,8 +59,8 @@ export const AnCifra = styled.article`
 
   > div > h2 {
     min-height: 56px;
-    padding: 14px 24px;
-    margin: -22px -24px 0;
+    padding: 14px 20px;
+    margin: -10px -20px 0;
     background: #e9e3ff;
     color: #4c3fb3;
     font-weight: 400;
@@ -155,6 +155,12 @@ export const FiltersContainer = styled.div`
   &:focus-within {
     box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.35);
   }
+
+  @media (max-width: 700px) {
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
 `;
 
 export const FilterInput = styled.input`
@@ -182,6 +188,13 @@ export const FilterInput = styled.input`
   &::placeholder {
     color: #94a3b8;
   }
+
+  @media (max-width: 700px) {
+    min-width: 100%;
+    height: 40px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
 `;
 
 export const FilterSelect = styled.select`
@@ -204,5 +217,12 @@ export const FilterSelect = styled.select`
     outline: none;
     border-color: #000;
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+  }
+
+  @media (max-width: 700px) {
+    min-width: 100%;
+    height: 40px;
+    font-size: 0.9rem;
+    border-radius: 12px;
   }
 `;

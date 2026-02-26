@@ -10,7 +10,7 @@ export const Background = styled.section`
   align-items: center;
   background-color: #0f0f0f;
 
-  background-image: url("/padrao-de-notas-musicais-em-fundo-preto_1017-32303.avif");
+  background-image: url("/login.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

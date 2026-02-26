@@ -219,7 +219,7 @@ select:focus-visible {
   gap: 8px;
   white-space: nowrap;
   padding: 10px 18px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
   background: linear-gradient(135deg, #6b5cff, #5a4ad9);
   color: #fff;
@@ -241,17 +241,20 @@ select:focus-visible {
 
 @media only screen and (max-width: 700px) {
   .btn.adicionar-primary {
-    padding: 4px 10px;
+    padding: 8px 10px;
     font-size: 14px;
     white-space: nowrap;
+    border-radius: 5px;
+
   }
 }
 
-@media only screen and (max-width: 420px) {
+@media only screen and (max-width: 430px) {
   .btn.adicionar-primary {
-    padding: 2px 8px;
+    padding: 6px 9px;
     font-size: 12px;
     white-space: nowrap;
+    border-radius: 5px;
   }
 }
 .btn-danger {
@@ -265,6 +268,38 @@ select:focus-visible {
   transition: 0.3s;
   &:hover {
     filter: drop-shadow(0 0 3px var(--main));
+  }
+}
+
+img[src$="back.svg"],
+img[alt="Voltar"] {
+  width: 38px !important;
+  height: 38px !important;
+  padding: 7px;
+  border-radius: 8px;
+  display: block;
+}
+
+button:hover img[src$="back.svg"],
+button:hover img[alt="Voltar"] {
+  background: #f1f5f9;
+}
+
+@media only screen and (max-width: 700px) {
+  img[src$="back.svg"],
+  img[alt="Voltar"] {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 8px;
+  }
+}
+
+@media only screen and (max-width: 420px) {
+  img[src$="back.svg"],
+  img[alt="Voltar"] {
+    width: 34px !important;
+    height: 34px !important;
+    padding: 9px;
   }
 }
 .btn-success {

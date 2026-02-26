@@ -28,6 +28,12 @@ export const FiltersContainer = styled.div`
   &:focus-within {
     box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.35);
   }
+
+  @media (max-width: 700px) {
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
 `;
 
 export const FilterInput = styled.input`
@@ -55,6 +61,13 @@ export const FilterInput = styled.input`
   &::placeholder {
     color: #94a3b8;
   }
+
+  @media (max-width: 700px) {
+    min-width: 100%;
+    height: 40px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
 `;
 
 export const FilterSelect = styled.select`
@@ -78,14 +91,21 @@ export const FilterSelect = styled.select`
     border-color: #000;
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
   }
+
+  @media (max-width: 700px) {
+    min-width: 100%;
+    height: 40px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
 `;
 
 // Grid das cifras
 export const CifrasBody = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
-  justify-items: center;
+  gap: 38px;
+  justify-items: stretch;
 
   @media (max-width: 924px) {
     grid-template-columns: repeat(2, 1fr);
@@ -97,7 +117,6 @@ export const CifrasBody = styled.div`
 
   a {
     width: 100%;
-    max-width: 300px;
     border-radius: 8px;
     display: flex;
     background: transparent;
@@ -114,22 +133,24 @@ export const CifrasBody = styled.div`
 export const AnCifra = styled.article`
   background: #fff;
   border: 1px solid #e5e7eb;
-  padding: 10px 24px;
+  padding: 10px 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 300px;
   width: 100%;
+  max-width: 340px;
+  justify-self: center;
   min-height: 120px;
   border-radius: 12px;
+  overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   transition: 0.3s;
   justify-content: flex-start;
 
   h2 {
     min-height: 56px;
-    padding: 14px 24px;
-    margin: -22px -24px 0;
+    padding: 14px 20px;
+    margin: -10px -20px 0;
     background: #e9e3ff;
     color: #4c3fb3;
     font-size: 18px;

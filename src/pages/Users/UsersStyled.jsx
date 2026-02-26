@@ -21,6 +21,7 @@ export const UsersHeader = styled.header`
     justify-self: center;
     text-align: center;
     margin: 0;
+    min-width: 0;
   }
 
   > :last-child {
@@ -35,6 +36,15 @@ export const UsersHeader = styled.header`
   }
 
   gap: 20px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  @media (max-width: 430px) {
+    gap: 6px;
+  }
 
   .btns-header {
     display: flex;

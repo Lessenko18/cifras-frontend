@@ -9,6 +9,32 @@ export const Page = styled.section`
   > header {
     margin-bottom: 12px;
   }
+
+  > header > button:first-child {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+  }
+
+  > header > button:first-child img {
+    width: 28px;
+    height: 28px;
+  }
+
+  @media (max-width: 700px) {
+    > header > button:first-child {
+      width: 46px;
+      height: 46px;
+    }
+
+    > header > button:first-child img {
+      width: 30px;
+      height: 30px;
+    }
+  }
 `;
 
 export const Title = styled.h1`
@@ -18,6 +44,17 @@ export const Title = styled.h1`
   font-weight: 800;
   margin: 0 0 24px;
   color: #0f172a;
+
+  @media (max-width: 700px) {
+    font-size: 22px;
+  }
+
+  @media (max-width: 530px) {
+    font-size: 18px;
+  }
+   @media (max-width: 360px) {
+    font-size: 14px;
+  }
 `;
 
 export const CardsGrid = styled.div`
