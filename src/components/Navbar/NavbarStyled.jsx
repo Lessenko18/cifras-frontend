@@ -3,15 +3,20 @@ import styled from "styled-components";
 export const NavContainer = styled.nav`
   max-width: 1200px;
   width: 100%;
-  margin: 15px auto 40px;
+  margin: 15px auto 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 20px;
-  background: linear-gradient(90deg, #000000 0%, #2f2a7a 45%, #5a4ad9 100%);
-  padding: 0 20px;
+  background-image: url("/fundoviolao.PNG");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center 42%;
+  padding: 10px 20px;
   border-radius: 10px;
+  overflow: hidden;
+
   #logo {
     max-width: 250px;
     filter: drop-shadow(0 2px 2px #0000007b);

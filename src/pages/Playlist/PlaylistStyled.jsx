@@ -52,7 +52,7 @@ export const Title = styled.h1`
   @media (max-width: 530px) {
     font-size: 18px;
   }
-   @media (max-width: 360px) {
+  @media (max-width: 360px) {
     font-size: 14px;
   }
 `;
@@ -68,6 +68,52 @@ export const CardsGrid = styled.div`
   }
   @media (max-width: 760px) {
     grid-template-columns: 1fr;
+  }
+`;
+
+export const EmptyState = styled.div`
+  margin: 12px auto 0;
+  max-width: 520px;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 28px 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  text-align: center;
+
+  .icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 12px;
+    opacity: 0.9;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    color: #111827;
+  }
+
+  p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .empty-action {
+    margin-top: 16px;
+  }
+
+  @media (max-width: 700px) {
+    h3 {
+      font-size: 18px;
+    }
+
+    p {
+      font-size: 14px;
+    }
   }
 `;
 

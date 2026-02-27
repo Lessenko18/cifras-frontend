@@ -4,6 +4,7 @@ import {
   Page,
   Title,
   CardsGrid,
+  EmptyState,
   Card,
   CifrasGrid,
   ModalBox,
@@ -37,9 +38,11 @@ const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
 
 export default function Playlists() {
   const [playlists, setPlaylists] = useState([]);
+  const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true);
   const [cifras, setCifras] = useState([]);
 
   const [isCreating, setIsCreating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [modalEdit, setModalEdit] = useState(false);
   const [modalDelete, setModalDelete] = useState(false);
   const [chosen, setChosen] = useState(null);
@@ -174,6 +177,8 @@ export default function Playlists() {
 
   const getOwnerId = useCallback((playlist) => {
     return (
+      playlist?.criador?._id ||
+      playlist?.criador ||
       playlist?.ownerId ||
       playlist?.userId ||
       playlist?.usuarioId ||
@@ -292,11 +297,14 @@ export default function Playlists() {
   );
 
   const fetchPlaylists = useCallback(async () => {
+    setIsLoadingPlaylists(true);
     try {
       const res = await getPlaylistsService();
       setPlaylists(res.data || []);
     } catch {
       toast.error("Falha ao carregar playlists.");
+    } finally {
+      setIsLoadingPlaylists(false);
     }
   }, []);
 
@@ -453,17 +461,9 @@ export default function Playlists() {
   );
 
   const handleDelete = useCallback(async () => {
-    if (!chosen?._id) return;
+    if (!chosen?._id || isDeleting) return;
 
-    const ownerId = getOwnerId(chosen);
-    const isOwner = ownerId ? ownerId === currentUserId : false;
-    const isAdm = currentUser?.level === "ADM";
-    if (!isOwner && !isAdm) {
-      toast.error("Somente o criador ou ADM pode excluir a playlist.");
-      setModalDelete(false);
-      setChosen(null);
-      return;
-    }
+    setIsDeleting(true);
 
     try {
       await deletePlaylistService(chosen._id);
@@ -472,13 +472,19 @@ export default function Playlists() {
       setChosen(null);
       await fetchPlaylists();
     } catch (err) {
-      const message = err.response?.data?.message || "Erro ao excluir playlist";
+      const backendMessage = err.response?.data?.message;
+      const fallbackMessage = err.response?.data;
+      const message =
+        (typeof backendMessage === "string" && backendMessage) ||
+        (typeof fallbackMessage === "string" && fallbackMessage) ||
+        err.message ||
+        "Erro ao excluir playlist";
 
       toast.error(message);
-
-      toast.error("Falha ao excluir playlist.");
+    } finally {
+      setIsDeleting(false);
     }
-  }, [chosen, currentUser?.level, currentUserId, fetchPlaylists, getOwnerId]);
+  }, [chosen, fetchPlaylists, isDeleting]);
 
   const handleOpenShare = useCallback(
     async (playlist) => {
@@ -625,80 +631,97 @@ export default function Playlists() {
         </button>
       </UsersHeader>
 
-      <CardsGrid>
-        {[...playlists]
-          .sort((a, b) => a.nome.localeCompare(b.nome))
-          .map((pl) => {
-            const ownerId = getOwnerId(pl);
-            const shared = isSharedWithUser(pl);
-            const isOwner = ownerId ? ownerId === currentUserId : !shared;
-            const isAdm = currentUser?.level === "ADM";
-            const canShare = isOwner || isAdm;
-            const canEdit = isOwner || isAdm || shared;
-            const canDelete = isOwner || isAdm;
-            const showCornerActions = canShare || canEdit || canDelete;
-            const displayName = stripMusicEmoji(pl.nome);
+      {!isLoadingPlaylists && playlists.length === 0 ? (
+        <EmptyState>
+          <img src="/music.svg" alt="" aria-hidden="true" className="icon" />
+          <h3>Você ainda não tem playlists</h3>
+          <p>
+            Crie sua primeira playlist para organizar suas músicas favoritas.
+          </p>
+          <button
+            type="button"
+            className="btn adicionar-primary empty-action"
+            onClick={handleOpenCreate}
+          >
+            Criar primeira playlist
+          </button>
+        </EmptyState>
+      ) : (
+        <CardsGrid>
+          {[...playlists]
+            .sort((a, b) => a.nome.localeCompare(b.nome))
+            .map((pl) => {
+              const ownerId = getOwnerId(pl);
+              const shared = isSharedWithUser(pl);
+              const isOwner = ownerId ? ownerId === currentUserId : !shared;
+              const isAdm = currentUser?.level === "ADM";
+              const canShare = isOwner || isAdm;
+              const canEdit = isOwner || isAdm || shared;
+              const canDelete = isOwner || isAdm;
+              const showCornerActions = canShare || canEdit || canDelete;
+              const displayName = stripMusicEmoji(pl.nome);
 
-            return (
-              <Card key={pl._id}>
-                <div className="playlist-title">
-                  <img src="/music.svg" alt="" aria-hidden="true" />
-                  <span>{displayName}</span>
-                </div>
-                <div className="playlist-count">
-                  <span>{pl.cifras?.length || 0} música(s)</span>
-                </div>
-                {showCornerActions && (
-                  <div className="share-actions">
-                    {canShare && (
-                      <IconButton
-                        type="button"
-                        onClick={() => handleOpenShare(pl)}
-                        aria-label="Compartilhar"
-                        title="Compartilhar"
-                      >
-                        <img src="/share.svg" alt="Compartilhar" />
-                      </IconButton>
-                    )}
-                    {(canEdit || canDelete) && (
-                      <div className="icon-actions">
-                        {canEdit && (
-                          <IconButton
-                            type="button"
-                            onClick={() => handleClickEdit(pl)}
-                            aria-label="Editar"
-                            title="Editar"
-                          >
-                            <img src="/update.svg" alt="Editar" />
-                          </IconButton>
-                        )}
-                        {canDelete && (
-                          <IconButton
-                            type="button"
-                            onClick={() => handleOpenDelete(pl)}
-                            aria-label="Excluir"
-                            title="Excluir"
-                          >
-                            <img src="/delete.svg" alt="Excluir" />
-                          </IconButton>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-                <div className="actions">
-                  <button
-                    className="playlist-action"
-                    onClick={() => navigate(`/home/playlists/${pl._id}/ver`)}
-                  >
+              return (
+                <Card key={pl._id}>
+                  <div className="playlist-title">
                     <img src="/music.svg" alt="" aria-hidden="true" />
-                    <span>Ver Músicas</span>
-                  </button>
-                </div>
-              </Card>
-            );
-          })}
-      </CardsGrid>
+                    <span>{displayName}</span>
+                  </div>
+                  <div className="playlist-count">
+                    <span>{pl.cifras?.length || 0} música(s)</span>
+                  </div>
+                  {showCornerActions && (
+                    <div className="share-actions">
+                      {canShare && (
+                        <IconButton
+                          type="button"
+                          onClick={() => handleOpenShare(pl)}
+                          aria-label="Compartilhar"
+                          title="Compartilhar"
+                        >
+                          <img src="/share.svg" alt="Compartilhar" />
+                        </IconButton>
+                      )}
+                      {(canEdit || canDelete) && (
+                        <div className="icon-actions">
+                          {canEdit && (
+                            <IconButton
+                              type="button"
+                              onClick={() => handleClickEdit(pl)}
+                              aria-label="Editar"
+                              title="Editar"
+                            >
+                              <img src="/update.svg" alt="Editar" />
+                            </IconButton>
+                          )}
+                          {canDelete && (
+                            <IconButton
+                              type="button"
+                              onClick={() => handleOpenDelete(pl)}
+                              aria-label="Excluir"
+                              title="Excluir"
+                            >
+                              <img src="/delete.svg" alt="Excluir" />
+                            </IconButton>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div className="actions">
+                    <button
+                      className="playlist-action"
+                      onClick={() => navigate(`/home/playlists/${pl._id}/ver`)}
+                    >
+                      <img src="/music.svg" alt="" aria-hidden="true" />
+                      <span>Ver Músicas</span>
+                    </button>
+                  </div>
+                </Card>
+              );
+            })}
+        </CardsGrid>
+      )}
 
       {/* CREATE */}
       {isCreating && (
@@ -1024,8 +1047,9 @@ export default function Playlists() {
               type="button"
               onClick={handleDelete}
               className="btn btn-danger"
+              disabled={isDeleting}
             >
-              Excluir
+              {isDeleting ? "Excluindo..." : "Excluir"}
             </button>
           </div>
         </ModalDelete>

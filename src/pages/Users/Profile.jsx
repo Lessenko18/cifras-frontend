@@ -168,7 +168,7 @@ export default function Profile() {
       window.dispatchEvent(new Event("userUpdated"));
       setUser(finalUser);
 
-      toast.success("✅ Perfil atualizado com sucesso!");
+      toast.success("Perfil atualizado com sucesso!");
       setEditing(false);
       setForm((s) => ({ ...s, password: "", avatarFile: null }));
       setPreview(null);
