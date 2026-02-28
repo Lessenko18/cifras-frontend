@@ -122,7 +122,11 @@ export function Navbar() {
                   </div>
                 </div>
 
-                <Link to="/home/profile" onClick={() => setOpenMenu(false)}>
+                <Link
+                  className="perfil-btn"
+                  to="/home/profile"
+                  onClick={() => setOpenMenu(false)}
+                >
                   Perfil
                 </Link>
                 <button className="logout-btn" onClick={handleLogout}>

@@ -15,7 +15,7 @@ export const NavContainer = styled.nav`
   background-position: center 42%;
   padding: 10px 20px;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible;
 
   #logo {
     max-width: 250px;
@@ -53,8 +53,32 @@ export const NavContent = styled.div`
 
 export const UserArea = styled.div`
   position: relative;
+  z-index: 1000;
   display: flex;
   align-items: center;
+
+  .perfil-btn {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--dark);
+    text-decoration: none;
+    font-weight: 600;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.15s ease;
+
+    &:hover {
+      background-color: var(--gray);
+      color: var(--main);
+      border-color: var(--gray);
+      transform: translateY(-1px);
+    }
+  }
 
   .user-btn {
     background: transparent;
@@ -112,7 +136,7 @@ export const UserArea = styled.div`
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     padding: 12px;
     min-width: 290px;
-    z-index: 200;
+    z-index: 2000;
     display: flex;
     flex-direction: column;
     gap: 8px;
