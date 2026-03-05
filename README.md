@@ -1,168 +1,112 @@
-# Cifras Caritas - Fullstack Project
+# Cifras Caritas - Frontend
 
-Este repositorio contem a solucao completa para gestao de cifras e playlists da Caritas, composta por um Frontend em React 19 e um Backend REST em Node.js.
+Aplicação web para gestão de cifras e playlists da Caritas.
 
-## Visao geral
+> Este repositório contém o **frontend** (React + Vite). O backend REST é um projeto separado.
 
-O projeto foi desenvolvido para facilitar a organizacao de repertorios musicais, permitindo o gerenciamento de cifras com visualizacao otimizada, controle de acesso por niveis (ADM/USER) e compartilhamento de listas entre usuarios.
+## Visão geral
 
-## Frontend (React)
+O sistema foi desenvolvido para facilitar a organização de repertórios musicais, com controle de acesso por nível (ADM/USER), visualização otimizada de cifras e compartilhamento de playlists.
 
-Aplicacao web moderna construida com Vite e voltada para a experiencia do usuario musico.
+## Funcionalidades
 
-### Funcionalidades
+- Autenticação completa: login, cadastro, recuperação e redefinição de senha.
+- Visualização de cifras com suporte a duas colunas (separador `!!!`).
+- Autoscroll com ajuste de velocidade para execução musical.
+- Gestão de playlists com compartilhamento por e-mail e busca dinâmica de usuários.
+- Perfil do usuário com edição de dados e avatar.
+- Painel administrativo (ADM): CRUD de categorias e usuários.
 
-- Autenticacao completa: login, cadastro e recuperacao de senha.
-- Visualizacao de cifras com suporte a duas colunas (usando o separador !!!).
-- Autoscroll com ajuste de velocidade para leitura durante a execucao musical.
-- Gestao de playlists: criar, editar e compartilhar por email com busca dinamica de usuarios.
-- Perfil do usuario com edicao de dados e upload de avatar integrado ao S3.
-- Painel administrativo: CRUD de categorias e usuarios (restrito a perfis ADM).
+## Stack
 
-### Tecnologias
-
-- React 19 / Vite
+- React 19 + Vite 7
 - React Router DOM
 - Styled Components
-- Axios (interceptors para tratamento de token JWT)
+- Axios (interceptors com JWT)
 - React Hot Toast
 
-### Rotas da aplicacao
+## Pré-requisitos
 
-- / e /login - Login
-- /signup - Cadastro
-- /forgot-password - Recuperacao de senha
-- /home - Home
-- /home/profile - Perfil
-- /home/cifras - Cifras
-- /home/cifra/:id - Visualizar cifra
-- /home/playlists - Playlists
-- /home/playlists/:id/ver - Visualizar playlist
-- /home/users - Usuarios (ADM)
-- /home/categorias - Categorias (ADM)
+- Node.js 20+
+- npm 10+
+- Backend da API rodando (padrão: `http://localhost:3000`)
 
-O controle de acesso para rotas ADM e feito via localStorage com user.level === "ADM".
+## Variáveis de ambiente (frontend)
 
-### Observacoes de uso
-
-- O token JWT e armazenado no localStorage e enviado automaticamente pelo interceptor do Axios.
-- Se a API retornar 401, o usuario e deslogado e redirecionado para /login.
-- Para separar a cifra em duas colunas, use !!! no campo de observacao.
-
-## Backend (Node.js)
-
-API REST que fornece todos os recursos necessarios para o funcionamento do ecossistema.
-
-### Tecnologias
-
-- Runtime: Node.js + Express
-- Banco de dados: MongoDB (Mongoose)
-- Autenticacao: JWT (JSON Web Tokens)
-- Storage: integracao com AWS S3 para imagens
-
-### Endpoints principais
-
-Autenticacao
-
-- POST /auth/login
-- POST /auth/register
-- GET /auth/me
-- POST /auth/forgot-password
-
-Usuarios
-
-- GET /user/
-- POST /user/create
-- PATCH /user/update/:id
-- DELETE /user/delete/:id
-- GET /user/search?q=
-
-Categorias
-
-- GET /categoria/
-- GET /categoria/:id
-- POST /categoria/create
-- PATCH /categoria/update/:id
-- DELETE /categoria/delete/:id
-- GET /categoria/search?nome=
-
-Cifras
-
-- GET /cifra/
-- GET /cifra/:id
-- POST /cifra/create
-- PATCH /cifra/update/:id
-- DELETE /cifra/delete/:id
-- GET /cifra/search?nome=
-
-Playlists
-
-- GET /playlist/
-- GET /playlist/:id
-- GET /playlist/:id/view
-- POST /playlist/create
-- PATCH /playlist/update/:id
-- DELETE /playlist/delete/:id
-- POST /playlist/:id/share
-- DELETE /playlist/:id/share
-
-Upload de avatar (S3)
-
-- POST /user/get-presigned-url (opcional, quando usar upload direto)
-- POST /user/upload-avatar (upload via backend, usado atualmente)
-
-## Configuracao e instalacao
-
-### Configuracao do ambiente
-
-Crie um arquivo .env na pasta do backend com as seguintes variaveis. Nao inclua valores reais no README e nao commite o .env no repositorio.
+Crie um arquivo `.env` na raiz deste projeto:
 
 ```env
-PORT=3000
-DATABASE_URL=
-JWT_SECRET=
-AWS_REGION=
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_S3_BUCKET_NAME=
+VITE_API_BASE_URL=http://localhost:3000
+VITE_PUBLIC_APP_URL=http://localhost:5173
 ```
 
-### Como rodar o backend
+Observações:
 
-1. Instale as dependencias:
+- `VITE_API_BASE_URL`: URL base da API consumida pelo Axios.
+- `VITE_PUBLIC_APP_URL`: URL pública do frontend usada para gerar link de recuperação de senha.
+- Alternativa legada suportada: `VITE_APP_BASE_URL`.
 
-```bash
-npm install
-```
-
-2. Rode em modo desenvolvimento:
-
-```bash
-npm run dev
-```
-
-O servidor sobe por padrao em http://localhost:3000.
-
-### Como rodar o frontend
-
-No diretorio do frontend:
+## Instalação e execução
 
 ```bash
 npm install
 npm run dev
 ```
+
+Aplicação local: `http://localhost:5173`
+
+## Scripts
+
+- `npm run dev` - inicia ambiente de desenvolvimento.
+- `npm run build` - gera build de produção.
+- `npm run preview` - preview local da build.
+- `npm run lint` - executa ESLint.
+
+## Rotas da aplicação
+
+- `/` e `/login` - Login
+- `/signup` - Cadastro
+- `/forgot-password` - Recuperação de senha
+- `/reset-password?token=...` - Redefinição de senha
+- `/home` - Home
+- `/home/profile` - Perfil
+- `/home/cifras` - Cifras
+- `/home/cifra/:id` - Visualizar cifra
+- `/home/playlists` - Playlists
+- `/home/playlists/:id/ver` - Visualizar playlist
+- `/home/users` - Usuários (ADM)
+- `/home/categorias` - Categorias (ADM)
+
+## Integração com API (resumo)
+
+Autenticação:
+
+- `POST /auth/login`
+- `POST /auth/register`
+- `GET /auth/me`
+- `POST /auth/forgot-password`
+- `POST /auth/reset-password`
+
+O frontend também consome endpoints de usuários, categorias, cifras e playlists.
+
+## Comportamentos importantes
+
+- O token JWT é salvo no `localStorage` e enviado automaticamente pelo interceptor do Axios.
+- Em resposta `401`, o app remove sessão local e redireciona para `/login`.
+- Controle de acesso de rotas ADM feito por `user.level === "ADM"`.
+
+## Deploy (Vercel)
+
+O projeto já possui `vercel.json` com rewrite para SPA:
+
+- todas as rotas são redirecionadas para `/`.
 
 ## Problemas comuns
 
-- CORS: garanta que o backend permita requests do frontend.
-- 401 constante: verifique se o token esta sendo retornado no login.
-- Upload de avatar falha: confira configuracao de S3 no backend.
+- CORS: backend deve permitir o domínio do frontend.
+- `401` frequente: validar token retornado no login e validade JWT.
+- Link de recuperação inválido: validar `VITE_PUBLIC_APP_URL` e rota `/reset-password`.
 
-## Roadmap
+## Licença
 
-- Permitir edicao de cifras apenas pelo autor ou ADM master.
-- Compartilhar cifras via checkbox (similar ao compartilhamento de playlists).
-
-## Licenca
-
-Projeto interno da Caritas. 
+Projeto interno da Caritas.

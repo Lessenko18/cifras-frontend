@@ -10,7 +10,32 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const navigate = useNavigate();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isFormValid = emailRegex.test(email.trim()) && password.length >= 6;
+  const isSubmitDisabled = !isFormValid || isSubmitting;
+
+  const getDisabledMessage = () => {
+    if (isSubmitting) {
+      return "Aguarde, estamos entrando na sua conta...";
+    }
+
+    if (!email.trim() && password.length < 6) {
+      return "Preencha o e-mail valido e uma senha com no minimo 6 caracteres.";
+    }
+
+    if (!emailRegex.test(email.trim())) {
+      return "Informe um e-mail valido para continuar.";
+    }
+
+    if (password.length < 6) {
+      return "A senha precisa ter no minimo 6 caracteres.";
+    }
+
+    return "Preencha os dados corretamente para continuar.";
+  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -19,18 +44,22 @@ export default function Login() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (isSubmitting) {
+      return;
+    }
+
     if (!email || !password) {
       toast.error("Por favor, preencha todos os campos.");
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       toast.error("Por favor, insira um email válido.");
       return;
     }
 
     try {
+      setIsSubmitting(true);
       const user = await loginRequest(email, password, remember);
 
       if (!user) {
@@ -42,6 +71,8 @@ export default function Login() {
       navigate("/home");
     } catch (error) {
       toast.error(error || "Erro ao realizar login.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -68,6 +99,7 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isSubmitting}
             />
             <FaUser className="icon icon-left" />
           </div>
@@ -82,6 +114,7 @@ export default function Login() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isSubmitting}
             />
             <FaLock className="icon icon-left" />
             <div className="icon icon-right" onClick={togglePasswordVisibility}>
@@ -97,14 +130,19 @@ export default function Login() {
                 name="remember"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
+                disabled={isSubmitting}
               />{" "}
               Lembrar-me
             </label>
             <Link to="/forgot-password">Esqueci minha senha</Link>
           </div>
 
-          <button type="submit">Entrar</button>
-
+          <button type="submit" disabled={isSubmitDisabled}>
+            {isSubmitting ? "Entrando..." : "Entrar"}
+          </button>
+          {isSubmitDisabled && (
+            <p className="validation-message">{getDisabledMessage()}</p>
+          )}
           <div className="signup-link">
             <p>Não tem uma conta?</p>
             <Link to="/signup">Cadastre-se</Link>

@@ -182,6 +182,20 @@ export const LoginContainer = styled.div`
       background: linear-gradient(90deg, #7c3aed 0%, #2563eb 100%);
       transform: scale(1.02);
     }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+      transform: none;
+      background: linear-gradient(90deg, #7b7b7b 0%, #5f5f5f 100%);
+    }
+  }
+
+  .validation-message {
+    margin: 10px 8px 0;
+    font-size: 13px;
+    color: #ffe082;
+    text-align: center;
   }
 
   .signup-link {
