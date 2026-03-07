@@ -4,6 +4,17 @@ export const VerCifraContainer = styled.section`
   max-width: 1200px;
   width: 100%;
   padding: 0 10px;
+
+  .ver-cifra-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ver-cifra-back {
+    margin-left: -6px;
+  }
+
   &.partes {
     max-width: 1300px;
   }

@@ -124,9 +124,7 @@ export default function Cifras() {
     getCategorias();
   }, [getCifras, getCategorias]);
 
-  /* ======================
-     CREATE CIFRA
-  ====================== */
+  /* CREATE CIFRA */
 
   const handleCreateCifra = useCallback(
     async (event) => {

@@ -165,7 +165,13 @@ export const ModalEdit = styled.form`
   left: 50%;
   z-index: 10;
   transform: translate(-50%, -50%);
-  div {
+
+  h3 {
+    margin: 0 0 10px;
+    padding-right: 70px;
+  }
+
+  > div {
     display: grid;
     gap: 10px;
   }
@@ -182,5 +188,34 @@ export const ModalEdit = styled.form`
   #inputLevel {
     display: flex;
     align-items: center;
+  }
+  .user-foto {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 10px;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: block;
+    margin: 0;
+    border: 1px solid #000;
+  }
+
+  .user-foto-fallback {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    border: 1px solid #000;
+    background: #e8ecf2;
+    color: #1f2d3d;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
   }
 `;

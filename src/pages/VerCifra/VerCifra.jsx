@@ -150,41 +150,48 @@ export default function VerCifra() {
   return (
     <VerCifraContainer className={part1 != "" && "partes"}>
       <UsersHeader>
-        <Velocimetro>
+        <div className="ver-cifra-left">
+          <Velocimetro>
+            <button
+              type="button"
+              aria-label="Diminuir velocidade da rolagem"
+              onClick={() => setVelocity((v) => Math.min(9, v + 2))}
+            >
+              -
+            </button>
+            <button
+              type="button"
+              aria-label="Iniciar ou pausar rolagem"
+              onClick={interruptor}
+            >
+              {scrolling ? (
+                <img src="/pause.svg" alt="pause" />
+              ) : (
+                <img src="/pause.svg" alt="play" />
+              )}
+            </button>
+            <button
+              type="button"
+              aria-label="Aumentar velocidade da rolagem"
+              onClick={() => setVelocity((v) => Math.max(1, v - 2))}
+            >
+              +
+            </button>
+          </Velocimetro>
           <button
             type="button"
-            aria-label="Diminuir velocidade da rolagem"
-            onClick={() => setVelocity((v) => Math.min(9, v + 2))}
+            aria-label="Voltar"
+            className="ver-cifra-back"
+            onClick={() => navigate(-1)}
           >
-            -
+            <img
+              src="/back.svg"
+              alt="Voltar"
+              title="Voltar"
+              className="img-hover"
+            />
           </button>
-          <button
-            type="button"
-            aria-label="Iniciar ou pausar rolagem"
-            onClick={interruptor}
-          >
-            {scrolling ? (
-              <img src="/pause.svg" alt="pause" />
-            ) : (
-              <img src="/pause.svg" alt="play" />
-            )}
-          </button>
-          <button
-            type="button"
-            aria-label="Aumentar velocidade da rolagem"
-            onClick={() => setVelocity((v) => Math.max(1, v - 2))}
-          >
-            +
-          </button>
-        </Velocimetro>
-        <button type="button" aria-label="Voltar" onClick={() => navigate(-1)}>
-          <img
-            src="/back.svg"
-            alt="Voltar"
-            title="Voltar"
-            className="img-hover"
-          />
-        </button>
+        </div>
         <Title>{cifra.nome}</Title>
         <div className="btns-header">
           <button

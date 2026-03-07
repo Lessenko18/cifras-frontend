@@ -18,6 +18,7 @@ import { Input } from "../../components/Input/Input";
 import { useNavigate } from "react-router-dom";
 import { Title } from "../Playlist/PlaylistStyled";
 import toast from "react-hot-toast";
+import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -25,7 +26,21 @@ export default function Users() {
   const [modalDelete, setModalDelete] = useState(false);
   const [chosenUser, setChosenUser] = useState(null);
   const [modalEdit, setModalEdit] = useState(false);
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
   const navigate = useNavigate();
+
+  const chosenUserName =
+    chosenUser?.name || chosenUser?.nome || chosenUser?.email || "Usuário";
+  const chosenUserAvatar = normalizeAvatarUrl(
+    chosenUser?.avatarUrl || chosenUser?.avatar || chosenUser?.photo || "",
+  );
+  const chosenUserInitials = chosenUserName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 
   async function getUsers() {
     const response = await getUsersService();
@@ -107,6 +122,7 @@ export default function Users() {
 
   function editClick(user) {
     setChosenUser(user);
+    setAvatarLoadError(false);
     setModalEdit(true);
     setModalDelete(false);
     setCreateUser(false);
@@ -221,6 +237,18 @@ export default function Users() {
       {modalEdit && chosenUser && (
         <ModalEdit key={chosenUser._id} onSubmit={handleEditUser}>
           <h3>Editar Usuário</h3>
+          {chosenUserAvatar && !avatarLoadError ? (
+            <img
+              src={chosenUserAvatar}
+              alt={chosenUserName}
+              className="user-foto"
+              onError={() => setAvatarLoadError(true)}
+            />
+          ) : (
+            <div className="user-foto-fallback" aria-label={chosenUserName}>
+              {chosenUserInitials || "U"}
+            </div>
+          )}
           <div>
             <label htmlFor="name">Nome do Usuário</label>
             <Input
