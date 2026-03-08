@@ -17,6 +17,10 @@ export const NavContainer = styled.nav`
   border-radius: 10px;
   overflow: visible;
 
+  @media only screen and (max-width: 450px) {
+    border-radius: 0;
+  }
+
   #logo {
     max-width: 250px;
     filter: drop-shadow(0 2px 2px #0000007b);

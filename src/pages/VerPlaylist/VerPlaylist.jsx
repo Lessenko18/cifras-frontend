@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getPlaylistViewService } from "../../service/playlistService";
+import {
+  getPlaylistByIdService,
+  getPlaylistViewService,
+} from "../../service/playlistService";
 import {
   Page,
   Header,
@@ -24,6 +27,46 @@ export default function VerPlaylist() {
   const navigate = useNavigate();
   const [musicaAtiva, setMusicaAtiva] = useState(0);
   const [sumarioVisivel, setSumarioVisivel] = useState(true);
+
+  function getMusicId(item) {
+    if (!item) return null;
+    return item._id || item.id || item.cifraId || item.musicaId || null;
+  }
+
+  function applySavedOrder(viewData, playlistData) {
+    const sourceMusicas = Array.isArray(viewData?.musicas)
+      ? viewData.musicas
+      : [];
+    const sourceOrder = Array.isArray(playlistData?.cifras)
+      ? playlistData.cifras
+      : [];
+
+    if (sourceMusicas.length === 0 || sourceOrder.length === 0) {
+      return viewData;
+    }
+
+    const orderMap = new Map();
+    sourceOrder.forEach((entry, index) => {
+      const id = getMusicId(entry);
+      if (id) orderMap.set(String(id), index);
+    });
+
+    if (orderMap.size === 0) return viewData;
+
+    const sortedMusicas = [...sourceMusicas].sort((a, b) => {
+      const idA = String(getMusicId(a) || "");
+      const idB = String(getMusicId(b) || "");
+      const posA = orderMap.has(idA)
+        ? orderMap.get(idA)
+        : Number.MAX_SAFE_INTEGER;
+      const posB = orderMap.has(idB)
+        ? orderMap.get(idB)
+        : Number.MAX_SAFE_INTEGER;
+      return posA - posB;
+    });
+
+    return { ...viewData, musicas: sortedMusicas };
+  }
 
   function interruptor() {
     setScrolling((s) => !s);
@@ -64,8 +107,11 @@ export default function VerPlaylist() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await getPlaylistViewService(id);
-        setData(res);
+        const [viewData, playlistData] = await Promise.all([
+          getPlaylistViewService(id),
+          getPlaylistByIdService(id),
+        ]);
+        setData(applySavedOrder(viewData, playlistData));
       } catch (e) {
         setErr("Não foi possível carregar a playlist.");
       } finally {

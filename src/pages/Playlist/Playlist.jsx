@@ -868,12 +868,16 @@ export default function Playlists() {
 
           <div>
             <label>Músicas</label>
+            <small style={{ color: "#475569" }}>
+              Arraste as músicas para definir a ordem da playlist.
+            </small>
             <CifrasGrid>
               <MultSeletor
                 className="playlist-mult"
                 tipo="cifra"
                 escolhidos={chosenCifras}
                 addItem={updateCifra}
+                allowReorder
               />
             </CifrasGrid>
           </div>
