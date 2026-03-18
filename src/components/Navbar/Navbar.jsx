@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { NavContainer, NavContent, UserArea } from "./NavbarStyled";
-import { logout } from "../../service/auth.service";
+import { getMeRequest, logout } from "../../service/auth.service";
 import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
 
 export function Navbar() {
@@ -18,6 +18,7 @@ export function Navbar() {
 
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const menuRef = useRef(null);
 
   const initials = user?.name
@@ -40,10 +41,33 @@ export function Navbar() {
   }, [openMenu]);
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function syncAdminLevel() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        if (isMounted) setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const authenticatedUser = await getMeRequest();
+        if (!isMounted) return;
+
+        const level = String(authenticatedUser?.level || "").toUpperCase();
+        setIsAdmin(level === "ADM");
+      } catch {
+        if (isMounted) setIsAdmin(false);
+      }
+    }
+
+    syncAdminLevel();
+
     function syncUser() {
       const stored = JSON.parse(localStorage.getItem("user"));
       if (!stored) {
         setUser(stored);
+        setIsAdmin(false);
         return;
       }
 
@@ -52,6 +76,8 @@ export function Navbar() {
         avatar: normalizeAvatarUrl(stored.avatar),
         photo: normalizeAvatarUrl(stored.photo),
       });
+
+      syncAdminLevel();
     }
     JSON.parse(localStorage.getItem("user"))?.avatar;
 
@@ -59,6 +85,7 @@ export function Navbar() {
     window.addEventListener("storage", syncUser);
 
     return () => {
+      isMounted = false;
       window.removeEventListener("userUpdated", syncUser);
       window.removeEventListener("storage", syncUser);
     };
@@ -82,7 +109,7 @@ export function Navbar() {
           <Link to="/home/cifras">Cifras</Link>
           <Link to="/home/playlists">Playlists</Link>
 
-          {user?.level === "ADM" && (
+          {isAdmin && (
             <>
               <Link to="/home/users">Usuários</Link>
               <Link to="/home/categorias">Categorias</Link>

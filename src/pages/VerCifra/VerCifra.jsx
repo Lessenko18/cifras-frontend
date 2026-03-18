@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   deleteCifraService,
   editCifraService,
   getCifraById,
 } from "../../service/cifraService";
+import { getMeRequest } from "../../service/auth.service";
 import { UsersHeader } from "../Users/UsersStyled";
 import {
   CifraBody,
@@ -29,6 +30,8 @@ import { Velocimetro } from "../VerPlaylist/VerPlaylistStyled";
 export default function VerCifra() {
   const { id } = useParams();
   const [cifra, setCifra] = useState({});
+  const [authenticatedUser, setAuthenticatedUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [update, setUpdate] = useState(false);
   const [modalDelete, setModalDelete] = useState(false);
   const [escolhidos, setEscolhidos] = useState([]);
@@ -41,9 +44,78 @@ export default function VerCifra() {
   const intervalRef = useRef(null);
   const navigate = useNavigate();
 
+  const ownerId = useMemo(() => {
+    return (
+      cifra?.criador?._id ||
+      cifra?.criador ||
+      cifra?.ownerId ||
+      cifra?.userId ||
+      cifra?.usuarioId ||
+      cifra?.criadoPorId ||
+      cifra?.createdById ||
+      cifra?.owner?._id ||
+      cifra?.user?._id ||
+      cifra?.usuario?._id ||
+      cifra?.criadoPor?._id ||
+      cifra?.createdBy?._id ||
+      cifra?.createdBy ||
+      null
+    );
+  }, [cifra]);
+
+  const canManageCifra = useMemo(() => {
+    if (isAdmin) return true;
+
+    const userId = authenticatedUser?._id || authenticatedUser?.id;
+    if (!userId || !ownerId) return false;
+
+    return String(userId) === String(ownerId);
+  }, [authenticatedUser, isAdmin, ownerId]);
+
   function interruptor() {
     setScrolling((s) => !s);
   }
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function syncAuthenticatedUser() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        if (isMounted) {
+          setAuthenticatedUser(null);
+          setIsAdmin(false);
+        }
+        return;
+      }
+
+      try {
+        const user = await getMeRequest();
+        if (!isMounted) return;
+
+        setAuthenticatedUser(user);
+        setIsAdmin(String(user?.level || "").toUpperCase() === "ADM");
+      } catch {
+        if (isMounted) {
+          setAuthenticatedUser(null);
+          setIsAdmin(false);
+        }
+      }
+    }
+
+    syncAuthenticatedUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!canManageCifra) {
+      setUpdate(false);
+      setModalDelete(false);
+    }
+  }, [canManageCifra]);
 
   useEffect(() => {
     clearInterval(intervalRef.current);
@@ -84,6 +156,13 @@ export default function VerCifra() {
 
   async function handleUpdateCifra(event) {
     event.preventDefault();
+
+    if (!canManageCifra) {
+      toast.error("Você não tem permissão para editar esta cifra.");
+      setUpdate(false);
+      return;
+    }
+
     const formdata = new FormData(event.target);
     const data = Object.fromEntries(formdata.entries());
     data.categorias = escolhidos.map((c) => c._id);
@@ -132,6 +211,12 @@ export default function VerCifra() {
   }, [categoriaQuery]);
 
   async function handleDeleteCifra() {
+    if (!canManageCifra) {
+      toast.error("Você não tem permissão para excluir esta cifra.");
+      setModalDelete(false);
+      return;
+    }
+
     try {
       await deleteCifraService(id);
       toast.success("Cifra excluída com sucesso!");
@@ -193,26 +278,28 @@ export default function VerCifra() {
           </button>
         </div>
         <Title>{cifra.nome}</Title>
-        <div className="btns-header">
-          <button
-            type="button"
-            aria-label="Editar cifra"
-            onClick={() => setUpdate(!update)}
-          >
-            <img src="/update.svg" alt="Update" title="editar" />
-          </button>
-          <button
-            type="button"
-            aria-label="Excluir cifra"
-            onClick={() => setModalDelete(!modalDelete)}
-          >
-            <img src="/delete.svg" alt="Delete" title="Excluir" />
-          </button>
-        </div>
+        {canManageCifra && (
+          <div className="btns-header">
+            <button
+              type="button"
+              aria-label="Editar cifra"
+              onClick={() => setUpdate(!update)}
+            >
+              <img src="/update.svg" alt="Update" title="editar" />
+            </button>
+            <button
+              type="button"
+              aria-label="Excluir cifra"
+              onClick={() => setModalDelete(!modalDelete)}
+            >
+              <img src="/delete.svg" alt="Delete" title="Excluir" />
+            </button>
+          </div>
+        )}
       </UsersHeader>
       {/* UPDATE */}
       <CifraBody>
-        {!update ? (
+        {!update || !canManageCifra ? (
           <CifraContent className={part1 != "" && "partes"}>
             <a target="_blank" href={cifra.link}>
               Acesse a cifra original

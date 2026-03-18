@@ -2,6 +2,16 @@ import api from "./api";
 import { normalizeAvatarUrl } from "../utils/normalizeAvatarUrl";
 import { getPublicAppUrl } from "../utils/getPublicAppUrl";
 
+function normalizeUser(user) {
+  if (!user) return user;
+
+  return {
+    ...user,
+    avatar: normalizeAvatarUrl(user.avatar),
+    photo: normalizeAvatarUrl(user.photo),
+  };
+}
+
 // LOGIN
 export async function loginRequest(email, password, remember = false) {
   try {
@@ -21,12 +31,7 @@ export async function loginRequest(email, password, remember = false) {
       },
     });
 
-    const user = meResponse.data;
-
-    if (user) {
-      user.avatar = normalizeAvatarUrl(user.avatar);
-      user.photo = normalizeAvatarUrl(user.photo);
-    }
+    const user = normalizeUser(meResponse.data);
 
     localStorage.setItem("user", JSON.stringify(user));
 
@@ -37,6 +42,12 @@ export async function loginRequest(email, password, remember = false) {
       "Erro ao fazer login. Verifique suas credenciais."
     );
   }
+}
+
+export async function getMeRequest() {
+  const response = await api.get("/auth/me");
+  const user = response?.data?.user || response?.data;
+  return normalizeUser(user);
 }
 
 // ESQUECI MINHA SENHA

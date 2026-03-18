@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { useEffect, useState } from "react";
 import {
   RouterProvider,
   createBrowserRouter,
@@ -21,11 +22,55 @@ import VerCifra from "./pages/VerCifra/VerCifra.jsx";
 import { Toaster } from "react-hot-toast";
 import VerPlaylist from "./pages/VerPlaylist/VerPlaylist.jsx";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { getMeRequest } from "./service/auth.service";
 
 function AdminRoute({ children }) {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  if (!user || user.level !== "ADM") {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkAdminAccess() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        if (isMounted) {
+          setIsAdmin(false);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const user = await getMeRequest();
+        const level = String(user?.level || "").toUpperCase();
+
+        if (isMounted) {
+          setIsAdmin(level === "ADM");
+        }
+      } catch {
+        if (isMounted) {
+          setIsAdmin(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    checkAdminAccess();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!isAdmin) {
     return <Navigate to="/home" replace />;
   }
 

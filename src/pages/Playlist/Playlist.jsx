@@ -32,6 +32,7 @@ import toast from "react-hot-toast";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
 import { getUsersService, searchUsersService } from "../../service/userService";
 import { getPublicAppUrl } from "../../utils/getPublicAppUrl";
+import { getMeRequest } from "../../service/auth.service";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
@@ -56,19 +57,49 @@ export default function Playlists() {
   const [createShareEmails, setCreateShareEmails] = useState([]);
   const [createShareInput, setCreateShareInput] = useState("");
   const [createShareSuggestions, setCreateShareSuggestions] = useState([]);
+  const [authenticatedUser, setAuthenticatedUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const shareSearchTimer = useRef(null);
   const createSearchTimer = useRef(null);
 
   const navigate = useNavigate();
-  const currentUser = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user")) || {};
-    } catch {
-      return {};
+  const currentUserId = authenticatedUser?._id || authenticatedUser?.id || null;
+  const currentUserEmail = authenticatedUser?.email?.toLowerCase() || "";
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function syncAdminAccess() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        if (isMounted) {
+          setAuthenticatedUser(null);
+          setIsAdmin(false);
+        }
+        return;
+      }
+
+      try {
+        const authenticatedUser = await getMeRequest();
+        if (!isMounted) return;
+        setAuthenticatedUser(authenticatedUser);
+        setIsAdmin(
+          String(authenticatedUser?.level || "").toUpperCase() === "ADM",
+        );
+      } catch {
+        if (isMounted) {
+          setAuthenticatedUser(null);
+          setIsAdmin(false);
+        }
+      }
     }
+
+    syncAdminAccess();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
-  const currentUserId = currentUser?._id || currentUser?.id || null;
-  const currentUserEmail = currentUser?.email?.toLowerCase() || "";
 
   /* ======================
      MAP DE CIFRAS (opcional)
@@ -654,7 +685,7 @@ export default function Playlists() {
               const ownerId = getOwnerId(pl);
               const shared = isSharedWithUser(pl);
               const isOwner = ownerId ? ownerId === currentUserId : !shared;
-              const isAdm = currentUser?.level === "ADM";
+              const isAdm = isAdmin;
               const canShare = isOwner || isAdm;
               const canEdit = isOwner || isAdm || shared;
               const canDelete = isOwner || isAdm;
@@ -974,7 +1005,7 @@ export default function Playlists() {
                       const isOwner = ownerId
                         ? ownerId === currentUserId
                         : false;
-                      const isAdm = currentUser?.level === "ADM";
+                      const isAdm = isAdmin;
                       const canRemove = isOwner || isAdm;
 
                       return (

@@ -8,9 +8,13 @@ import {
   Field,
   Actions,
 } from "./ProfileStyled";
-import { logout } from "../../service/auth.service";
+import { getMeRequest, logout } from "../../service/auth.service";
 import { editUserService } from "../../service/userService";
-import { uploadToS3ViaBackend } from "../../service/s3Service";
+import {
+  MAX_AVATAR_SIZE_MB,
+  getImageSizeError,
+  uploadToS3ViaBackend,
+} from "../../service/s3Service";
 import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
 import toast from "react-hot-toast";
 
@@ -55,6 +59,15 @@ export default function Profile() {
     const { name, value, files } = e.target;
     if (name === "avatar") {
       const file = files && files[0] ? files[0] : null;
+
+      const imageSizeError = getImageSizeError(file);
+      if (imageSizeError) {
+        toast.error(imageSizeError);
+        e.target.value = "";
+        setForm((s) => ({ ...s, avatarFile: null }));
+        setPreview(user.avatar || user.photo || null);
+        return;
+      }
       setForm((s) => ({ ...s, avatarFile: file }));
 
       if (file) {
@@ -94,7 +107,8 @@ export default function Profile() {
     setIsSaving(true);
 
     try {
-      const id = user._id || user.id;
+      const authenticatedUser = await getMeRequest();
+      const id = authenticatedUser?._id || authenticatedUser?.id;
 
       if (!id) {
         toast.error("ID do usuário não encontrado");
@@ -283,7 +297,9 @@ export default function Profile() {
             </div>
 
             <div>
-              <label>Avatar (Foto de Perfil)</label>
+              <label>
+                Avatar (Foto de Perfil) - Máx. {MAX_AVATAR_SIZE_MB} MB
+              </label>
               <input
                 name="avatar"
                 type="file"
