@@ -1,6 +1,6 @@
 import api from "./api";
 
-export const MAX_AVATAR_SIZE_MB = 200;
+export const MAX_AVATAR_SIZE_MB = 10;
 export const MAX_AVATAR_SIZE_BYTES = MAX_AVATAR_SIZE_MB * 1024 * 1024;
 export const ALLOWED_IMAGE_MIME_TYPES = [
   "image/jpeg",

@@ -19,6 +19,11 @@ const normalize = (text = "") =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
+const sortByNome = (a, b) =>
+  (a?.nome || "").localeCompare(b?.nome || "", "pt-BR", {
+    sensitivity: "base",
+  });
+
 export default function Home() {
   const [cifras, setCifras] = useState([]);
   const [categorias, setCategorias] = useState([]);
@@ -105,7 +110,7 @@ export default function Home() {
           onChange={(e) => setCategoriaFiltro(e.target.value)}
         >
           <option value="">Todas as categorias</option>
-          {categorias.map((cat) => (
+          {[...categorias].sort(sortByNome).map((cat) => (
             <option key={cat._id} value={cat._id}>
               {cat.nome}
             </option>
