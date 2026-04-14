@@ -100,6 +100,81 @@ export const FilterSelect = styled.select`
   }
 `;
 
+export const FilterDropdownWrapper = styled.div`
+  position: relative;
+  min-width: 200px;
+
+  @media (max-width: 700px) {
+    min-width: 100%;
+  }
+`;
+
+export const FilterDropdownTrigger = styled.button`
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all 0.2s ease;
+  text-align: left;
+
+  &:focus {
+    outline: none;
+    border-color: #000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+  }
+
+  @media (max-width: 700px) {
+    height: 40px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+`;
+
+export const FilterDropdownPanel = styled.div`
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.2);
+  z-index: 200;
+  min-width: 220px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 4px 0;
+`;
+
+export const FilterDropdownItem = styled.button`
+  width: 100%;
+  padding: 9px 16px;
+  padding-left: ${({ $indent }) => ($indent ? "32px" : "16px")};
+  text-align: left;
+  background: ${({ $active }) => ($active ? "#ede9fe" : "transparent")};
+  color: ${({ $active }) => ($active ? "#6d28d9" : "#0f172a")};
+  font-weight: ${({ $active }) => ($active ? "700" : "500")};
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    background: ${({ $active }) => ($active ? "#ede9fe" : "#f8fafc")};
+  }
+`;
+
 // Grid das cifras
 export const CifrasBody = styled.div`
   display: grid;

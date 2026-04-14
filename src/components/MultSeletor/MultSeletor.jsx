@@ -113,7 +113,14 @@ export default function MultSeletor({
                 dragIndex === index ? "dragging" : ""
               } ${dropIndex === index ? "drag-over" : ""}`.trim()}
             >
-              <span className="item-content">{item.nome}</span>
+              <span className="item-content">
+                {item.nome}
+                {tipo === "categoria" && item.parent?.nome && (
+                  <span style={{ color: "#94a3b8", fontSize: "0.8em", marginLeft: "5px" }}>
+                    ({item.parent.nome})
+                  </span>
+                )}
+              </span>
               <span className="item-actions">
                 {allowReorder && (
                   <span className="drag-handle" title="Arraste para reordenar">
@@ -143,6 +150,11 @@ export default function MultSeletor({
           onClick={() => handleSelect(item)}
         >
           {item.nome}
+          {tipo === "categoria" && item.parent?.nome && (
+            <span style={{ color: "#94a3b8", fontSize: "0.8em", marginLeft: "5px" }}>
+              ({item.parent.nome})
+            </span>
+          )}
         </p>
       ))}
     </MultSeletorContainer>

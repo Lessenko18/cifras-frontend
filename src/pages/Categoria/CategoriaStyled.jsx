@@ -39,13 +39,12 @@ export const CategoriaHeader = styled.header`
 `;
 
 export const CategoriasBody = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  justify-items: center;
-  gap: 10px;
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
 `;
 
 export const ModalCategoria = styled.form`

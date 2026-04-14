@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
 import {
   createCifraService,
@@ -16,7 +16,10 @@ import {
   PaginationInfo,
   FiltersContainer,
   FilterInput,
-  FilterSelect,
+  FilterDropdownWrapper,
+  FilterDropdownTrigger,
+  FilterDropdownPanel,
+  FilterDropdownItem,
 } from "./CifraStyled";
 import { Input } from "../../components/Input/Input";
 import { getCategoriasService } from "../../service/categoriaService";
@@ -35,6 +38,9 @@ export default function Cifras() {
   const [searchNome, setSearchNome] = useState("");
   const [debouncedSearchNome, setDebouncedSearchNome] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterExpanded, setFilterExpanded] = useState(new Set());
+  const filterRef = useRef(null);
 
   const [itensPerPage] = useState(15);
   const [currentPage, setCurrentPage] = useState(0);
@@ -55,7 +61,25 @@ export default function Cifras() {
      FILTROS
   ====================== */
 
+  const rootCategorias = useMemo(
+    () =>
+      categorias
+        .filter((c) => !c.parent)
+        .sort((a, b) => a.nome.localeCompare(b.nome)),
+    [categorias],
+  );
+
   const cifrasFiltradas = useMemo(() => {
+    const relevantIds = new Set();
+    if (categoriaFiltro) {
+      relevantIds.add(categoriaFiltro);
+      // inclui subcategorias da categoria selecionada
+      categorias.forEach((cat) => {
+        const parentId = cat.parent?._id || cat.parent;
+        if (String(parentId) === categoriaFiltro) relevantIds.add(cat._id);
+      });
+    }
+
     return cifras.filter((cifra) => {
       const matchNome = normalize(cifra.nome).includes(
         normalize(debouncedSearchNome),
@@ -64,15 +88,13 @@ export default function Cifras() {
       const matchCategoria =
         !categoriaFiltro ||
         cifra.categorias?.some((cat) => {
-          if (typeof cat === "string") return cat === categoriaFiltro;
-          if (typeof cat === "object" && cat._id)
-            return cat._id === categoriaFiltro;
-          return false;
+          const catId = typeof cat === "string" ? cat : cat?._id;
+          return relevantIds.has(catId);
         });
 
       return matchNome && matchCategoria;
     });
-  }, [cifras, debouncedSearchNome, categoriaFiltro]);
+  }, [cifras, debouncedSearchNome, categoriaFiltro, categorias]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -85,6 +107,28 @@ export default function Cifras() {
   useEffect(() => {
     setCurrentPage(0);
   }, [debouncedSearchNome, categoriaFiltro]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (filterRef.current && !filterRef.current.contains(e.target)) {
+        setFilterOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filterLabel = useMemo(() => {
+    if (!categoriaFiltro) return "Todas as categorias";
+    const cat = categorias.find((c) => c._id === categoriaFiltro);
+    if (!cat) return "Todas as categorias";
+    const hasChildren = categorias.some(
+      (c) => String(c.parent?._id || c.parent) === String(cat._id),
+    );
+    if (hasChildren) return `${cat.nome} (todas)`;
+    if (cat.parent?.nome) return `${cat.nome} · ${cat.parent.nome}`;
+    return cat.nome;
+  }, [categoriaFiltro, categorias]);
 
   /* ======================
      PAGINAÇÃO
@@ -190,18 +234,91 @@ export default function Cifras() {
           onChange={(e) => setSearchNome(e.target.value)}
         />
 
-        <FilterSelect
-          value={categoriaFiltro}
-          aria-label="Filtrar por categoria"
-          onChange={(e) => setCategoriaFiltro(e.target.value)}
-        >
-          <option value="">Todas as categorias</option>
-          {categorias.map((cat) => (
-            <option key={cat._id} value={cat._id}>
-              {cat.nome}
-            </option>
-          ))}
-        </FilterSelect>
+        <FilterDropdownWrapper ref={filterRef}>
+          <FilterDropdownTrigger
+            type="button"
+            onClick={() => setFilterOpen((o) => !o)}
+            aria-label="Filtrar por categoria"
+          >
+            <span>{filterLabel}</span>
+            <span style={{
+              fontSize: "0.7em",
+              transition: "transform 0.2s",
+              display: "inline-block",
+              transform: filterOpen ? "rotate(0deg)" : "rotate(-90deg)",
+              color: "#7c3aed",
+            }}>▼</span>
+          </FilterDropdownTrigger>
+
+          {filterOpen && (
+            <FilterDropdownPanel>
+              <FilterDropdownItem
+                $active={categoriaFiltro === ""}
+                onClick={() => { setCategoriaFiltro(""); setFilterOpen(false); }}
+              >
+                Todas as categorias
+              </FilterDropdownItem>
+
+              {rootCategorias.map((root) => {
+                const children = categorias
+                  .filter((c) => String(c.parent?._id || c.parent) === String(root._id))
+                  .sort((a, b) => a.nome.localeCompare(b.nome));
+
+                const isExpanded = filterExpanded.has(root._id);
+
+                if (children.length > 0) {
+                  return (
+                    <div key={root._id}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <FilterDropdownItem
+                          $active={categoriaFiltro === root._id}
+                          style={{ flex: 1 }}
+                          onClick={() => { setCategoriaFiltro(root._id); setFilterOpen(false); }}
+                        >
+                          {root.nome}
+                        </FilterDropdownItem>
+                        <button
+                          type="button"
+                          onClick={() => setFilterExpanded((prev) => {
+                            const next = new Set(prev);
+                            next.has(root._id) ? next.delete(root._id) : next.add(root._id);
+                            return next;
+                          })}
+                          style={{
+                            background: "none", border: "none", cursor: "pointer",
+                            padding: "0 12px", fontSize: "0.7em", color: "#7c3aed",
+                            transition: "transform 0.2s",
+                            transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)",
+                          }}
+                        >▼</button>
+                      </div>
+                      {isExpanded && children.map((child) => (
+                        <FilterDropdownItem
+                          key={child._id}
+                          $active={categoriaFiltro === child._id}
+                          $indent
+                          onClick={() => { setCategoriaFiltro(child._id); setFilterOpen(false); }}
+                        >
+                          ↳ {child.nome}
+                        </FilterDropdownItem>
+                      ))}
+                    </div>
+                  );
+                }
+
+                return (
+                  <FilterDropdownItem
+                    key={root._id}
+                    $active={categoriaFiltro === root._id}
+                    onClick={() => { setCategoriaFiltro(root._id); setFilterOpen(false); }}
+                  >
+                    {root.nome}
+                  </FilterDropdownItem>
+                );
+              })}
+            </FilterDropdownPanel>
+          )}
+        </FilterDropdownWrapper>
 
         {(searchNome || categoriaFiltro) && (
           <button
@@ -317,7 +434,16 @@ Na vida noturna`}
                   {cifra.categorias?.map((cat) => {
                     const catId = typeof cat === "string" ? cat : cat?._id;
                     const categoria = categorias.find((c) => c._id === catId);
-                    return <span key={catId}>{categoria?.nome || "—"}</span>;
+                    return (
+                      <span key={catId}>
+                        {categoria?.nome}
+                        {categoria?.parent?.nome && (
+                          <span style={{ color: "#9ca3af", fontWeight: 400, marginLeft: 3 }}>
+                            ({categoria.parent.nome})
+                          </span>
+                        )}
+                      </span>
+                    );
                   })}
                 </div>
               </AnCifra>
