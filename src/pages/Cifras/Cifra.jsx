@@ -61,6 +61,16 @@ export default function Cifras() {
      FILTROS
   ====================== */
 
+  const getCategoriaParentName = (categoria) => {
+    if (!categoria) return "";
+    if (categoria.parent?.nome) return categoria.parent.nome;
+    const parentId =
+      typeof categoria.parent === "string"
+        ? categoria.parent
+        : categoria.parent?._id;
+    return categorias.find((c) => c._id === parentId)?.nome || "";
+  };
+
   const rootCategorias = useMemo(
     () =>
       categorias
@@ -434,12 +444,13 @@ Na vida noturna`}
                   {cifra.categorias?.map((cat) => {
                     const catId = typeof cat === "string" ? cat : cat?._id;
                     const categoria = categorias.find((c) => c._id === catId);
+                    const parentName = getCategoriaParentName(categoria);
                     return (
                       <span key={catId}>
                         {categoria?.nome}
-                        {categoria?.parent?.nome && (
+                        {parentName && (
                           <span style={{ color: "#9ca3af", fontWeight: 400, marginLeft: 3 }}>
-                            ({categoria.parent.nome})
+                            ({parentName})
                           </span>
                         )}
                       </span>

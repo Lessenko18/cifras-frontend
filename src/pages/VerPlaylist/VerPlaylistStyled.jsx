@@ -72,6 +72,14 @@ export const CifraCard = styled.section`
   margin-bottom: 14px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
 `;
 
 export const TextoCifra = styled.pre`

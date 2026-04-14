@@ -11,9 +11,19 @@ import {
   CifraBody,
   CifraContent,
   ModalDelete,
+  ModalTom,
+  Overlay,
+  TomButton,
   UpdateCifra,
   VerCifraContainer,
 } from "./VerCifraStyled";
+import {
+  detectOriginalKey,
+  getKeyAtOffset,
+  getSemitonesTo,
+  NOTES_DISPLAY,
+  transposeText,
+} from "../../utils/transpose";
 import { Title } from "../Playlist/PlaylistStyled";
 import { Input } from "../../components/Input/Input";
 import TextareaAutosize from "react-textarea-autosize";
@@ -41,6 +51,8 @@ export default function VerCifra() {
   const [part2, setPart2] = useState("");
   const [scrolling, setScrolling] = useState(false);
   const [velocity, setVelocity] = useState(5);
+  const [semitones, setSemitones] = useState(0);
+  const [modalTom, setModalTom] = useState(false);
   const intervalRef = useRef(null);
   const navigate = useNavigate();
 
@@ -62,6 +74,21 @@ export default function VerCifra() {
       null
     );
   }, [cifra]);
+
+  // Tonalidade original detectada a partir do primeiro acorde da cifra
+  const originalKey = useMemo(() => detectOriginalKey(cifra.observacao), [cifra.observacao]);
+
+  // Tonalidade atual com grafia correta (sustenido ou bemol conforme a tonalidade)
+  const currentKey = useMemo(
+    () => getKeyAtOffset(originalKey, semitones),
+    [originalKey, semitones]
+  );
+
+  // Texto da cifra já transposto (calculado na renderização, sem alterar o banco)
+  const observacaoTransposta = useMemo(
+    () => transposeText(cifra.observacao, semitones),
+    [cifra.observacao, semitones]
+  );
 
   const canManageCifra = useMemo(() => {
     if (isAdmin) return true;
@@ -134,6 +161,16 @@ export default function VerCifra() {
       intervalRef.current = null;
     };
   }, [scrolling, velocity]);
+  // Persiste o tom escolhido por música no localStorage
+  useEffect(() => {
+    if (!id) return;
+    if (semitones === 0) {
+      localStorage.removeItem(`tom_${id}`);
+    } else {
+      localStorage.setItem(`tom_${id}`, semitones);
+    }
+  }, [semitones, id]);
+
   async function getCifra() {
     const response = await getCifraById(id);
     let listaCategorias = [];
@@ -146,6 +183,9 @@ export default function VerCifra() {
       setPart1("");
       setPart2("");
     }
+    // Restaura o tom salvo para esta cifra
+    const saved = localStorage.getItem(`tom_${id}`);
+    setSemitones(saved ? parseInt(saved, 10) : 0);
 
     for (const categoria of response.data.categorias) {
       const responseCat = await getCategoriaById(categoria);
@@ -301,16 +341,28 @@ export default function VerCifra() {
       <CifraBody>
         {!update || !canManageCifra ? (
           <CifraContent className={part1 != "" && "partes"}>
-            <a target="_blank" href={cifra.link}>
-              Acesse a cifra original
-            </a>
+            <div className="cifra-topo">
+              {originalKey && (
+                <TomButton
+                  type="button"
+                  aria-label="Abrir seletor de tom"
+                  onClick={() => setModalTom(true)}
+                >
+                  <span className="tom-label">Tom:</span>
+                  <span className="tom-value">{currentKey}</span>
+                </TomButton>
+              )}
+              <a target="_blank" href={cifra.link}>
+                Acesse a cifra original
+              </a>
+            </div>
             {part1 == "" && part2 == "" ? (
-              <pre>{cifra.observacao}</pre>
+              <pre>{observacaoTransposta}</pre>
             ) : (
               <div className="cifra-partes">
-                {part1 != "" && <pre>{part1}</pre>}
+                {part1 != "" && <pre>{observacaoTransposta.split("!!!")[0]}</pre>}
                 <span></span>
-                {part2 != "" && <pre>{part2}</pre>}
+                {part2 != "" && <pre>{observacaoTransposta.split("!!!")[1]}</pre>}
               </div>
             )}
           </CifraContent>
@@ -389,6 +441,59 @@ export default function VerCifra() {
           </UpdateCifra>
         )}
       </CifraBody>
+      {/* MODAL TOM */}
+      {modalTom && (
+        <>
+          <Overlay onClick={() => setModalTom(false)} />
+          <ModalTom>
+            <div className="tom-titulo">
+              Tom: <span>{currentKey}</span>
+            </div>
+            <div className="tom-semitom">
+              <button
+                type="button"
+                onClick={() => setSemitones((s) => s - 1)}
+              >
+                - ½ tom
+              </button>
+              <button
+                type="button"
+                onClick={() => setSemitones((s) => s + 1)}
+              >
+                + ½ tom
+              </button>
+            </div>
+            <div className="tom-grid">
+              {NOTES_DISPLAY.map((note) => {
+                const isAtivo = getSemitonesTo(currentKey, note) === 0;
+                return (
+                  <button
+                    key={note}
+                    type="button"
+                    className={isAtivo ? "ativo" : ""}
+                    onClick={() => {
+                      if (!originalKey) return;
+                      setSemitones((s) => s + getSemitonesTo(currentKey, note));
+                    }}
+                  >
+                    {note}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              className="tom-restaurar"
+              onClick={() => {
+                setSemitones(0);
+                setModalTom(false);
+              }}
+            >
+              Restaurar tom inicial
+            </button>
+          </ModalTom>
+        </>
+      )}
       {/* MODAL DELETE  */}
       {modalDelete && (
         <ModalDelete>

@@ -15,6 +15,18 @@ import {
   Sumario,
   PlaylistBody,
 } from "./VerPlaylistStyled";
+import {
+  ModalTom,
+  Overlay,
+  TomButton,
+} from "../VerCifra/VerCifraStyled";
+import {
+  detectOriginalKey,
+  getKeyAtOffset,
+  getSemitonesTo,
+  NOTES_DISPLAY,
+  transposeText,
+} from "../../utils/transpose";
 
 export default function VerPlaylist() {
   const { id } = useParams();
@@ -27,6 +39,11 @@ export default function VerPlaylist() {
   const navigate = useNavigate();
   const [musicaAtiva, setMusicaAtiva] = useState(0);
   const [sumarioVisivel, setSumarioVisivel] = useState(true);
+
+  // Transposição: { [songId]: semitones }
+  const [toms, setToms] = useState({});
+  // ID da música com modal de tom aberto (null = nenhum)
+  const [modalMusicaId, setModalMusicaId] = useState(null);
 
   function getMusicId(item) {
     if (!item) return null;
@@ -56,16 +73,22 @@ export default function VerPlaylist() {
     const sortedMusicas = [...sourceMusicas].sort((a, b) => {
       const idA = String(getMusicId(a) || "");
       const idB = String(getMusicId(b) || "");
-      const posA = orderMap.has(idA)
-        ? orderMap.get(idA)
-        : Number.MAX_SAFE_INTEGER;
-      const posB = orderMap.has(idB)
-        ? orderMap.get(idB)
-        : Number.MAX_SAFE_INTEGER;
+      const posA = orderMap.has(idA) ? orderMap.get(idA) : Number.MAX_SAFE_INTEGER;
+      const posB = orderMap.has(idB) ? orderMap.get(idB) : Number.MAX_SAFE_INTEGER;
       return posA - posB;
     });
 
     return { ...viewData, musicas: sortedMusicas };
+  }
+
+  // Atualiza o tom de uma música e persiste no localStorage
+  function updateTom(songId, newSemitones) {
+    setToms((prev) => ({ ...prev, [songId]: newSemitones }));
+    if (newSemitones === 0) {
+      localStorage.removeItem(`tom_${songId}`);
+    } else {
+      localStorage.setItem(`tom_${songId}`, newSemitones);
+    }
   }
 
   function interruptor() {
@@ -111,8 +134,18 @@ export default function VerPlaylist() {
           getPlaylistViewService(id),
           getPlaylistByIdService(id),
         ]);
-        setData(applySavedOrder(viewData, playlistData));
-      } catch (e) {
+        const ordenado = applySavedOrder(viewData, playlistData);
+        setData(ordenado);
+
+        // Carrega os tons salvos no localStorage para cada música
+        const savedToms = {};
+        (ordenado.musicas || []).forEach((m) => {
+          const sid = getMusicId(m);
+          const saved = localStorage.getItem(`tom_${sid}`);
+          if (saved) savedToms[sid] = parseInt(saved, 10);
+        });
+        setToms(savedToms);
+      } catch {
         setErr("Não foi possível carregar a playlist.");
       } finally {
         setLoading(false);
@@ -149,6 +182,16 @@ export default function VerPlaylist() {
   if (loading) return <Page>Carregando…</Page>;
   if (err) return <Page>{err}</Page>;
 
+  // Música com modal aberto
+  const modalMusica = modalMusicaId
+    ? data.musicas?.find((m) => String(getMusicId(m)) === String(modalMusicaId))
+    : null;
+  const modalOriginalKey = modalMusica
+    ? detectOriginalKey(modalMusica.descricao)
+    : null;
+  const modalSemitones = modalMusicaId ? (toms[modalMusicaId] || 0) : 0;
+  const modalCurrentKey = getKeyAtOffset(modalOriginalKey, modalSemitones);
+
   return (
     <Page>
       <button
@@ -159,18 +202,13 @@ export default function VerPlaylist() {
       </button>
 
       <Velocimetro>
-        <button onClick={() => setVelocity((v) => Math.min(9, v + 2))}>
-          {" "}
-          -{" "}
-        </button>
+        <button onClick={() => setVelocity((v) => Math.min(9, v + 2))}>-</button>
         <button onClick={interruptor}>
           <img src="/pause.svg" alt="toggle" />
         </button>
-        <button onClick={() => setVelocity((v) => Math.max(1, v - 2))}>
-          {" "}
-          +{" "}
-        </button>
+        <button onClick={() => setVelocity((v) => Math.max(1, v - 2))}>+</button>
       </Velocimetro>
+
       <button
         id={sumarioVisivel ? "Closeeye" : "Openeye"}
         onClick={() => setSumarioVisivel(!sumarioVisivel)}
@@ -194,7 +232,7 @@ export default function VerPlaylist() {
             </div>
             {data.musicas?.map((m, i) => (
               <button
-                key={`${m._id || m.nome}-${i}`}
+                key={`${getMusicId(m)}-${i}`}
                 onClick={() => {
                   scrollToMusica(i);
                   if (window.innerWidth < 850) setSumarioVisivel(false);
@@ -207,19 +245,91 @@ export default function VerPlaylist() {
           </Sumario>
         )}
 
-        {/* CORPO DA PLAYLIST */}
         <PlaylistBody>
-          {data.musicas?.map((m, i) => (
-            <CifraCard key={`${m._id || m.nome}-${i}`} id={`musica-${i}`}>
-              <TituloMusica>{m.nome}</TituloMusica>
-              <TextoCifra>{m.descricao || ""}</TextoCifra>
-            </CifraCard>
-          ))}
+          {data.musicas?.map((m, i) => {
+            const songId = getMusicId(m);
+            const semitones = toms[songId] || 0;
+            const origKey = detectOriginalKey(m.descricao);
+            const currentKey = getKeyAtOffset(origKey, semitones);
+            const conteudo = transposeText(m.descricao || "", semitones);
+
+            return (
+              <CifraCard key={`${songId}-${i}`} id={`musica-${i}`}>
+                <div className="card-header">
+                  <TituloMusica>{m.nome}</TituloMusica>
+                  {origKey && (
+                    <TomButton
+                      type="button"
+                      aria-label="Abrir seletor de tom"
+                      onClick={() => setModalMusicaId(songId)}
+                    >
+                      <span className="tom-label">Tom:</span>
+                      <span className="tom-value">{currentKey}</span>
+                    </TomButton>
+                  )}
+                </div>
+                <TextoCifra>{conteudo}</TextoCifra>
+              </CifraCard>
+            );
+          })}
           {(!data.musicas || data.musicas.length === 0) && (
             <Empty>Esta playlist ainda não tem músicas.</Empty>
           )}
         </PlaylistBody>
       </div>
+
+      {/* MODAL TOM */}
+      {modalMusicaId && modalOriginalKey && (
+        <>
+          <Overlay onClick={() => setModalMusicaId(null)} />
+          <ModalTom>
+            <div className="tom-titulo">
+              Tom: <span>{modalCurrentKey}</span>
+            </div>
+            <div className="tom-semitom">
+              <button
+                type="button"
+                onClick={() => updateTom(modalMusicaId, modalSemitones - 1)}
+              >
+                - ½ tom
+              </button>
+              <button
+                type="button"
+                onClick={() => updateTom(modalMusicaId, modalSemitones + 1)}
+              >
+                + ½ tom
+              </button>
+            </div>
+            <div className="tom-grid">
+              {NOTES_DISPLAY.map((note) => (
+                <button
+                  key={note}
+                  type="button"
+                  className={getSemitonesTo(modalCurrentKey, note) === 0 ? "ativo" : ""}
+                  onClick={() =>
+                    updateTom(
+                      modalMusicaId,
+                      modalSemitones + getSemitonesTo(modalCurrentKey, note)
+                    )
+                  }
+                >
+                  {note}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="tom-restaurar"
+              onClick={() => {
+                updateTom(modalMusicaId, 0);
+                setModalMusicaId(null);
+              }}
+            >
+              Restaurar tom inicial
+            </button>
+          </ModalTom>
+        </>
+      )}
     </Page>
   );
 }
