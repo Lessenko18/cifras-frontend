@@ -36,7 +36,9 @@ export default function MultSeletor({
         response = await searchCifra(value);
       }
 
-      setItems(Array.isArray(response?.data) ? response.data : []);
+      const chosenIds = new Set(escolhidos.map((i) => i._id || i.id));
+      const results = Array.isArray(response?.data) ? response.data : [];
+      setItems(results.filter((item) => !chosenIds.has(item._id || item.id)).slice(0, 5));
     } catch (err) {
       console.error("Erro ao buscar:", err);
       setItems([]);
