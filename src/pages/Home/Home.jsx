@@ -23,7 +23,9 @@ const normalize = (text = "") =>
     .replace(/[\u0300-\u036f]/g, "");
 
 const sortByNome = (a, b) =>
-  (a?.nome || "").localeCompare(b?.nome || "", "pt-BR", { sensitivity: "base" });
+  (a?.nome || "").localeCompare(b?.nome || "", "pt-BR", {
+    sensitivity: "base",
+  });
 
 export default function Home() {
   const [cifras, setCifras] = useState([]);
@@ -44,6 +46,23 @@ export default function Home() {
     [categorias],
   );
 
+  const findCategoria = (cat) => {
+    const catId = typeof cat === "string" ? cat : cat?._id;
+    return categorias.find((c) => c._id === catId);
+  };
+
+  const getCategoriaParentName = (categoria) => {
+    if (!categoria) return "";
+    if (categoria.parent?.nome) return categoria.parent.nome;
+
+    const parentId =
+      typeof categoria.parent === "string"
+        ? categoria.parent
+        : categoria.parent?._id;
+
+    return categorias.find((c) => c._id === parentId)?.nome || "";
+  };
+
   const cifrasFiltradas = useMemo(() => {
     const relevantIds = new Set();
     if (categoriaFiltro) {
@@ -55,7 +74,9 @@ export default function Home() {
     }
 
     return cifras.filter((cifra) => {
-      const matchNome = normalize(cifra.nome).includes(normalize(debouncedSearchNome));
+      const matchNome = normalize(cifra.nome).includes(
+        normalize(debouncedSearchNome),
+      );
       const matchCategoria =
         !categoriaFiltro ||
         cifra.categorias?.some((cat) => {
@@ -74,7 +95,8 @@ export default function Home() {
       (c) => String(c.parent?._id || c.parent) === String(cat._id),
     );
     if (hasChildren) return `${cat.nome} (todas)`;
-    if (cat.parent?.nome) return `${cat.nome} · ${cat.parent.nome}`;
+    const parentName = getCategoriaParentName(cat);
+    if (parentName) return `${cat.nome} · ${parentName}`;
     return cat.nome;
   }, [categoriaFiltro, categorias]);
 
@@ -115,7 +137,10 @@ export default function Home() {
 
   const pages = Math.ceil(cifrasFiltradas.length / itensPerpage);
   const startIndex = currentPage * itensPerpage;
-  const cifraPaginated = cifrasFiltradas.slice(startIndex, startIndex + itensPerpage);
+  const cifraPaginated = cifrasFiltradas.slice(
+    startIndex,
+    startIndex + itensPerpage,
+  );
 
   const handlePageChange = (page) => {
     if (page >= 0 && page < pages) setCurrentPage(page);
@@ -140,27 +165,37 @@ export default function Home() {
             aria-label="Filtrar por categoria"
           >
             <span>{filterLabel}</span>
-            <span style={{
-              fontSize: "0.7em",
-              transition: "transform 0.2s",
-              display: "inline-block",
-              transform: filterOpen ? "rotate(0deg)" : "rotate(-90deg)",
-              color: "#7c3aed",
-            }}>▼</span>
+            <span
+              style={{
+                fontSize: "0.7em",
+                transition: "transform 0.2s",
+                display: "inline-block",
+                transform: filterOpen ? "rotate(0deg)" : "rotate(-90deg)",
+                color: "#7c3aed",
+              }}
+            >
+              ▼
+            </span>
           </FilterDropdownTrigger>
 
           {filterOpen && (
             <FilterDropdownPanel>
               <FilterDropdownItem
                 $active={categoriaFiltro === ""}
-                onClick={() => { setCategoriaFiltro(""); setFilterOpen(false); }}
+                onClick={() => {
+                  setCategoriaFiltro("");
+                  setFilterOpen(false);
+                }}
               >
                 Todas as categorias
               </FilterDropdownItem>
 
               {rootCategorias.map((root) => {
                 const children = categorias
-                  .filter((c) => String(c.parent?._id || c.parent) === String(root._id))
+                  .filter(
+                    (c) =>
+                      String(c.parent?._id || c.parent) === String(root._id),
+                  )
                   .sort(sortByNome);
                 const isExpanded = filterExpanded.has(root._id);
 
@@ -171,35 +206,54 @@ export default function Home() {
                         <FilterDropdownItem
                           $active={categoriaFiltro === root._id}
                           style={{ flex: 1 }}
-                          onClick={() => { setCategoriaFiltro(root._id); setFilterOpen(false); }}
+                          onClick={() => {
+                            setCategoriaFiltro(root._id);
+                            setFilterOpen(false);
+                          }}
                         >
                           {root.nome}
                         </FilterDropdownItem>
                         <button
                           type="button"
-                          onClick={() => setFilterExpanded((prev) => {
-                            const next = new Set(prev);
-                            next.has(root._id) ? next.delete(root._id) : next.add(root._id);
-                            return next;
-                          })}
+                          onClick={() =>
+                            setFilterExpanded((prev) => {
+                              const next = new Set(prev);
+                              next.has(root._id)
+                                ? next.delete(root._id)
+                                : next.add(root._id);
+                              return next;
+                            })
+                          }
                           style={{
-                            background: "none", border: "none", cursor: "pointer",
-                            padding: "0 12px", fontSize: "0.7em", color: "#7c3aed",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: "0 12px",
+                            fontSize: "0.7em",
+                            color: "#7c3aed",
                             transition: "transform 0.2s",
-                            transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)",
+                            transform: isExpanded
+                              ? "rotate(0deg)"
+                              : "rotate(-90deg)",
                           }}
-                        >▼</button>
-                      </div>
-                      {isExpanded && children.map((child) => (
-                        <FilterDropdownItem
-                          key={child._id}
-                          $active={categoriaFiltro === child._id}
-                          $indent
-                          onClick={() => { setCategoriaFiltro(child._id); setFilterOpen(false); }}
                         >
-                          ↳ {child.nome}
-                        </FilterDropdownItem>
-                      ))}
+                          ▼
+                        </button>
+                      </div>
+                      {isExpanded &&
+                        children.map((child) => (
+                          <FilterDropdownItem
+                            key={child._id}
+                            $active={categoriaFiltro === child._id}
+                            $indent
+                            onClick={() => {
+                              setCategoriaFiltro(child._id);
+                              setFilterOpen(false);
+                            }}
+                          >
+                            ↳ {child.nome}
+                          </FilterDropdownItem>
+                        ))}
                     </div>
                   );
                 }
@@ -208,7 +262,10 @@ export default function Home() {
                   <FilterDropdownItem
                     key={root._id}
                     $active={categoriaFiltro === root._id}
-                    onClick={() => { setCategoriaFiltro(root._id); setFilterOpen(false); }}
+                    onClick={() => {
+                      setCategoriaFiltro(root._id);
+                      setFilterOpen(false);
+                    }}
                   >
                     {root.nome}
                   </FilterDropdownItem>
@@ -245,14 +302,22 @@ export default function Home() {
                     <h2>{cifra.nome}</h2>
                     <div>
                       {cifra.categorias?.map((cat) => {
-                        const catId = typeof cat === "string" ? cat : cat?._id;
-                        const categoria = categorias.find((c) => c._id === catId);
+                        const categoria = findCategoria(cat);
+                        const parentName = getCategoriaParentName(categoria);
+                        const catKey = typeof cat === "string" ? cat : cat?._id;
+
                         return (
-                          <span key={`${cifra._id}-${catId}`}>
+                          <span key={`${cifra._id}-${catKey}`}>
                             {categoria?.nome}
-                            {categoria?.parent?.nome && (
-                              <span style={{ color: "#9ca3af", fontWeight: 400, marginLeft: 3 }}>
-                                ({categoria.parent.nome})
+                            {parentName && (
+                              <span
+                                style={{
+                                  color: "#9ca3af",
+                                  fontWeight: 400,
+                                  marginLeft: 3,
+                                }}
+                              >
+                                ({parentName})
                               </span>
                             )}
                           </span>
