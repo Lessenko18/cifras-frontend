@@ -22,7 +22,7 @@ export const Page = styled.div`
     height: 45px;
     width: 45px;
     padding: 8px;
-    bottom: 85px;
+    bottom: 140px;
     right: 20px;
     z-index: 1001;
     background: #fff;
@@ -45,22 +45,32 @@ export const PlaylistBody = styled.div`
   margin: 0 auto;
   width: 100%;
   padding-bottom: 50px;
+
+  @media (max-width: 850px) {
+    max-width: 100%;
+    align-items: stretch;
+  }
 `;
 export const Header = styled.div`
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  align-items: baseline;
-  gap: 12px;
+  align-items: center;
+  gap: 8px 12px;
   margin-bottom: 16px;
+  text-align: center;
 
   h2 {
     margin: 0;
     font-size: 1.5rem;
-    justify-items: center;
+    word-break: break-word;
+    text-align: center;
+    flex: 0 1 auto;
   }
   span {
     font-size: 1rem;
     opacity: 0.7;
+    white-space: nowrap;
   }
 `;
 
@@ -168,11 +178,11 @@ export const Velocimetro = styled.div`
   bottom: 20px;
   right: 20px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px;
+  gap: 4px;
+  padding: 6px;
   background: #e9eef5;
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -186,18 +196,21 @@ export const Velocimetro = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
     transition: background 0.2s;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
 
     &:hover {
       background: #d3dae6;
     }
 
     img {
-      width: 22px;
-      height: 22px;
+      width: 18px;
+      height: 18px;
       display: block;
     }
   }

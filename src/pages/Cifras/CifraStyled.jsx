@@ -194,6 +194,7 @@ export const CifrasBody = styled.div`
     width: 100%;
     border-radius: 8px;
     display: flex;
+    justify-content: center;
     background: transparent;
     padding: 0;
     transition: 0.3s;
@@ -214,7 +215,7 @@ export const AnCifra = styled.article`
   gap: 10px;
   width: 100%;
   max-width: 340px;
-  justify-self: center;
+  margin: 0 auto;
   min-height: 120px;
   border-radius: 12px;
   overflow: hidden;

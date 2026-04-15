@@ -38,7 +38,9 @@ export default function VerPlaylist() {
   const intervalRef = useRef(null);
   const navigate = useNavigate();
   const [musicaAtiva, setMusicaAtiva] = useState(0);
-  const [sumarioVisivel, setSumarioVisivel] = useState(true);
+  const [sumarioVisivel, setSumarioVisivel] = useState(
+    typeof window !== "undefined" ? window.innerWidth >= 850 : true
+  );
 
   // Transposição: { [songId]: semitones }
   const [toms, setToms] = useState({});
