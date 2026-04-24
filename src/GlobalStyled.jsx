@@ -1,5 +1,4 @@
 import { createGlobalStyle } from "styled-components";
-import { Toaster } from "sonner";
 
 export const GlobalStyled = createGlobalStyle`
 /*Reset*/

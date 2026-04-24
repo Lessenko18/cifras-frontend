@@ -23,6 +23,7 @@ import { Toaster } from "react-hot-toast";
 import VerPlaylist from "./pages/VerPlaylist/VerPlaylist.jsx";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { getMeRequest } from "./service/auth.service";
+import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary.jsx";
 
 function AdminRoute({ children }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -32,15 +33,6 @@ function AdminRoute({ children }) {
     let isMounted = true;
 
     async function checkAdminAccess() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        if (isMounted) {
-          setIsAdmin(false);
-          setIsLoading(false);
-        }
-        return;
-      }
-
       try {
         const user = await getMeRequest();
         const level = String(user?.level || "").toUpperCase();
@@ -150,7 +142,9 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <GlobalStyled />
-    <RouterProvider router={router} />
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>
     <Toaster />
     <SpeedInsights />
   </React.StrictMode>,

@@ -15,23 +15,11 @@ function normalizeUser(user) {
 // LOGIN
 export async function loginRequest(email, password, remember = false) {
   try {
-    const response = await api.post("/auth/login", {
-      email,
-      password,
-      remember,
-    });
+    // O backend define o cookie httpOnly access_token na resposta
+    await api.post("/auth/login", { email, password, remember });
 
-    const token = response.data.token;
-
-    localStorage.setItem("token", token);
-
-    const meResponse = await api.get("/auth/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const user = normalizeUser(meResponse.data);
+    const meResponse = await api.get("/auth/me");
+    const user = normalizeUser(meResponse.data?.user || meResponse.data);
 
     localStorage.setItem("user", JSON.stringify(user));
 
@@ -86,15 +74,19 @@ export async function resetPasswordService(token, newPassword) {
 export async function registerRequest(data) {
   try {
     const response = await api.post("/auth/register", data);
-
     return response.data;
   } catch (err) {
     throw err.response?.data?.message || "Erro ao realizar cadastro.";
   }
 }
 
-// LOGOUT
-export function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+// LOGOUT — limpa o cookie httpOnly no servidor e remove dados locais
+export async function logout() {
+  try {
+    await api.post("/auth/logout");
+  } catch {
+    // ignora erros (ex: token já expirado)
+  } finally {
+    localStorage.removeItem("user");
+  }
 }

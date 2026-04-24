@@ -44,12 +44,6 @@ export function Navbar() {
     let isMounted = true;
 
     async function syncAdminLevel() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        if (isMounted) setIsAdmin(false);
-        return;
-      }
-
       try {
         const authenticatedUser = await getMeRequest();
         if (!isMounted) return;
@@ -91,8 +85,8 @@ export function Navbar() {
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setUser(null);
     navigate("/login");
   };

@@ -1,7 +1,14 @@
 import api from "./api";
 
-export async function getCifrasService() {
-  const response = await api.get("/cifra/");
+export async function getCifrasService({ nome, categorias, favoritos, page = 0, limit = 15 } = {}) {
+  const params = new URLSearchParams();
+  if (nome) params.set("nome", nome);
+  if (categorias?.length) params.set("categorias", categorias.join(","));
+  if (favoritos?.length) params.set("favoritos", favoritos.join(","));
+  params.set("page", String(page));
+  params.set("limit", String(limit));
+
+  const response = await api.get(`/cifra/?${params.toString()}`);
   return response;
 }
 
@@ -22,10 +29,5 @@ export async function deleteCifraService(id) {
 
 export async function editCifraService(id, data) {
   const response = await api.patch(`/cifra/update/${id}`, data);
-  return response;
-}
-
-export async function searchCifra(data) {
-  const response = await api.get(`/cifra/search?nome=${data}`);
   return response;
 }

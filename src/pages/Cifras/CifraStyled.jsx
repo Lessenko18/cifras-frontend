@@ -207,6 +207,7 @@ export const CifrasBody = styled.div`
 
 // Card da cifra
 export const AnCifra = styled.article`
+  position: relative;
   background: #fff;
   border: 1px solid #e5e7eb;
   padding: 10px 20px;
@@ -238,6 +239,13 @@ export const AnCifra = styled.article`
     overflow: hidden;
   }
 
+  .artista {
+    font-size: 13px;
+    color: #9ca3af;
+    margin: -4px 0 0;
+    font-weight: 500;
+  }
+
   div {
     display: flex;
     flex-wrap: wrap;
@@ -253,6 +261,26 @@ export const AnCifra = styled.article`
       border-radius: 0;
       padding: 0;
       margin-right: 0 !important;
+    }
+  }
+
+  .heart-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.85);
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #e11d48;
+    padding: 3px 6px;
+    border-radius: 50%;
+    line-height: 1;
+    transition: transform 0.15s;
+
+    &:hover {
+      transform: scale(1.25);
     }
   }
 `;

@@ -1,7 +1,9 @@
-import { useEffect, useRef, useMemo, useState } from "react";
+import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { getCifrasService } from "../../service/cifraService";
 import { getCategoriasService } from "../../service/categoriaService";
+import { getFavoritosService, toggleFavoritoService } from "../../service/favoritosService";
+import { useSearch } from "../../hooks/useSearch";
 import {
   AnCifra,
   HomeContainer,
@@ -16,30 +18,24 @@ import {
   FilterDropdownItem,
 } from "./HomeStyled";
 
-const normalize = (text = "") =>
-  text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
 const sortByNome = (a, b) =>
-  (a?.nome || "").localeCompare(b?.nome || "", "pt-BR", {
-    sensitivity: "base",
-  });
+  (a?.nome || "").localeCompare(b?.nome || "", "pt-BR", { sensitivity: "base" });
 
 export default function Home() {
   const [cifras, setCifras] = useState([]);
+  const [pages, setPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
   const [categorias, setCategorias] = useState([]);
 
-  const [searchNome, setSearchNome] = useState("");
-  const [debouncedSearchNome, setDebouncedSearchNome] = useState("");
+  const { search: searchNome, setSearch: setSearchNome, debounced } = useSearch();
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterExpanded, setFilterExpanded] = useState(new Set());
   const filterRef = useRef(null);
 
-  const [itensPerpage] = useState(15);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [favoritosIds, setFavoritosIds] = useState([]);
+  const [favoritosMode, setFavoritosMode] = useState(false);
+  const favoritosSet = useMemo(() => new Set(favoritosIds), [favoritosIds]);
 
   const rootCategorias = useMemo(
     () => categorias.filter((c) => !c.parent).sort(sortByNome),
@@ -54,38 +50,21 @@ export default function Home() {
   const getCategoriaParentName = (categoria) => {
     if (!categoria) return "";
     if (categoria.parent?.nome) return categoria.parent.nome;
-
     const parentId =
-      typeof categoria.parent === "string"
-        ? categoria.parent
-        : categoria.parent?._id;
-
+      typeof categoria.parent === "string" ? categoria.parent : categoria.parent?._id;
     return categorias.find((c) => c._id === parentId)?.nome || "";
   };
 
-  const cifrasFiltradas = useMemo(() => {
-    const relevantIds = new Set();
-    if (categoriaFiltro) {
-      relevantIds.add(categoriaFiltro);
-      categorias.forEach((cat) => {
-        const parentId = cat.parent?._id || cat.parent;
-        if (String(parentId) === categoriaFiltro) relevantIds.add(cat._id);
-      });
-    }
-
-    return cifras.filter((cifra) => {
-      const matchNome = normalize(cifra.nome).includes(
-        normalize(debouncedSearchNome),
-      );
-      const matchCategoria =
-        !categoriaFiltro ||
-        cifra.categorias?.some((cat) => {
-          const catId = typeof cat === "string" ? cat : cat?._id;
-          return relevantIds.has(catId);
-        });
-      return matchNome && matchCategoria;
+  // IDs relevantes para o filtro (categoria selecionada + filhas)
+  const relevantCategoriaIds = useMemo(() => {
+    if (!categoriaFiltro) return [];
+    const ids = [categoriaFiltro];
+    categorias.forEach((cat) => {
+      const parentId = cat.parent?._id || cat.parent;
+      if (String(parentId) === categoriaFiltro) ids.push(cat._id);
     });
-  }, [cifras, debouncedSearchNome, categoriaFiltro, categorias]);
+    return ids;
+  }, [categoriaFiltro, categorias]);
 
   const filterLabel = useMemo(() => {
     if (!categoriaFiltro) return "Todas as categorias";
@@ -100,14 +79,60 @@ export default function Home() {
     return cat.nome;
   }, [categoriaFiltro, categorias]);
 
+  // Carrega categorias uma vez
   useEffect(() => {
-    setCurrentPage(0);
-  }, [debouncedSearchNome, categoriaFiltro]);
+    getCategoriasService()
+      .then((res) => setCategorias(res.data || []))
+      .catch(console.error);
+  }, []);
+
+  // Carrega favoritos do usuário
+  useEffect(() => {
+    getFavoritosService()
+      .then(setFavoritosIds)
+      .catch(() => {});
+  }, []);
+
+  const handleToggleFavorito = useCallback(async (cifraId) => {
+    try {
+      const updated = await toggleFavoritoService(cifraId);
+      setFavoritosIds(updated);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  // Busca cifras no servidor sempre que filtros ou página mudam
+  const fetchCifras = useCallback(async () => {
+    if (favoritosMode && favoritosIds.length === 0) {
+      setCifras([]);
+      setPages(0);
+      return;
+    }
+    try {
+      const res = await getCifrasService({
+        nome: debounced || undefined,
+        categorias: relevantCategoriaIds.length ? relevantCategoriaIds : undefined,
+        favoritos: favoritosMode ? favoritosIds : undefined,
+        page: currentPage,
+        limit: 15,
+      });
+      const data = res.data;
+      setCifras(data.cifras || []);
+      setPages(data.pages || 0);
+    } catch (err) {
+      console.error("Erro ao carregar cifras:", err);
+    }
+  }, [debounced, relevantCategoriaIds, currentPage, favoritosMode, favoritosIds]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearchNome(searchNome), 300);
-    return () => clearTimeout(timer);
-  }, [searchNome]);
+    fetchCifras();
+  }, [fetchCifras]);
+
+  // Reset de página quando filtro muda
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [debounced, categoriaFiltro, favoritosMode]);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -118,33 +143,6 @@ export default function Home() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [resCifras, resCategorias] = await Promise.all([
-          getCifrasService(),
-          getCategoriasService(),
-        ]);
-        setCifras(resCifras.data || []);
-        setCategorias(resCategorias.data || []);
-      } catch (err) {
-        console.error("Erro ao carregar cifras:", err);
-      }
-    }
-    fetchData();
-  }, []);
-
-  const pages = Math.ceil(cifrasFiltradas.length / itensPerpage);
-  const startIndex = currentPage * itensPerpage;
-  const cifraPaginated = cifrasFiltradas.slice(
-    startIndex,
-    startIndex + itensPerpage,
-  );
-
-  const handlePageChange = (page) => {
-    if (page >= 0 && page < pages) setCurrentPage(page);
-  };
 
   return (
     <HomeContainer>
@@ -182,20 +180,14 @@ export default function Home() {
             <FilterDropdownPanel>
               <FilterDropdownItem
                 $active={categoriaFiltro === ""}
-                onClick={() => {
-                  setCategoriaFiltro("");
-                  setFilterOpen(false);
-                }}
+                onClick={() => { setCategoriaFiltro(""); setFilterOpen(false); }}
               >
                 Todas as categorias
               </FilterDropdownItem>
 
               {rootCategorias.map((root) => {
                 const children = categorias
-                  .filter(
-                    (c) =>
-                      String(c.parent?._id || c.parent) === String(root._id),
-                  )
+                  .filter((c) => String(c.parent?._id || c.parent) === String(root._id))
                   .sort(sortByNome);
                 const isExpanded = filterExpanded.has(root._id);
 
@@ -206,10 +198,7 @@ export default function Home() {
                         <FilterDropdownItem
                           $active={categoriaFiltro === root._id}
                           style={{ flex: 1 }}
-                          onClick={() => {
-                            setCategoriaFiltro(root._id);
-                            setFilterOpen(false);
-                          }}
+                          onClick={() => { setCategoriaFiltro(root._id); setFilterOpen(false); }}
                         >
                           {root.nome}
                         </FilterDropdownItem>
@@ -218,42 +207,30 @@ export default function Home() {
                           onClick={() =>
                             setFilterExpanded((prev) => {
                               const next = new Set(prev);
-                              next.has(root._id)
-                                ? next.delete(root._id)
-                                : next.add(root._id);
+                              next.has(root._id) ? next.delete(root._id) : next.add(root._id);
                               return next;
                             })
                           }
                           style={{
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: "0 12px",
-                            fontSize: "0.7em",
-                            color: "#7c3aed",
+                            background: "none", border: "none", cursor: "pointer",
+                            padding: "0 12px", fontSize: "0.7em", color: "#7c3aed",
                             transition: "transform 0.2s",
-                            transform: isExpanded
-                              ? "rotate(0deg)"
-                              : "rotate(-90deg)",
+                            transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)",
                           }}
                         >
                           ▼
                         </button>
                       </div>
-                      {isExpanded &&
-                        children.map((child) => (
-                          <FilterDropdownItem
-                            key={child._id}
-                            $active={categoriaFiltro === child._id}
-                            $indent
-                            onClick={() => {
-                              setCategoriaFiltro(child._id);
-                              setFilterOpen(false);
-                            }}
-                          >
-                            ↳ {child.nome}
-                          </FilterDropdownItem>
-                        ))}
+                      {isExpanded && children.map((child) => (
+                        <FilterDropdownItem
+                          key={child._id}
+                          $active={categoriaFiltro === child._id}
+                          $indent
+                          onClick={() => { setCategoriaFiltro(child._id); setFilterOpen(false); }}
+                        >
+                          ↳ {child.nome}
+                        </FilterDropdownItem>
+                      ))}
                     </div>
                   );
                 }
@@ -262,10 +239,7 @@ export default function Home() {
                   <FilterDropdownItem
                     key={root._id}
                     $active={categoriaFiltro === root._id}
-                    onClick={() => {
-                      setCategoriaFiltro(root._id);
-                      setFilterOpen(false);
-                    }}
+                    onClick={() => { setCategoriaFiltro(root._id); setFilterOpen(false); }}
                   >
                     {root.nome}
                   </FilterDropdownItem>
@@ -275,15 +249,33 @@ export default function Home() {
           )}
         </FilterDropdownWrapper>
 
+        <button
+          type="button"
+          onClick={() => setFavoritosMode((m) => !m)}
+          style={{
+            height: 44,
+            borderRadius: 14,
+            padding: "0 16px",
+            fontWeight: 600,
+            cursor: "pointer",
+            fontSize: "0.95rem",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            border: `1px solid ${favoritosMode ? "#fda4af" : "#d1d5db"}`,
+            background: favoritosMode ? "#fecdd3" : "transparent",
+            color: favoritosMode ? "#e11d48" : "#6b7280",
+            transition: "all 0.2s",
+          }}
+        >
+          {favoritosMode ? "♥" : "♡"} Favoritos
+        </button>
+
         {(searchNome || categoriaFiltro) && (
           <button
             type="button"
             className="btn"
-            onClick={() => {
-              setSearchNome("");
-              setDebouncedSearchNome("");
-              setCategoriaFiltro("");
-            }}
+            onClick={() => { setSearchNome(""); setCategoriaFiltro(""); }}
           >
             Limpar filtro
           </button>
@@ -291,49 +283,55 @@ export default function Home() {
       </FiltersContainer>
 
       {/* LISTAGEM */}
-      {cifraPaginated.length > 0 ? (
+      {favoritosMode && favoritosIds.length === 0 ? (
+        <p style={{ gridColumn: "1 / -1" }}>Você ainda não adicionou nenhum favorito.</p>
+      ) : cifras.length > 0 ? (
         <>
-          {[...cifraPaginated]
-            .sort((a, b) => a.nome.localeCompare(b.nome))
-            .map((cifra) => (
-              <Link to={"/home/cifra/" + cifra._id} key={cifra._id}>
-                <AnCifra>
+          {cifras.map((cifra) => (
+            <Link to={"/home/cifra/" + cifra._id} key={cifra._id}>
+              <AnCifra>
+                <button
+                  type="button"
+                  className="heart-btn"
+                  aria-label={favoritosSet.has(cifra._id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleToggleFavorito(cifra._id);
+                  }}
+                >
+                  {favoritosSet.has(cifra._id) ? "♥" : "♡"}
+                </button>
+                <div>
+                  <h2>{cifra.nome}</h2>
+                  {cifra.artista && <p className="artista">{cifra.artista}</p>}
                   <div>
-                    <h2>{cifra.nome}</h2>
-                    <div>
-                      {cifra.categorias?.map((cat) => {
-                        const categoria = findCategoria(cat);
-                        const parentName = getCategoriaParentName(categoria);
-                        const catKey = typeof cat === "string" ? cat : cat?._id;
-
-                        return (
-                          <span key={`${cifra._id}-${catKey}`}>
-                            {categoria?.nome}
-                            {parentName && (
-                              <span
-                                style={{
-                                  color: "#9ca3af",
-                                  fontWeight: 400,
-                                  marginLeft: 3,
-                                }}
-                              >
-                                ({parentName})
-                              </span>
-                            )}
-                          </span>
-                        );
-                      })}
-                    </div>
+                    {cifra.categorias?.map((cat) => {
+                      const categoria = findCategoria(cat);
+                      const parentName = getCategoriaParentName(categoria);
+                      const catKey = typeof cat === "string" ? cat : cat?._id;
+                      return (
+                        <span key={`${cifra._id}-${catKey}`}>
+                          {categoria?.nome}
+                          {parentName && (
+                            <span style={{ color: "#9ca3af", fontWeight: 400, marginLeft: 3 }}>
+                              ({parentName})
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
                   </div>
-                </AnCifra>
-              </Link>
-            ))}
+                </div>
+              </AnCifra>
+            </Link>
+          ))}
 
           {pages > 1 && (
             <PaginationContainer>
               <PaginationButton
                 disabled={currentPage === 0}
-                onClick={() => handlePageChange(currentPage - 1)}
+                onClick={() => setCurrentPage((p) => p - 1)}
               >
                 Anterior
               </PaginationButton>
@@ -341,8 +339,8 @@ export default function Home() {
                 Página {currentPage + 1} de {pages}
               </PaginationInfo>
               <PaginationButton
-                disabled={currentPage + 1 === pages}
-                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage + 1 >= pages}
+                onClick={() => setCurrentPage((p) => p + 1)}
               >
                 Próxima
               </PaginationButton>
@@ -350,7 +348,7 @@ export default function Home() {
           )}
         </>
       ) : (
-        <p>Nenhuma cifra encontrada.</p>
+        <p style={{ gridColumn: "1 / -1" }}>Nenhuma cifra encontrada.</p>
       )}
     </HomeContainer>
   );

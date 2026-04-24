@@ -70,15 +70,6 @@ export default function Playlists() {
     let isMounted = true;
 
     async function syncAdminAccess() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        if (isMounted) {
-          setAuthenticatedUser(null);
-          setIsAdmin(false);
-        }
-        return;
-      }
-
       try {
         const authenticatedUser = await getMeRequest();
         if (!isMounted) return;
@@ -341,8 +332,8 @@ export default function Playlists() {
 
   const fetchCifras = useCallback(async () => {
     try {
-      const res = await getCifrasService();
-      setCifras(res.data || []);
+      const res = await getCifrasService({ limit: 1000 });
+      setCifras(res.data?.cifras || []);
     } catch {
       toast.error("Falha ao carregar cifras.");
     }

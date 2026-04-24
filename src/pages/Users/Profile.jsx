@@ -50,8 +50,8 @@ export default function Profile() {
     : (user?.email?.charAt(0) || "U").toUpperCase();
   const avatarSrc = preview || user.avatar || user.photo || null;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
 

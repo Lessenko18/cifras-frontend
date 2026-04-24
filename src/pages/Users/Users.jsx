@@ -182,7 +182,7 @@ export default function Users() {
           <div>
             <label htmlFor="password">Senha</label>
             <Input
-              type="text"
+              type="password"
               name="password"
               required
               placeholder="Digite a senha do usuário"
@@ -270,7 +270,7 @@ export default function Users() {
           <div>
             <label htmlFor="password">Senha</label>
             <Input
-              type="text"
+              type="password"
               name="password"
               placeholder="Deixe em branco para não alterar"
             />

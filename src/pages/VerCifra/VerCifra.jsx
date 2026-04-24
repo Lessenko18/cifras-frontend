@@ -107,15 +107,6 @@ export default function VerCifra() {
     let isMounted = true;
 
     async function syncAuthenticatedUser() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        if (isMounted) {
-          setAuthenticatedUser(null);
-          setIsAdmin(false);
-        }
-        return;
-      }
-
       try {
         const user = await getMeRequest();
         if (!isMounted) return;
@@ -176,7 +167,7 @@ export default function VerCifra() {
     let listaCategorias = [];
     setCifra(response.data);
     const partes = response.data.observacao.split("!!!");
-    if (partes.length == 2) {
+    if (partes.length === 2) {
       setPart1(partes[0] || "");
       setPart2(partes[1] || "");
     } else {
@@ -218,7 +209,7 @@ export default function VerCifra() {
   }
   function handleSelect(item) {
     let lista = [...escolhidos];
-    if (lista.find((i) => i._id == item._id)) {
+    if (lista.find((i) => i._id === item._id)) {
       return;
     }
     lista.push(item);
@@ -226,7 +217,7 @@ export default function VerCifra() {
   }
   function removeSelect(item) {
     let lista = [...escolhidos];
-    lista = lista.filter((i) => i._id != item._id);
+    lista = lista.filter((i) => i._id !== item._id);
     setEscolhidos(lista);
   }
   useEffect(() => {
@@ -273,7 +264,7 @@ export default function VerCifra() {
     getCifra();
   }, []);
   return (
-    <VerCifraContainer className={part1 != "" && "partes"}>
+    <VerCifraContainer className={part1 !== "" && "partes"}>
       <UsersHeader>
         <div className="ver-cifra-left">
           <Velocimetro>
@@ -340,7 +331,7 @@ export default function VerCifra() {
       {/* UPDATE */}
       <CifraBody>
         {!update || !canManageCifra ? (
-          <CifraContent className={part1 != "" && "partes"}>
+          <CifraContent className={part1 !== "" && "partes"}>
             <div className="cifra-topo">
               {originalKey && (
                 <TomButton
@@ -352,17 +343,22 @@ export default function VerCifra() {
                   <span className="tom-value">{currentKey}</span>
                 </TomButton>
               )}
+              {cifra.artista && (
+                <p style={{ margin: 0, color: "#6b7280", fontSize: "0.95rem", fontStyle: "italic" }}>
+                  {cifra.artista}
+                </p>
+              )}
               <a target="_blank" href={cifra.link}>
                 Acesse a cifra original
               </a>
             </div>
-            {part1 == "" && part2 == "" ? (
+            {part1 === "" && part2 === "" ? (
               <pre>{observacaoTransposta}</pre>
             ) : (
               <div className="cifra-partes">
-                {part1 != "" && <pre>{observacaoTransposta.split("!!!")[0]}</pre>}
+                {part1 !== "" && <pre>{observacaoTransposta.split("!!!")[0]}</pre>}
                 <span></span>
-                {part2 != "" && <pre>{observacaoTransposta.split("!!!")[1]}</pre>}
+                {part2 !== "" && <pre>{observacaoTransposta.split("!!!")[1]}</pre>}
               </div>
             )}
           </CifraContent>
@@ -373,7 +369,11 @@ export default function VerCifra() {
               <Input type="text" name="nome" defaultValue={cifra.nome} />
             </div>
             <div>
-              <label htmlFor="nome">Link da cifra</label>
+              <label htmlFor="artista">Artista</label>
+              <Input type="text" name="artista" defaultValue={cifra.artista || ""} placeholder="Nome do artista (opcional)" />
+            </div>
+            <div>
+              <label htmlFor="link">Link da cifra</label>
               <Input type="text" name="link" defaultValue={cifra.link} />
             </div>
             <MultSeletorContainer>

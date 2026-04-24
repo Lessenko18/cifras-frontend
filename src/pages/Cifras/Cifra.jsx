@@ -1,9 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
-import {
-  createCifraService,
-  getCifrasService,
-} from "../../service/cifraService";
+import { createCifraService, getCifrasService } from "../../service/cifraService";
+import { getFavoritosService, toggleFavoritoService } from "../../service/favoritosService";
 import {
   AnCifra,
   ModalCifra,
@@ -27,106 +25,50 @@ import { Link, useNavigate } from "react-router-dom";
 import { UsersHeader } from "../Users/UsersStyled";
 import { Title } from "../Playlist/PlaylistStyled";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
+import { useSearch } from "../../hooks/useSearch";
 
 export default function Cifras() {
   const [cifras, setCifras] = useState([]);
+  const [pages, setPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
   const [categorias, setCategorias] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
   const [chosenCategorias, setChosenCategorias] = useState([]);
   const [sending, setSending] = useState(false);
 
-  const [searchNome, setSearchNome] = useState("");
-  const [debouncedSearchNome, setDebouncedSearchNome] = useState("");
+  const { search: searchNome, setSearch: setSearchNome, debounced } = useSearch();
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterExpanded, setFilterExpanded] = useState(new Set());
   const filterRef = useRef(null);
 
-  const [itensPerPage] = useState(15);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [favoritosIds, setFavoritosIds] = useState([]);
+  const favoritosSet = useMemo(() => new Set(favoritosIds), [favoritosIds]);
 
   const navigate = useNavigate();
-
-  /* ======================
-     HELPERS
-  ====================== */
-
-  const normalize = (text = "") =>
-    text
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-
-  /* ======================
-     FILTROS
-  ====================== */
 
   const getCategoriaParentName = (categoria) => {
     if (!categoria) return "";
     if (categoria.parent?.nome) return categoria.parent.nome;
     const parentId =
-      typeof categoria.parent === "string"
-        ? categoria.parent
-        : categoria.parent?._id;
+      typeof categoria.parent === "string" ? categoria.parent : categoria.parent?._id;
     return categorias.find((c) => c._id === parentId)?.nome || "";
   };
 
   const rootCategorias = useMemo(
-    () =>
-      categorias
-        .filter((c) => !c.parent)
-        .sort((a, b) => a.nome.localeCompare(b.nome)),
+    () => categorias.filter((c) => !c.parent).sort((a, b) => a.nome.localeCompare(b.nome)),
     [categorias],
   );
 
-  const cifrasFiltradas = useMemo(() => {
-    const relevantIds = new Set();
-    if (categoriaFiltro) {
-      relevantIds.add(categoriaFiltro);
-      // inclui subcategorias da categoria selecionada
-      categorias.forEach((cat) => {
-        const parentId = cat.parent?._id || cat.parent;
-        if (String(parentId) === categoriaFiltro) relevantIds.add(cat._id);
-      });
-    }
-
-    return cifras.filter((cifra) => {
-      const matchNome = normalize(cifra.nome).includes(
-        normalize(debouncedSearchNome),
-      );
-
-      const matchCategoria =
-        !categoriaFiltro ||
-        cifra.categorias?.some((cat) => {
-          const catId = typeof cat === "string" ? cat : cat?._id;
-          return relevantIds.has(catId);
-        });
-
-      return matchNome && matchCategoria;
+  const relevantCategoriaIds = useMemo(() => {
+    if (!categoriaFiltro) return [];
+    const ids = [categoriaFiltro];
+    categorias.forEach((cat) => {
+      const parentId = cat.parent?._id || cat.parent;
+      if (String(parentId) === categoriaFiltro) ids.push(cat._id);
     });
-  }, [cifras, debouncedSearchNome, categoriaFiltro, categorias]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchNome(searchNome);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchNome]);
-
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [debouncedSearchNome, categoriaFiltro]);
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (filterRef.current && !filterRef.current.contains(e.target)) {
-        setFilterOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    return ids;
+  }, [categoriaFiltro, categorias]);
 
   const filterLabel = useMemo(() => {
     if (!categoriaFiltro) return "Todas as categorias";
@@ -140,28 +82,14 @@ export default function Cifras() {
     return cat.nome;
   }, [categoriaFiltro, categorias]);
 
-  /* ======================
-     PAGINAÇÃO
-  ====================== */
-
-  const pages = Math.ceil(cifrasFiltradas.length / itensPerPage);
-  const startIndex = currentPage * itensPerPage;
-  const endIndex = startIndex + itensPerPage;
-  const cifraPaginated = cifrasFiltradas.slice(startIndex, endIndex);
-
-  const handlePageChange = (page) => {
-    if (page >= 0 && page < pages) {
-      setCurrentPage(page);
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (filterRef.current && !filterRef.current.contains(e.target)) {
+        setFilterOpen(false);
+      }
     }
-  };
-
-  const getCifras = useCallback(async () => {
-    try {
-      const response = await getCifrasService();
-      setCifras(response.data || []);
-    } catch (err) {
-      console.error(err);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const getCategorias = useCallback(async () => {
@@ -173,12 +101,48 @@ export default function Cifras() {
     }
   }, []);
 
-  useEffect(() => {
-    getCifras();
-    getCategorias();
-  }, [getCifras, getCategorias]);
+  const fetchCifras = useCallback(async () => {
+    try {
+      const res = await getCifrasService({
+        nome: debounced || undefined,
+        categorias: relevantCategoriaIds.length ? relevantCategoriaIds : undefined,
+        page: currentPage,
+        limit: 15,
+      });
+      const data = res.data;
+      setCifras(data.cifras || []);
+      setPages(data.pages || 0);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [debounced, relevantCategoriaIds, currentPage]);
 
-  /* CREATE CIFRA */
+  useEffect(() => {
+    getCategorias();
+  }, [getCategorias]);
+
+  useEffect(() => {
+    getFavoritosService()
+      .then(setFavoritosIds)
+      .catch(() => {});
+  }, []);
+
+  const handleToggleFavorito = useCallback(async (cifraId) => {
+    try {
+      const updated = await toggleFavoritoService(cifraId);
+      setFavoritosIds(updated);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCifras();
+  }, [fetchCifras]);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [debounced, categoriaFiltro]);
 
   const handleCreateCifra = useCallback(
     async (event) => {
@@ -204,7 +168,7 @@ export default function Cifras() {
         setIsCreating(false);
         setChosenCategorias([]);
         event.target.reset();
-        await getCifras();
+        await fetchCifras();
         toast.success("Cifra cadastrada com sucesso!");
       } catch (err) {
         console.error(err);
@@ -213,7 +177,7 @@ export default function Cifras() {
         setSending(false);
       }
     },
-    [chosenCategorias, getCifras],
+    [chosenCategorias, fetchCifras],
   );
 
   const updateCategoria = useCallback((lista) => {
@@ -227,10 +191,7 @@ export default function Cifras() {
           <img src="/back.svg" alt="Voltar" className="img-hover" />
         </button>
         <Title>Cifras</Title>
-        <button
-          className="btn adicionar-primary"
-          onClick={() => setIsCreating(true)}
-        >
+        <button className="btn adicionar-primary" onClick={() => setIsCreating(true)}>
           Adicionar Cifra
         </button>
       </UsersHeader>
@@ -252,11 +213,8 @@ export default function Cifras() {
           >
             <span>{filterLabel}</span>
             <span style={{
-              fontSize: "0.7em",
-              transition: "transform 0.2s",
-              display: "inline-block",
-              transform: filterOpen ? "rotate(0deg)" : "rotate(-90deg)",
-              color: "#7c3aed",
+              fontSize: "0.7em", transition: "transform 0.2s", display: "inline-block",
+              transform: filterOpen ? "rotate(0deg)" : "rotate(-90deg)", color: "#7c3aed",
             }}>▼</span>
           </FilterDropdownTrigger>
 
@@ -273,7 +231,6 @@ export default function Cifras() {
                 const children = categorias
                   .filter((c) => String(c.parent?._id || c.parent) === String(root._id))
                   .sort((a, b) => a.nome.localeCompare(b.nome));
-
                 const isExpanded = filterExpanded.has(root._id);
 
                 if (children.length > 0) {
@@ -334,11 +291,7 @@ export default function Cifras() {
           <button
             type="button"
             className="btn"
-            onClick={() => {
-              setSearchNome("");
-              setDebouncedSearchNome("");
-              setCategoriaFiltro("");
-            }}
+            onClick={() => { setSearchNome(""); setCategoriaFiltro(""); }}
           >
             Limpar filtro
           </button>
@@ -347,21 +300,10 @@ export default function Cifras() {
 
       {isCreating && (
         <>
-          <ModalOverlay
-            onClick={() => {
-              setIsCreating(false);
-              setChosenCategorias([]);
-            }}
-          />
+          <ModalOverlay onClick={() => { setIsCreating(false); setChosenCategorias([]); }} />
 
           <ModalCifra onSubmit={handleCreateCifra}>
-            <CloseX
-              type="button"
-              onClick={() => {
-                setIsCreating(false);
-                setChosenCategorias([]);
-              }}
-            >
+            <CloseX type="button" onClick={() => { setIsCreating(false); setChosenCategorias([]); }}>
               ×
             </CloseX>
 
@@ -369,23 +311,17 @@ export default function Cifras() {
 
             <div>
               <label htmlFor="cifra-nome">Título da Música *</label>
-              <Input
-                id="cifra-nome"
-                name="nome"
-                required
-                placeholder="Preencha o nome da música"
-              />
+              <Input id="cifra-nome" name="nome" required placeholder="Preencha o nome da música" />
+            </div>
+
+            <div>
+              <label htmlFor="cifra-artista">Artista</label>
+              <Input id="cifra-artista" name="artista" placeholder="Nome do artista (opcional)" />
             </div>
 
             <div>
               <label htmlFor="cifra-link">Link da Cifra *</label>
-              <Input
-                id="cifra-link"
-                name="link"
-                type="url"
-                required
-                placeholder="https://exemplo.com.br/sua-cifra"
-              />
+              <Input id="cifra-link" name="link" type="url" required placeholder="https://exemplo.com.br/sua-cifra" />
             </div>
 
             <p>Utilize "!!!" para separar a cifra em duas colunas</p>
@@ -395,36 +331,22 @@ export default function Cifras() {
               <textarea
                 id="cifra-observacao"
                 name="observacao"
-                placeholder={`Cole sua cifra aqui:
-      Am
-Doente de amor procurei remédio
-     G
-Na vida noturna`}
+                placeholder={`Cole sua cifra aqui:\n      Am\nDoente de amor procurei remédio\n     G\nNa vida noturna`}
               />
             </div>
 
-            <MultSeletor
-              tipo="categoria"
-              escolhidos={chosenCategorias}
-              addItem={updateCategoria}
-            />
+            <MultSeletor tipo="categoria" escolhidos={chosenCategorias} addItem={updateCategoria} />
 
             <div className="actions modal-actions">
               <button
                 type="button"
                 className="btn btn-danger"
-                onClick={() => {
-                  setIsCreating(false);
-                  setChosenCategorias([]);
-                }}
+                onClick={() => { setIsCreating(false); setChosenCategorias([]); }}
               >
                 Cancelar
               </button>
-
               {!sending ? (
-                <button type="submit" className="btn">
-                  Adicionar
-                </button>
+                <button type="submit" className="btn">Adicionar</button>
               ) : (
                 <p className="btn">Enviando</p>
               )}
@@ -434,50 +356,59 @@ Na vida noturna`}
       )}
 
       <CifrasBody>
-        {cifraPaginated
-          .sort((a, b) => a.nome.localeCompare(b.nome))
-          .map((cifra) => (
-            <Link key={cifra._id} to={`/home/cifra/${cifra._id}`}>
-              <AnCifra>
-                <h2>{cifra.nome}</h2>
-                <div>
-                  {cifra.categorias?.map((cat) => {
-                    const catId = typeof cat === "string" ? cat : cat?._id;
-                    const categoria = categorias.find((c) => c._id === catId);
-                    const parentName = getCategoriaParentName(categoria);
-                    return (
-                      <span key={catId}>
-                        {categoria?.nome}
-                        {parentName && (
-                          <span style={{ color: "#9ca3af", fontWeight: 400, marginLeft: 3 }}>
-                            ({parentName})
-                          </span>
-                        )}
-                      </span>
-                    );
-                  })}
-                </div>
-              </AnCifra>
-            </Link>
-          ))}
+        {cifras.map((cifra) => (
+          <Link key={cifra._id} to={`/home/cifra/${cifra._id}`}>
+            <AnCifra>
+              <button
+                type="button"
+                className="heart-btn"
+                aria-label={favoritosSet.has(cifra._id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleToggleFavorito(cifra._id);
+                }}
+              >
+                {favoritosSet.has(cifra._id) ? "♥" : "♡"}
+              </button>
+              <h2>{cifra.nome}</h2>
+              {cifra.artista && <p className="artista">{cifra.artista}</p>}
+              <div>
+                {cifra.categorias?.map((cat) => {
+                  const catId = typeof cat === "string" ? cat : cat?._id;
+                  const categoria = categorias.find((c) => c._id === catId);
+                  const parentName = getCategoriaParentName(categoria);
+                  return (
+                    <span key={catId}>
+                      {categoria?.nome}
+                      {parentName && (
+                        <span style={{ color: "#9ca3af", fontWeight: 400, marginLeft: 3 }}>
+                          ({parentName})
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+            </AnCifra>
+          </Link>
+        ))}
       </CifrasBody>
 
       {pages > 1 && (
         <PaginationContainer>
           <PaginationButton
             disabled={currentPage === 0}
-            onClick={() => handlePageChange(currentPage - 1)}
+            onClick={() => setCurrentPage((p) => p - 1)}
           >
             Anterior
           </PaginationButton>
-
           <PaginationInfo>
             Página {currentPage + 1} de {pages}
           </PaginationInfo>
-
           <PaginationButton
-            disabled={currentPage + 1 === pages}
-            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage + 1 >= pages}
+            onClick={() => setCurrentPage((p) => p + 1)}
           >
             Próxima
           </PaginationButton>

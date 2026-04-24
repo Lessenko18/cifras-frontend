@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Input } from "../Input/Input";
 import { GuardaEscolhidos, MultSeletorContainer } from "./MultSeletorStyled";
 import { searchCategoria } from "../../service/categoriaService";
-import { searchCifra } from "../../service/cifraService";
+import { getCifrasService } from "../../service/cifraService";
 
 export default function MultSeletor({
   tipo,
@@ -29,15 +29,16 @@ export default function MultSeletor({
 
     try {
       let response;
-
+      let results = [];
       if (tipo === "categoria") {
         response = await searchCategoria(value);
+        results = Array.isArray(response?.data) ? response.data : [];
       } else if (tipo === "cifra") {
-        response = await searchCifra(value);
+        response = await getCifrasService({ nome: value, limit: 10 });
+        results = response?.data?.cifras || [];
       }
 
       const chosenIds = new Set(escolhidos.map((i) => i._id || i.id));
-      const results = Array.isArray(response?.data) ? response.data : [];
       setItems(results.filter((item) => !chosenIds.has(item._id || item.id)).slice(0, 5));
     } catch (err) {
       console.error("Erro ao buscar:", err);
