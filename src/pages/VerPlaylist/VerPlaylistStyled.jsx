@@ -22,13 +22,13 @@ export const Page = styled.div`
     height: 45px;
     width: 45px;
     padding: 8px;
-    bottom: 140px;
+    bottom: 230px;
     right: 20px;
     z-index: 1001;
-    background: #fff;
+    background: var(--light);
     border-radius: 50%;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    border: 1px solid #ddd;
+    border: 1px solid var(--divider);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -75,12 +75,12 @@ export const Header = styled.div`
 `;
 
 export const CifraCard = styled.section`
-  border: 1px solid #e6e6e6;
+  border: 1px solid var(--border-light);
   border-radius: 12px;
   padding: 14px;
   width: 100%;
   margin-bottom: 14px;
-  background: #fff;
+  background: var(--light);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
   .card-header {
@@ -100,7 +100,7 @@ export const TextoCifra = styled.pre`
   font-size: 1rem;
   line-height: 1.4rem;
 
-  background: #fafafa;
+  background: var(--bg-card);
   border-radius: 8px;
   padding: 12px 14px;
 
@@ -110,12 +110,11 @@ export const TextoCifra = styled.pre`
 
   text-align: left;
 
-  // scrollbar
   &::-webkit-scrollbar {
     height: 6px;
   }
   &::-webkit-scrollbar-thumb {
-    background: #ccc;
+    background: var(--border-color);
     border-radius: 4px;
   }
 
@@ -170,9 +169,10 @@ export const TituloMusica = styled.h3`
 
 export const Empty = styled.div`
   padding: 24px 0;
-  color: #777;
+  color: var(--text-muted);
   text-align: center;
 `;
+
 export const Velocimetro = styled.div`
   position: fixed;
   bottom: 20px;
@@ -183,12 +183,19 @@ export const Velocimetro = styled.div`
   justify-content: center;
   gap: 4px;
   padding: 6px;
-  background: #e9eef5;
+  background: var(--velocimetro-bg);
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   width: fit-content;
   height: fit-content;
   z-index: 999;
+
+  .velocimetro-sep {
+    width: 70%;
+    height: 1px;
+    background: var(--border-color);
+    margin: 2px 0;
+  }
 
   button {
     all: unset;
@@ -200,12 +207,12 @@ export const Velocimetro = styled.div`
     height: 28px;
     border-radius: 6px;
     transition: background 0.2s;
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: bold;
-    color: #333;
+    color: var(--text-secondary);
 
     &:hover {
-      background: #d3dae6;
+      background: var(--velocimetro-hover);
     }
 
     img {
@@ -215,15 +222,16 @@ export const Velocimetro = styled.div`
     }
   }
 `;
+
 export const Sumario = styled.aside`
   position: sticky;
   top: 90px;
   align-self: flex-start;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--light);
+  border: 1px solid var(--divider);
   border-radius: 12px;
   padding: 12px;
-  width: 250px; /* Largura fixa para desktop */
+  width: 250px;
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -234,7 +242,7 @@ export const Sumario = styled.aside`
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 85%; /* No celular, ele vira um "modal" centralizado */
+    width: 85%;
     max-height: 70vh;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   }
@@ -248,12 +256,12 @@ export const Sumario = styled.aside`
     background: none;
     cursor: pointer;
     font-size: 15px;
-    color: #333;
+    color: var(--text-secondary);
     border-radius: 8px;
     margin-bottom: 4px;
 
     &.ativo {
-      background: #222;
+      background: var(--main);
       color: #fff;
     }
   }

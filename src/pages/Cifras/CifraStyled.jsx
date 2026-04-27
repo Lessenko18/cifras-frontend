@@ -16,11 +16,11 @@ export const FiltersContainer = styled.div`
   align-items: center;
   flex-wrap: wrap;
 
-  background: #ffffff;
+  background: var(--bg-card);
   padding: 14px 16px;
   border-radius: 16px;
 
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-light);
   box-shadow: 0 8px 24px -14px rgba(0, 0, 0, 0.25);
 
   transition: box-shadow 0.2s ease;
@@ -43,23 +43,23 @@ export const FilterInput = styled.input`
   padding: 0 14px;
 
   border-radius: 14px;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
 
   font-size: 0.95rem;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--text-primary);
 
   transition: all 0.2s ease;
 
   &:focus {
     outline: none;
-    border-color: #000;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+    border-color: var(--main);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
   }
 
   &::placeholder {
-    color: #94a3b8;
+    color: var(--text-muted);
   }
 
   @media (max-width: 700px) {
@@ -144,8 +144,8 @@ export const FilterDropdownPanel = styled.div`
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--light);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.2);
   z-index: 200;
@@ -161,7 +161,7 @@ export const FilterDropdownItem = styled.button`
   padding-left: ${({ $indent }) => ($indent ? "32px" : "16px")};
   text-align: left;
   background: ${({ $active }) => ($active ? "#ede9fe" : "transparent")};
-  color: ${({ $active }) => ($active ? "#6d28d9" : "#0f172a")};
+  color: ${({ $active }) => ($active ? "#6d28d9" : "var(--text-secondary)")};
   font-weight: ${({ $active }) => ($active ? "700" : "500")};
   font-size: 0.9rem;
   border: none;
@@ -171,7 +171,7 @@ export const FilterDropdownItem = styled.button`
   gap: 6px;
 
   &:hover {
-    background: ${({ $active }) => ($active ? "#ede9fe" : "#f8fafc")};
+    background: ${({ $active }) => ($active ? "#ede9fe" : "var(--bg-input)")};
   }
 `;
 
@@ -208,8 +208,8 @@ export const CifrasBody = styled.div`
 // Card da cifra
 export const AnCifra = styled.article`
   position: relative;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   padding: 10px 20px;
   display: flex;
   flex-direction: column;
@@ -228,8 +228,8 @@ export const AnCifra = styled.article`
     min-height: 56px;
     padding: 14px 20px;
     margin: -10px -20px 0;
-    background: #e9e3ff;
-    color: #4c3fb3;
+    background: var(--card-head-bg);
+    color: var(--card-head-text);
     font-size: 18px;
     font-weight: 400;
     line-height: 1.2;
@@ -241,7 +241,7 @@ export const AnCifra = styled.article`
 
   .artista {
     font-size: 13px;
-    color: #9ca3af;
+    color: var(--text-muted);
     margin: -4px 0 0;
     font-weight: 500;
   }
@@ -257,7 +257,7 @@ export const AnCifra = styled.article`
       font-weight: 800;
       background: transparent;
       font-size: 15px;
-      color: #6b7280;
+      color: var(--text-muted);
       border-radius: 0;
       padding: 0;
       margin-right: 0 !important;
@@ -295,7 +295,7 @@ export const ModalOverlay = styled.div`
 
 // Modal criar/editar
 export const ModalCifra = styled.form`
-  background: #fff;
+  background: var(--light);
   width: 440px;
   max-width: calc(100% - 24px);
   padding: 22px 24px;
@@ -316,21 +316,23 @@ export const ModalCifra = styled.form`
     font-size: 20px;
     font-weight: 800;
     margin-right: 28px;
-    color: #0f172a;
+    color: var(--text-primary);
   }
 
   label {
     font-weight: 600;
-    color: #0f172a;
+    color: var(--text-primary);
   }
 
   input,
   textarea {
     width: 100%;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 8px 10px;
     font-size: 0.95rem;
+    background: var(--bg-input);
+    color: var(--text-primary);
   }
 
   textarea {
@@ -357,10 +359,10 @@ export const CloseX = styled.button`
   border: 0;
   font-weight: 700;
   cursor: pointer;
-  color: #0f172a;
+  color: var(--text-primary);
 
   &:hover {
-    background: #f1f5f9;
+    background: var(--bg-input);
   }
 `;
 
@@ -396,6 +398,6 @@ export const PaginationButton = styled.button`
 export const PaginationInfo = styled.p`
   font-size: 0.95rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0;
 `;

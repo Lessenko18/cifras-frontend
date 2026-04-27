@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   deleteCifraService,
@@ -37,6 +37,7 @@ import {
   searchCategoria,
 } from "../../service/categoriaService";
 import { Velocimetro } from "../VerPlaylist/VerPlaylistStyled";
+import { useWakeLock } from "../../hooks/useWakeLock";
 export default function VerCifra() {
   const { id } = useParams();
   const [cifra, setCifra] = useState({});
@@ -55,6 +56,20 @@ export default function VerCifra() {
   const [modalTom, setModalTom] = useState(false);
   const intervalRef = useRef(null);
   const navigate = useNavigate();
+  const [fontSize, setFontSize] = useState(() => {
+    const saved = localStorage.getItem("cifra_fontSize");
+    return saved ? parseInt(saved, 10) : 18;
+  });
+
+  useWakeLock();
+
+  const changeFontSize = useCallback((delta) => {
+    setFontSize((prev) => {
+      const next = Math.min(30, Math.max(12, prev + delta));
+      localStorage.setItem("cifra_fontSize", next);
+      return next;
+    });
+  }, []);
 
   const ownerId = useMemo(() => {
     return (
@@ -293,6 +308,21 @@ export default function VerCifra() {
             >
               +
             </button>
+            <span className="velocimetro-sep" />
+            <button
+              type="button"
+              aria-label="Diminuir tamanho do texto"
+              onClick={() => changeFontSize(-2)}
+            >
+              A-
+            </button>
+            <button
+              type="button"
+              aria-label="Aumentar tamanho do texto"
+              onClick={() => changeFontSize(2)}
+            >
+              A+
+            </button>
           </Velocimetro>
           <button
             type="button"
@@ -344,7 +374,7 @@ export default function VerCifra() {
                 </TomButton>
               )}
               {cifra.artista && (
-                <p style={{ margin: 0, color: "#6b7280", fontSize: "0.95rem", fontStyle: "italic" }}>
+                <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.95rem", fontStyle: "italic" }}>
                   {cifra.artista}
                 </p>
               )}
@@ -353,12 +383,12 @@ export default function VerCifra() {
               </a>
             </div>
             {part1 === "" && part2 === "" ? (
-              <pre>{observacaoTransposta}</pre>
+              <pre style={{ fontSize: `${fontSize}px` }}>{observacaoTransposta}</pre>
             ) : (
               <div className="cifra-partes">
-                {part1 !== "" && <pre>{observacaoTransposta.split("!!!")[0]}</pre>}
+                {part1 !== "" && <pre style={{ fontSize: `${fontSize}px` }}>{observacaoTransposta.split("!!!")[0]}</pre>}
                 <span></span>
-                {part2 !== "" && <pre>{observacaoTransposta.split("!!!")[1]}</pre>}
+                {part2 !== "" && <pre style={{ fontSize: `${fontSize}px` }}>{observacaoTransposta.split("!!!")[1]}</pre>}
               </div>
             )}
           </CifraContent>

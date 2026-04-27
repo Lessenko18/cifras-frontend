@@ -27,8 +27,8 @@ export const CifraContent = styled.div`
   margin: 50px auto;
   justify-items: center;
 
-  background: #fafafa;
-  color: #222;
+  background: var(--bg-card);
+  color: var(--text-secondary);
   border-radius: 10px;
   padding: 20px;
   gap: 40px;
@@ -61,7 +61,7 @@ export const CifraContent = styled.div`
     gap: 20px;
 
     & > span {
-      background-color: #ddd;
+      background-color: var(--divider);
       width: 2px;
       height: 100%;
     }
@@ -71,14 +71,14 @@ export const CifraContent = styled.div`
     font-size: 18px;
     line-height: 1.4rem;
     white-space: pre-wrap;
-    background-color: #fafafa;
+    background-color: var(--bg-card);
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid #030303;
+    border: 1px solid var(--pre-border);
     width: 100%;
     max-width: 750px;
     overflow-x: auto;
-    color: #000;
+    color: var(--text-primary);
     @media only screen and (max-width: 580px) {
       font-size: 13px;
       line-height: 1.2rem;
@@ -91,7 +91,7 @@ export const UpdateCifra = styled.form`
   margin: 50px auto;
   justify-items: center;
   max-width: 850px;
-  background-color: #f1f1f1;
+  background-color: var(--bg-input);
   border-radius: 10px;
   padding: 30px;
   gap: 20px;
@@ -120,15 +120,15 @@ export const TomButton = styled.button`
   gap: 4px;
   padding: 4px 10px;
   border-radius: 8px;
-  border: 1px solid #ccc;
-  background: #f1f1f1;
+  border: 1px solid var(--border-color);
+  background: var(--tom-btn-bg);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
 
   span.tom-label {
-    color: #444;
+    color: var(--text-muted);
   }
   span.tom-value {
     color: #6b5cff;
@@ -143,7 +143,7 @@ export const Overlay = styled.div`
 `;
 
 export const ModalTom = styled.div`
-  background-color: #fff;
+  background-color: var(--light);
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
@@ -175,14 +175,14 @@ export const ModalTom = styled.div`
       flex: 1;
       padding: 8px 4px;
       border-radius: 8px;
-      border: 1px solid #ccc;
-      background: #f1f1f1;
+      border: 1px solid var(--border-color);
+      background: var(--tom-btn-bg);
       cursor: pointer;
       font-size: 14px;
       font-weight: 500;
 
       &:hover {
-        background: #e4e4e4;
+        background: var(--velocimetro-hover);
       }
     }
   }
@@ -196,20 +196,20 @@ export const ModalTom = styled.div`
     button {
       padding: 9px 4px;
       border-radius: 8px;
-      border: 1px solid #ccc;
-      background: #f1f1f1;
+      border: 1px solid var(--border-color);
+      background: var(--tom-btn-bg);
       cursor: pointer;
       font-size: 14px;
       font-weight: 500;
 
       &:hover {
-        background: #e4e4e4;
+        background: var(--velocimetro-hover);
       }
 
       &.ativo {
-        background: #222;
-        color: #fff;
-        border-color: #222;
+        background: var(--tom-active-bg);
+        color: var(--tom-active-text);
+        border-color: var(--tom-active-bg);
       }
     }
   }
@@ -218,13 +218,13 @@ export const ModalTom = styled.div`
     width: 100%;
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid #ccc;
-    background: #f1f1f1;
+    border: 1px solid var(--border-color);
+    background: var(--tom-btn-bg);
     cursor: pointer;
     font-size: 14px;
 
     &:hover {
-      background: #e4e4e4;
+      background: var(--velocimetro-hover);
     }
   }
 `;
@@ -238,7 +238,7 @@ export const ModalDelete = styled.div`
   width: 100%;
   margin: 15px auto;
   text-align: center;
-  border: 1px solid #000;
+  border: 1px solid var(--border-color);
   display: grid;
   gap: 15px;
 

@@ -109,8 +109,8 @@ export const ModalUser = styled.form`
   }
 `;
 export const AnUser = styled.article`
-  border: 1px solid #000;
-  background-color: #ffff;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
   padding: 10px 15px;
   display: flex;
   justify-content: space-between;

@@ -43,7 +43,7 @@ export const Title = styled.h1`
   font-size: 28px;
   font-weight: 800;
   margin: 0 0 24px;
-  color: #0f172a;
+  color: var(--text-primary);
 
   @media (max-width: 700px) {
     font-size: 22px;
@@ -118,8 +118,8 @@ export const EmptyState = styled.div`
 `;
 
 export const Card = styled.article`
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
   border-radius: 12px;
   padding: 22px 24px;
   padding-right: 72px;
@@ -139,8 +139,8 @@ export const Card = styled.article`
     gap: 8px;
     padding: 14px 24px;
     border-radius: 0;
-    background: #e9e3ff;
-    color: #4c3fb3;
+    background: var(--card-head-bg);
+    color: var(--card-head-text);
     font-weight: 800;
     margin: -22px -72px 12px -24px;
     align-self: stretch;

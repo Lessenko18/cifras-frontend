@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from "react";
 import { NavContainer, NavContent, UserArea } from "./NavbarStyled";
 import { getMeRequest, logout } from "../../service/auth.service";
 import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
+import { useTheme } from "../../context/ThemeContext";
+import { FiSun, FiMoon } from "react-icons/fi";
 
 export function Navbar() {
   const [user, setUser] = useState(() => {
@@ -20,6 +22,7 @@ export function Navbar() {
   const [openMenu, setOpenMenu] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const menuRef = useRef(null);
+  const { dark, toggle } = useTheme();
 
   const initials = user?.name
     ? user.name
@@ -109,6 +112,14 @@ export function Navbar() {
               <Link to="/home/categorias">Categorias</Link>
             </>
           )}
+
+          <button
+            className="theme-toggle"
+            onClick={toggle}
+            aria-label={dark ? "Ativar modo claro" : "Ativar modo escuro"}
+          >
+            {dark ? <FiSun size={20} /> : <FiMoon size={20} />}
+          </button>
 
           <UserArea ref={menuRef}>
             <button

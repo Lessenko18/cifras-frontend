@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getPlaylistByIdService,
@@ -27,6 +27,7 @@ import {
   NOTES_DISPLAY,
   transposeText,
 } from "../../utils/transpose";
+import { useWakeLock } from "../../hooks/useWakeLock";
 
 export default function VerPlaylist() {
   const { id } = useParams();
@@ -46,6 +47,20 @@ export default function VerPlaylist() {
   const [toms, setToms] = useState({});
   // ID da música com modal de tom aberto (null = nenhum)
   const [modalMusicaId, setModalMusicaId] = useState(null);
+  const [fontSize, setFontSize] = useState(() => {
+    const saved = localStorage.getItem("cifra_fontSize");
+    return saved ? parseInt(saved, 10) : 18;
+  });
+
+  useWakeLock();
+
+  const changeFontSize = useCallback((delta) => {
+    setFontSize((prev) => {
+      const next = Math.min(30, Math.max(12, prev + delta));
+      localStorage.setItem("cifra_fontSize", next);
+      return next;
+    });
+  }, []);
 
   function getMusicId(item) {
     if (!item) return null;
@@ -193,6 +208,9 @@ export default function VerPlaylist() {
           <img src="/pause.svg" alt="toggle" />
         </button>
         <button onClick={() => setVelocity((v) => Math.max(1, v - 2))}>+</button>
+        <span className="velocimetro-sep" />
+        <button aria-label="Diminuir tamanho do texto" onClick={() => changeFontSize(-2)}>A-</button>
+        <button aria-label="Aumentar tamanho do texto" onClick={() => changeFontSize(2)}>A+</button>
       </Velocimetro>
 
       <button
@@ -254,7 +272,7 @@ export default function VerPlaylist() {
                     </TomButton>
                   )}
                 </div>
-                <TextoCifra>{conteudo}</TextoCifra>
+                <TextoCifra style={{ fontSize: `${fontSize}px` }}>{conteudo}</TextoCifra>
               </CifraCard>
             );
           })}

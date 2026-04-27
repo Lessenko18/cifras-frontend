@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const NavContainer = styled.nav`
-  max-width: 1200px;
+  max-width: 1400px;
   width: 100%;
   margin: 15px auto 20px;
   display: flex;
@@ -38,10 +38,33 @@ export const NavContent = styled.div`
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 15px;
-  color: var(--light);
+  color: #fff;
   align-items: center;
   padding: 20px 0;
   margin-left: auto;
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+    padding: 6px;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+  }
+
+  [data-theme="dark"] & .theme-toggle {
+    background: rgba(251, 191, 36, 0.18);
+    border-color: rgba(251, 191, 36, 0.5);
+    color: #fbbf24;
+  }
 
   @media only screen and (max-width: 528px) {
     padding-top: 0;
@@ -91,7 +114,7 @@ export const UserArea = styled.div`
     display: flex;
     align-items: center;
     gap: 8px;
-    color: var(--light);
+    color: #fff;
   }
 
   img {

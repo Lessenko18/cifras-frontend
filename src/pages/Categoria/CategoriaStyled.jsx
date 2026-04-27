@@ -89,8 +89,8 @@ export const ModalCategoria = styled.form`
 `;
 
 export const AnCategoria = styled.article`
-  border: 1px solid #000;
-  background-color: #fff;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
   padding: 10px 15px;
   display: flex;
   justify-content: space-between;

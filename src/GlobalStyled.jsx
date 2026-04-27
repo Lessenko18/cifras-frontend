@@ -9,6 +9,52 @@ export const GlobalStyled = createGlobalStyle`
   --light: #fff;
   --gray: #eeeeee;
   --dark: #000;
+
+  /* tema claro (padrão) */
+  --bg: #ffffff;
+  --bg-card: #fafafa;
+  --panel-bg: #f1f5f9;
+  --panel-border: #e2e8f0;
+  --bg-input: #f1f1f1;
+  --text-primary: #000000;
+  --text-secondary: #222222;
+  --text-muted: #6b7280;
+  --border-color: #cccccc;
+  --border-light: #e6e6e6;
+  --divider: #dddddd;
+  --pre-border: #030303;
+  --velocimetro-bg: #e9eef5;
+  --velocimetro-hover: #d3dae6;
+  --tom-btn-bg: #f1f1f1;
+  --tom-active-bg: #222222;
+  --tom-active-text: #ffffff;
+  --card-head-bg: #e9e3ff;
+  --card-head-text: #4c3fb3;
+}
+
+[data-theme="dark"] {
+  --light: #1e1e1e;
+  --gray: #2a2a2a;
+  --dark: #e8e8e8;
+  --bg: #111111;
+  --bg-card: #1a1a1a;
+  --bg-input: #2a2a2a;
+  --text-primary: #e8e8e8;
+  --text-secondary: #cccccc;
+  --text-muted: #9ca3af;
+  --border-color: #3f3f3f;
+  --border-light: #2d2d2d;
+  --divider: #333333;
+  --pre-border: #3f3f3f;
+  --panel-bg: #1a1f33;
+  --panel-border: #2a2f4a;
+  --velocimetro-bg: #1e2433;
+  --velocimetro-hover: #2d3748;
+  --tom-btn-bg: #2a2a2a;
+  --tom-active-bg: #6b5cff;
+  --tom-active-text: #ffffff;
+  --card-head-bg: #2a1f52;
+  --card-head-text: #c4b5fd;
 }
 html {
   box-sizing: border-box;
@@ -27,6 +73,9 @@ body {
   min-height: 100vh;
   text-rendering: optimizeSpeed;
   line-height: 1.5;
+  background-color: var(--bg);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
 }
 
 body,
@@ -186,6 +235,17 @@ svg path {
   transition: 0.3s;
 }
 
+[data-theme="dark"] img[src$="back.svg"],
+[data-theme="dark"] img[src$="update.svg"],
+[data-theme="dark"] img[src$="delete.svg"],
+[data-theme="dark"] img[src$="share.svg"],
+[data-theme="dark"] img[src$="music.svg"],
+[data-theme="dark"] img[src$="pause.svg"],
+[data-theme="dark"] img[src$="closeeye.svg"],
+[data-theme="dark"] img[src$="openeye.svg"] {
+  filter: invert(1);
+}
+
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -281,7 +341,7 @@ img[alt="Voltar"] {
 
 button:hover img[src$="back.svg"],
 button:hover img[alt="Voltar"] {
-  background: #f1f5f9;
+  background: var(--bg-input);
 }
 
 @media only screen and (max-width: 700px) {

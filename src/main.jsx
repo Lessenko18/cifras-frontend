@@ -9,6 +9,7 @@ import {
 import { Navbar } from "./components/Navbar/Navbar.jsx";
 import Home from "./pages/Home/Home.jsx";
 import { GlobalStyled } from "./GlobalStyled.jsx";
+import { ThemeProvider } from "./context/ThemeContext.jsx";
 import Login from "./pages/Authentication/Login.jsx";
 import Signup from "./pages/Authentication/Signup.jsx";
 import ForgotPassword from "./pages/Authentication/ForgotPassword.jsx";
@@ -141,11 +142,13 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <GlobalStyled />
-    <ErrorBoundary>
-      <RouterProvider router={router} />
-    </ErrorBoundary>
-    <Toaster />
-    <SpeedInsights />
+    <ThemeProvider>
+      <GlobalStyled />
+      <ErrorBoundary>
+        <RouterProvider router={router} />
+      </ErrorBoundary>
+      <Toaster />
+      <SpeedInsights />
+    </ThemeProvider>
   </React.StrictMode>,
 );
