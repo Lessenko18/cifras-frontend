@@ -114,22 +114,6 @@ export default function VerPlaylist() {
   }, [scrolling, velocity]);
 
   useEffect(() => {
-    const handleWheel = (event) => {
-      const maxScroll =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const current = window.scrollY;
-      const atBottom = current >= maxScroll - 2;
-
-      if (atBottom && event.deltaY > 0) {
-        window.scrollTo({ top: 0, behavior: "auto" });
-      }
-    };
-
-    window.addEventListener("wheel", handleWheel, { passive: true });
-    return () => window.removeEventListener("wheel", handleWheel);
-  }, []);
-
-  useEffect(() => {
     (async () => {
       try {
         const [viewData, playlistData] = await Promise.all([
