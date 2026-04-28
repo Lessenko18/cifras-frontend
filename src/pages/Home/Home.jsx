@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // Cifras
@@ -19,7 +19,7 @@ import {
   unsharePlaylistService,
 } from "../../service/playlistService";
 import { getMeRequest } from "../../service/auth.service";
-import { getUsersService, searchUsersService } from "../../service/userService";
+import { searchUsersService } from "../../service/userService";
 import { getPublicAppUrl } from "../../utils/getPublicAppUrl";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
 import { Input } from "../../components/Input/Input";
@@ -33,6 +33,7 @@ import {
 import toast from "react-hot-toast";
 
 import BorderGlow from "../../components/BorderGlow/BorderGlow";
+import { FiShare2, FiEdit2, FiTrash2, FiMusic } from "react-icons/fi";
 import {
   HomeWrapper,
   Panel,
@@ -59,8 +60,86 @@ import {
 /* ── helpers ─────────────────────────────────────── */
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+
+// Cache de usuários — evita baixar a lista toda vez que abre modal de compartilhar
+let _usersCache = null;
+async function getCachedUsers() {
+  if (_usersCache) return _usersCache;
+  const { getUsersService } = await import("../../service/userService");
+  const res = await getUsersService();
+  _usersCache = res.data || [];
+  return _usersCache;
+}
 const sortByNome = (a, b) =>
   (a?.nome || "").localeCompare(b?.nome || "", "pt-BR", { sensitivity: "base" });
+
+/* ── Componentes memoizados ── evitam re-render quando o estado pai muda */
+const PlaylistCardItem = memo(function PlaylistCardItem({ pl, onView, onShare, onEdit, onDelete, canShare, canEdit, canDelete, stripEmoji }) {
+  return (
+    <PlaylistCard>
+      <div className="card-head">
+        <FiMusic size={14} aria-hidden="true" />
+        <span>{stripEmoji(pl.nome)}</span>
+      </div>
+      <div className="card-body">
+        <span className="card-count">{pl.cifras?.length || 0} música(s)</span>
+        <button className="ver-btn" onClick={() => onView(pl._id)}>
+          <FiMusic size={13} aria-hidden="true" />
+          Ver Músicas
+        </button>
+      </div>
+      {(canShare || canEdit || canDelete) && (
+        <div className="card-actions-corner">
+          {canShare && (
+            <button className="card-icon-btn" aria-label="Compartilhar" onClick={() => onShare(pl)}>
+              <FiShare2 size={14} />
+            </button>
+          )}
+          {canEdit && (
+            <button className="card-icon-btn" aria-label="Editar" onClick={() => onEdit(pl)}>
+              <FiEdit2 size={14} />
+            </button>
+          )}
+          {canDelete && (
+            <button className="card-icon-btn" aria-label="Excluir" onClick={() => onDelete(pl)}>
+              <FiTrash2 size={14} />
+            </button>
+          )}
+        </div>
+      )}
+    </PlaylistCard>
+  );
+});
+
+const CifraListItem = memo(function CifraListItem({ cifra, isFav, onToggleFav, getCatLabel }) {
+  return (
+    <Link to={`/home/cifra/${cifra._id}`}>
+      <CifraItem>
+        <div className="cifra-head">
+          <h2>{cifra.nome}</h2>
+          <button
+            type="button"
+            className="heart-btn"
+            aria-label={isFav ? "Remover favorito" : "Adicionar favorito"}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFav(cifra._id); }}
+          >
+            {isFav ? "♥" : "♡"}
+          </button>
+        </div>
+        <div className="cifra-body">
+          {cifra.artista && <span className="cifra-artista">{cifra.artista}</span>}
+          <span className="cifra-cats">
+            {cifra.categorias?.map((cat, i) => (
+              <span key={typeof cat === "string" ? cat : cat?._id}>
+                {i > 0 && " · "}{getCatLabel(cat)}
+              </span>
+            ))}
+          </span>
+        </div>
+      </CifraItem>
+    </Link>
+  );
+});
 
 export default function Home() {
   const navigate = useNavigate();
@@ -238,7 +317,7 @@ export default function Home() {
     const hasIds = raw.some((v) => typeof v === "string" && OBJECT_ID_PATTERN.test(v));
     if (!hasIds) return extractSharedEmails({ sharedWith: raw });
     try {
-      const users = (await getUsersService()).data || [];
+      const users = await getCachedUsers();
       const byId = new Map(users.map((u) => [u._id || u.id, u.email]));
       return Array.from(new Set(raw.map((v) => {
         if (EMAIL_PATTERN.test(v)) return v.toLowerCase();
@@ -373,7 +452,11 @@ export default function Home() {
     setShareInput(""); setShareSuggestions([]); setSharedExistingEmails([]);
     setShareModalOpen(true);
     try {
-      const detail = await getPlaylistByIdService(pl._id);
+      // Busca detalhes da playlist e pré-aquece cache de usuários em paralelo
+      const [detail] = await Promise.all([
+        getPlaylistByIdService(pl._id),
+        getCachedUsers(),
+      ]);
       setSharedExistingEmails(await resolveSharedEmails(detail));
     } catch { toast.error("Não foi possível carregar compartilhamentos."); }
   }, [closeAllModals, resolveSharedEmails]);
@@ -444,46 +527,19 @@ export default function Home() {
               const ownerId = getOwnerId(pl);
               const shared = isSharedWithUser(pl);
               const isOwner = ownerId ? ownerId === currentUserId : !shared;
-              const canShare = isOwner || isAdmin;
-              const canEdit = isOwner || isAdmin || shared;
-              const canDelete = isOwner || isAdmin;
-
               return (
-                <PlaylistCard key={pl._id}>
-                  <div className="card-head">
-                    <img src="/music.svg" alt="" aria-hidden="true" />
-                    <span>{stripEmoji(pl.nome)}</span>
-                  </div>
-                  <div className="card-body">
-                    <span className="card-count">{pl.cifras?.length || 0} música(s)</span>
-                    <button
-                      className="ver-btn"
-                      onClick={() => navigate(`/home/playlists/${pl._id}/ver`)}
-                    >
-                      <img src="/music.svg" alt="" aria-hidden="true" />
-                      Ver Músicas
-                    </button>
-                  </div>
-                  {(canShare || canEdit || canDelete) && (
-                    <div className="card-actions-corner">
-                      {canShare && (
-                        <button className="card-icon-btn" aria-label="Compartilhar" onClick={() => handleOpenShare(pl)}>
-                          <img src="/share.svg" alt="Compartilhar" />
-                        </button>
-                      )}
-                      {canEdit && (
-                        <button className="card-icon-btn" aria-label="Editar" onClick={() => handleClickEdit(pl)}>
-                          <img src="/update.svg" alt="Editar" />
-                        </button>
-                      )}
-                      {canDelete && (
-                        <button className="card-icon-btn" aria-label="Excluir" onClick={() => { closeAllModals(); setChosen(pl); setModalDelete(true); }}>
-                          <img src="/delete.svg" alt="Excluir" />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </PlaylistCard>
+                <PlaylistCardItem
+                  key={pl._id}
+                  pl={pl}
+                  canShare={isOwner || isAdmin}
+                  canEdit={isOwner || isAdmin || shared}
+                  canDelete={isOwner || isAdmin}
+                  stripEmoji={stripEmoji}
+                  onView={(id) => navigate(`/home/playlists/${id}/ver`)}
+                  onShare={handleOpenShare}
+                  onEdit={handleClickEdit}
+                  onDelete={(p) => { closeAllModals(); setChosen(p); setModalDelete(true); }}
+                />
               );
             })}
           </PlaylistCardsGrid>
@@ -608,34 +664,13 @@ export default function Home() {
           <>
             <CifraList>
               {cifras.map((cifra) => (
-                <Link to={`/home/cifra/${cifra._id}`} key={cifra._id}>
-                  <CifraItem>
-                    <div className="cifra-head">
-                      <h2>{cifra.nome}</h2>
-                      <button
-                        type="button"
-                        className="heart-btn"
-                        aria-label={favoritosSet.has(cifra._id) ? "Remover favorito" : "Adicionar favorito"}
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorito(cifra._id); }}
-                      >
-                        {favoritosSet.has(cifra._id) ? "♥" : "♡"}
-                      </button>
-                    </div>
-                    <div className="cifra-body">
-                      {cifra.artista && (
-                        <span className="cifra-artista">{cifra.artista}</span>
-                      )}
-                      <span className="cifra-cats">
-                        {cifra.categorias?.map((cat, i) => (
-                          <span key={typeof cat === "string" ? cat : cat?._id}>
-                            {i > 0 && " · "}
-                            {getCatLabel(cat)}
-                          </span>
-                        ))}
-                      </span>
-                    </div>
-                  </CifraItem>
-                </Link>
+                <CifraListItem
+                  key={cifra._id}
+                  cifra={cifra}
+                  isFav={favoritosSet.has(cifra._id)}
+                  onToggleFav={handleToggleFavorito}
+                  getCatLabel={getCatLabel}
+                />
               ))}
             </CifraList>
 
