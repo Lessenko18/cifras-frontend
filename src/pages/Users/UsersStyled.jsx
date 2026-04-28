@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const UsersContainer = styled.section`
-  max-width: 1200px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto 50px;
   display: grid;

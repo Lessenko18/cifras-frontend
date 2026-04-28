@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const ProfileContainer = styled.section`
-  max-width: 1200px;
+  max-width: 1400px;
   width: 100%;
   margin: 24px auto;
   padding: 0 20px;
@@ -18,13 +18,13 @@ export const BackRow = styled.div`
 `;
 
 export const Card = styled.form`
-  background: var(--light);
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 5px 15px -5px #00000060;
   display: grid;
   gap: 20px;
-  border: 1px solid #000;
+  border: 1px solid var(--border-color);
   max-width: 900px;
   width: 100%;
   margin: 0 auto;
@@ -44,21 +44,32 @@ export const Card = styled.form`
     gap: 8px;
   }
 
+  .form label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
   .form input {
     padding: 10px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
-    background: #fff;
+    background: var(--bg-input);
+    color: var(--text-primary);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
 
     &:focus {
       outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(59, 47, 235, 0.1);
+      border-color: var(--main);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
     }
 
     &:disabled {
-      background: #f5f5f5;
+      background: var(--bg-input);
       cursor: not-allowed;
       opacity: 0.6;
     }
@@ -75,18 +86,18 @@ export const Avatar = styled.div`
   align-items: center;
 
   img {
-    width: px;
+    width: 96px;
     height: 96px;
     object-fit: cover;
     border-radius: 10px;
-    border: 1px solid #000;
+    border: 1px solid var(--border-color);
   }
 
   .initials {
     width: 96px;
     height: 96px;
     border-radius: 10px;
-    background: #111111;
+    background: var(--main);
     color: #fff;
     display: grid;
     place-items: center;
@@ -97,11 +108,12 @@ export const Avatar = styled.div`
   .meta strong {
     display: block;
     font-size: 18px;
+    color: var(--text-primary);
   }
 
   .meta span {
     display: block;
-    color: #666;
+    color: var(--text-muted);
   }
 `;
 
@@ -110,13 +122,15 @@ export const Field = styled.div`
   gap: 6px;
   label {
     font-size: 13px;
-    color: #333;
+    font-weight: 600;
+    color: var(--text-secondary);
   }
   div {
-    background: #fff;
+    background: var(--bg-input);
+    color: var(--text-primary);
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid #e6e6e6;
+    border: 1px solid var(--border-color);
   }
 `;
 

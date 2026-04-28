@@ -32,6 +32,7 @@ import {
 } from "../Playlist/PlaylistStyled";
 import toast from "react-hot-toast";
 
+import BorderGlow from "../../components/BorderGlow/BorderGlow";
 import {
   HomeWrapper,
   Panel,
@@ -421,6 +422,7 @@ export default function Home() {
   return (
     <HomeWrapper>
       {/* ══ PAINEL ESQUERDO: PLAYLISTS ══ */}
+      <BorderGlow borderRadius={16} colors={['#c084fc', '#818cf8', '#38bdf8']} glowColor="270 70 75">
       <Panel>
         <PanelHeader>
           <PanelTitle>Minhas Playlists</PanelTitle>
@@ -503,8 +505,10 @@ export default function Home() {
           </PaginationContainer>
         )}
       </Panel>
+      </BorderGlow>
 
       {/* ══ PAINEL DIREITO: CIFRAS ══ */}
+      <BorderGlow borderRadius={16} colors={['#c084fc', '#818cf8', '#38bdf8']} glowColor="270 70 75">
       <Panel>
         <FiltersContainer>
           <FilterInput
@@ -606,25 +610,30 @@ export default function Home() {
               {cifras.map((cifra) => (
                 <Link to={`/home/cifra/${cifra._id}`} key={cifra._id}>
                   <CifraItem>
-                    <div className="cifra-info">
+                    <div className="cifra-head">
                       <h2>{cifra.nome}</h2>
+                      <button
+                        type="button"
+                        className="heart-btn"
+                        aria-label={favoritosSet.has(cifra._id) ? "Remover favorito" : "Adicionar favorito"}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorito(cifra._id); }}
+                      >
+                        {favoritosSet.has(cifra._id) ? "♥" : "♡"}
+                      </button>
+                    </div>
+                    <div className="cifra-body">
+                      {cifra.artista && (
+                        <span className="cifra-artista">{cifra.artista}</span>
+                      )}
                       <span className="cifra-cats">
                         {cifra.categorias?.map((cat, i) => (
                           <span key={typeof cat === "string" ? cat : cat?._id}>
-                            {i > 0 && " - "}
+                            {i > 0 && " · "}
                             {getCatLabel(cat)}
                           </span>
                         ))}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      className="heart-btn"
-                      aria-label={favoritosSet.has(cifra._id) ? "Remover favorito" : "Adicionar favorito"}
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorito(cifra._id); }}
-                    >
-                      {favoritosSet.has(cifra._id) ? "♥" : "♡"}
-                    </button>
                   </CifraItem>
                 </Link>
               ))}
@@ -646,6 +655,7 @@ export default function Home() {
           </>
         )}
       </Panel>
+      </BorderGlow>
 
       {/* ══ MODAIS DE PLAYLIST ══ */}
 

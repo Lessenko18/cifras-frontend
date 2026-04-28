@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const VerCifraContainer = styled.section`
-  max-width: 1200px;
+  max-width: 1400px;
   width: 100%;
   padding: 0 10px;
 

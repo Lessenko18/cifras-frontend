@@ -27,6 +27,27 @@ import { Title } from "../Playlist/PlaylistStyled";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
 import { useSearch } from "../../hooks/useSearch";
 
+const CATEGORY_ICONS = {
+  "Igreja":    "⛪",
+  "Sertanejo": "🤠",
+  "Gospel":    "🙏",
+  "Pop":       "🎤",
+  "Rock":      "🎸",
+  "MPB":       "🎵",
+  "Infantil":  "🧒",
+  "Natal":     "🎄",
+  "Páscoa":    "✝️",
+};
+
+function getCategoryIcon(categoryName, parentName) {
+  const search = (parentName || categoryName || "").toLowerCase();
+  if (!search) return "🎵";
+  const key = Object.keys(CATEGORY_ICONS).find((k) =>
+    search.includes(k.toLowerCase())
+  );
+  return key ? CATEGORY_ICONS[key] : "🎵";
+}
+
 export default function Cifras() {
   const [cifras, setCifras] = useState([]);
   const [pages, setPages] = useState(0);
@@ -378,14 +399,11 @@ export default function Cifras() {
                   const catId = typeof cat === "string" ? cat : cat?._id;
                   const categoria = categorias.find((c) => c._id === catId);
                   const parentName = getCategoriaParentName(categoria);
+                  const icon = getCategoryIcon(categoria?.nome, parentName);
                   return (
-                    <span key={catId}>
+                    <span key={catId} title={parentName || undefined}>
+                      {icon && icon}{icon && " "}
                       {categoria?.nome}
-                      {parentName && (
-                        <span style={{ color: "#9ca3af", fontWeight: 400, marginLeft: 3 }}>
-                          ({parentName})
-                        </span>
-                      )}
                     </span>
                   );
                 })}

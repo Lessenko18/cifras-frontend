@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { NavContainer, NavContent, UserArea } from "./NavbarStyled";
 import { getMeRequest, logout } from "../../service/auth.service";
@@ -102,14 +102,14 @@ export function Navbar() {
         </Link>
 
         <NavContent>
-          <Link to="/home">Home</Link>
-          <Link to="/home/cifras">Cifras</Link>
-          <Link to="/home/playlists">Playlists</Link>
+          <NavLink to="/home" end className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Home</NavLink>
+          <NavLink to="/home/cifras" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Cifras</NavLink>
+          <NavLink to="/home/playlists" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Playlists</NavLink>
 
           {isAdmin && (
             <>
-              <Link to="/home/users">Usuários</Link>
-              <Link to="/home/categorias">Categorias</Link>
+              <NavLink to="/home/users" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Usuários</NavLink>
+              <NavLink to="/home/categorias" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Categorias</NavLink>
             </>
           )}
 

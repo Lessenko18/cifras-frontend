@@ -280,12 +280,12 @@ select:focus-visible {
   padding: 10px 18px;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(135deg, #6b5cff, #5a4ad9);
+  background: linear-gradient(135deg, #0ea5e9, #7c3aed);
   color: #fff;
   font-size: 14px;
   line-height: 1.2;
   font-weight: 700;
-  box-shadow: 0 6px 14px rgba(107, 92, 255, 0.3);
+  box-shadow: 0 6px 14px rgba(124, 58, 237, 0.3);
   cursor: pointer;
   transition:
     transform 0.15s ease,
@@ -293,7 +293,7 @@ select:focus-visible {
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(107, 92, 255, 0.35);
+    box-shadow: 0 8px 18px rgba(124, 58, 237, 0.4);
     color: #fff;
   }
 }

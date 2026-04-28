@@ -326,11 +326,9 @@ export const CifraItem = styled.article`
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: 12px;
-  padding: 14px 16px;
+  overflow: hidden;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
 
@@ -339,46 +337,67 @@ export const CifraItem = styled.article`
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
-  .cifra-info {
+  .cifra-head {
+    background: var(--card-head-bg);
+    color: var(--card-head-text);
+    padding: 10px 42px 10px 14px;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    position: relative;
   }
 
   h2 {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
-    color: var(--text-primary);
     margin: 0;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .cifra-cats {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.2;
   }
 
   .heart-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
     background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 20px;
-    color: #7c3aed;
+    font-size: 18px;
+    color: var(--card-head-text);
     padding: 0;
     line-height: 1;
     flex-shrink: 0;
     transition: transform 0.15s;
 
     &:hover {
-      transform: scale(1.25);
+      transform: translateY(-50%) scale(1.25);
     }
+  }
+
+  .cifra-body {
+    padding: 10px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cifra-artista {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .cifra-cats {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;
 

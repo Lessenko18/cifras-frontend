@@ -43,6 +43,40 @@ export const NavContent = styled.div`
   padding: 20px 0;
   margin-left: auto;
 
+  .nav-link {
+    position: relative;
+    font-weight: 600;
+    color: #fff;
+    padding-bottom: 4px;
+
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: #fff;
+      border-radius: 2px;
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    &:hover::after {
+      transform: scaleX(1);
+    }
+
+    &.active::after {
+      transform: scaleX(1);
+      background: linear-gradient(90deg, #c084fc, #38bdf8);
+    }
+
+    &.active {
+      text-shadow: 0 0 12px rgba(192, 132, 252, 0.6);
+    }
+  }
+
   .theme-toggle {
     display: flex;
     align-items: center;

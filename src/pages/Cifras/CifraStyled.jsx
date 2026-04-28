@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 // Container principal
 export const CifrasContainer = styled.section`
-  max-width: 1200px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto 50px;
   display: grid;
@@ -179,7 +179,7 @@ export const FilterDropdownItem = styled.button`
 export const CifrasBody = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 38px;
+  gap: 20px;
   justify-items: stretch;
 
   @media (max-width: 924px) {
@@ -215,8 +215,8 @@ export const AnCifra = styled.article`
   flex-direction: column;
   gap: 10px;
   width: 100%;
-  max-width: 340px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   min-height: 120px;
   border-radius: 12px;
   overflow: hidden;
@@ -249,18 +249,19 @@ export const AnCifra = styled.article`
   div {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
 
-    span {
+    > span {
       display: inline-flex;
       align-items: center;
-      font-weight: 800;
-      background: transparent;
-      font-size: 15px;
+      gap: 4px;
+      font-weight: 600;
+      font-size: 0.78rem;
       color: var(--text-muted);
-      border-radius: 0;
-      padding: 0;
-      margin-right: 0 !important;
+      background: var(--bg-input);
+      border: 1px solid var(--border-light);
+      border-radius: 999px;
+      padding: 3px 10px;
     }
   }
 
