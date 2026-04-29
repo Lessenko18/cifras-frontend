@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
 import { createCifraService, getCifrasService } from "../../service/cifraService";
+import { fetchCifraClub } from "../../service/cifraClubService";
 import { getFavoritosService, toggleFavoritoService } from "../../service/favoritosService";
 import {
   AnCifra,
@@ -56,6 +57,12 @@ export default function Cifras() {
   const [isCreating, setIsCreating] = useState(false);
   const [chosenCategorias, setChosenCategorias] = useState([]);
   const [sending, setSending] = useState(false);
+
+  const [formNome, setFormNome] = useState("");
+  const [formArtista, setFormArtista] = useState("");
+  const [formLink, setFormLink] = useState("");
+  const [formObservacao, setFormObservacao] = useState("");
+  const [fetchingCifra, setFetchingCifra] = useState(false);
 
   const { search: searchNome, setSearch: setSearchNome, debounced } = useSearch();
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
@@ -165,30 +172,53 @@ export default function Cifras() {
     setCurrentPage(0);
   }, [debounced, categoriaFiltro]);
 
+  const resetForm = useCallback(() => {
+    setFormNome("");
+    setFormArtista("");
+    setFormLink("");
+    setFormObservacao("");
+    setChosenCategorias([]);
+  }, []);
+
+  const handleFetchCifra = useCallback(async () => {
+    if (!formLink.trim()) {
+      toast.warning("Cole o link da cifra primeiro.");
+      return;
+    }
+    setFetchingCifra(true);
+    try {
+      const { nome, artista } = await fetchCifraClub(formLink.trim());
+      if (nome) setFormNome(nome);
+      if (artista) setFormArtista(artista);
+      toast.success("Cifra carregada com sucesso!");
+    } catch {
+      toast.error("Não foi possível carregar a cifra. Verifique o link.");
+    } finally {
+      setFetchingCifra(false);
+    }
+  }, [formLink]);
+
   const handleCreateCifra = useCallback(
     async (event) => {
       event.preventDefault();
       setSending(true);
 
-      const formData = new FormData(event.target);
-      const data = Object.fromEntries(formData.entries());
+      const nome = formNome.trim();
+      const link = formLink.trim();
+      const observacao = formObservacao.trim();
+      const artista = formArtista.trim();
+      const categorias = chosenCategorias.map((c) => c._id);
 
-      data.nome = (data.nome ?? "").trim();
-      data.link = (data.link ?? "").trim();
-      data.observacao = (data.observacao ?? "").trim();
-      data.categorias = chosenCategorias.map((c) => c._id);
-
-      if (!data.nome || !data.link) {
+      if (!nome || !link) {
         toast.warning("Preencha pelo menos Nome e Link da cifra.");
         setSending(false);
         return;
       }
 
       try {
-        await createCifraService(data);
+        await createCifraService({ nome, link, observacao, artista, categorias });
         setIsCreating(false);
-        setChosenCategorias([]);
-        event.target.reset();
+        resetForm();
         await fetchCifras();
         toast.success("Cifra cadastrada com sucesso!");
       } catch (err) {
@@ -198,7 +228,7 @@ export default function Cifras() {
         setSending(false);
       }
     },
-    [chosenCategorias, fetchCifras],
+    [formNome, formLink, formObservacao, formArtista, chosenCategorias, fetchCifras, resetForm],
   );
 
   const updateCategoria = useCallback((lista) => {
@@ -321,10 +351,10 @@ export default function Cifras() {
 
       {isCreating && (
         <>
-          <ModalOverlay onClick={() => { setIsCreating(false); setChosenCategorias([]); }} />
+          <ModalOverlay onClick={() => { setIsCreating(false); resetForm(); }} />
 
           <ModalCifra onSubmit={handleCreateCifra}>
-            <CloseX type="button" onClick={() => { setIsCreating(false); setChosenCategorias([]); }}>
+            <CloseX type="button" onClick={() => { setIsCreating(false); resetForm(); }}>
               ×
             </CloseX>
 
@@ -332,17 +362,50 @@ export default function Cifras() {
 
             <div>
               <label htmlFor="cifra-nome">Título da Música *</label>
-              <Input id="cifra-nome" name="nome" required placeholder="Preencha o nome da música" />
+              <Input
+                id="cifra-nome"
+                name="nome"
+                required
+                placeholder="Preencha o nome da música"
+                value={formNome}
+                onChange={(e) => setFormNome(e.target.value)}
+              />
             </div>
 
             <div>
               <label htmlFor="cifra-artista">Artista</label>
-              <Input id="cifra-artista" name="artista" placeholder="Nome do artista (opcional)" />
+              <Input
+                id="cifra-artista"
+                name="artista"
+                placeholder="Nome do artista (opcional)"
+                value={formArtista}
+                onChange={(e) => setFormArtista(e.target.value)}
+              />
             </div>
 
             <div>
               <label htmlFor="cifra-link">Link da Cifra *</label>
-              <Input id="cifra-link" name="link" type="url" required placeholder="https://exemplo.com.br/sua-cifra" />
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <Input
+                  id="cifra-link"
+                  name="link"
+                  type="url"
+                  required
+                  placeholder="https://exemplo.com.br/sua-cifra"
+                  value={formLink}
+                  onChange={(e) => setFormLink(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleFetchCifra}
+                  disabled={fetchingCifra}
+                  style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+                >
+                  {fetchingCifra ? "Buscando..." : "Buscar"}
+                </button>
+              </div>
             </div>
 
             <p>Utilize "!!!" para separar a cifra em duas colunas</p>
@@ -353,6 +416,8 @@ export default function Cifras() {
                 id="cifra-observacao"
                 name="observacao"
                 placeholder={`Cole sua cifra aqui:\n      Am\nDoente de amor procurei remédio\n     G\nNa vida noturna`}
+                value={formObservacao}
+                onChange={(e) => setFormObservacao(e.target.value)}
               />
             </div>
 
@@ -362,7 +427,7 @@ export default function Cifras() {
               <button
                 type="button"
                 className="btn btn-danger"
-                onClick={() => { setIsCreating(false); setChosenCategorias([]); }}
+                onClick={() => { setIsCreating(false); resetForm(); }}
               >
                 Cancelar
               </button>
