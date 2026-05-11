@@ -6,6 +6,10 @@ export const Page = styled.div`
   margin: 0 auto;
   width: 100%;
 
+  @media (max-width: 850px) {
+    padding: 10px 8px;
+  }
+
   .main-layout {
     display: flex;
     gap: 20px;
@@ -14,25 +18,6 @@ export const Page = styled.div`
     @media (max-width: 850px) {
       display: block;
     }
-  }
-
-  #Openeye,
-  #Closeeye {
-    position: fixed;
-    height: 45px;
-    width: 45px;
-    padding: 8px;
-    bottom: 230px;
-    right: 20px;
-    z-index: 1001;
-    background: var(--light);
-    border-radius: 50%;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--divider);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 `;
 export const PlaylistBody = styled.div`
@@ -90,13 +75,47 @@ export const CifraCard = styled.section`
     gap: 8px;
     margin-bottom: 8px;
   }
+
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .eye-toggle {
+    all: unset;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    opacity: 0.55;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    img {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+  }
+
+  @media (max-width: 850px) {
+    padding: 10px 8px;
+  }
 `;
 
 export const TextoCifra = styled.pre`
   margin-top: 8px;
   margin-bottom: 0;
 
-  font-family: "italic", monospace;
+  font-family: monospace;
   font-size: 1rem;
   line-height: 1.4rem;
 
@@ -105,13 +124,13 @@ export const TextoCifra = styled.pre`
   padding: 12px 14px;
 
   white-space: pre;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: hidden;
 
   text-align: left;
 
   &::-webkit-scrollbar {
-    height: 6px;
+    height: 5px;
   }
   &::-webkit-scrollbar-thumb {
     background: var(--border-color);
@@ -119,44 +138,15 @@ export const TextoCifra = styled.pre`
   }
 
   @media (max-width: 675px) {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     line-height: 1.3rem;
-    padding: 10px 12px;
-  }
-
-  @media (max-width: 632px) {
-    font-size: clamp(0.78rem, 2.7vw, 0.98rem);
-    line-height: 1.26rem;
-    padding: 10px 12px;
-    white-space: pre;
-    overflow-x: hidden;
-    letter-spacing: -0.01em;
-  }
-
-  @media (max-width: 580px) {
-    font-size: clamp(0.75rem, 2.6vw, 0.96rem);
-    line-height: 1.22rem;
-    padding: 8px 10px;
-    white-space: pre;
-    letter-spacing: -0.015em;
-    transform: scaleX(0.97);
-    transform-origin: left top;
+    padding: 8px 8px;
   }
 
   @media (max-width: 430px) {
-    font-size: clamp(0.68rem, 2.3vw, 0.9rem);
-    line-height: 1.16rem;
-    padding: 7px 8px;
-    letter-spacing: -0.02em;
-    transform: scaleX(0.95);
-  }
-
-  @media (max-width: 400px) {
-    font-size: clamp(0.64rem, 2.1vw, 0.86rem);
-    line-height: 1.12rem;
-    padding: 6px 8px;
-    letter-spacing: -0.025em;
-    transform: scaleX(0.93);
+    font-size: 0.82rem;
+    line-height: 1.22rem;
+    padding: 6px 6px;
   }
 `;
 
@@ -175,8 +165,8 @@ export const Empty = styled.div`
 
 export const Velocimetro = styled.div`
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 16px;
+  right: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;

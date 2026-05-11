@@ -9,6 +9,7 @@ import {
   CifrasGrid,
   ModalBox,
   ModalDelete,
+  ModalOverlay,
   IconButton,
   ShareInputRow,
   ShareList,
@@ -747,6 +748,8 @@ export default function Playlists() {
 
       {/* CREATE */}
       {isCreating && (
+        <>
+        <ModalOverlay onClick={() => { setIsCreating(false); setChosenCifras([]); setCreateShareEmails([]); setCreateShareInput(""); setCreateShareSuggestions([]); }} />
         <ModalBox onSubmit={handleCreate}>
           <h3>Criar Playlist</h3>
 
@@ -871,10 +874,13 @@ export default function Playlists() {
             </button>
           </div>
         </ModalBox>
+        </>
       )}
 
       {/* EDIT */}
       {modalEdit && chosen && (
+        <>
+        <ModalOverlay onClick={() => { setModalEdit(false); setChosenCifras([]); }} />
         <ModalBox onSubmit={handleEdit}>
           <h3>Editar Playlist</h3>
 
@@ -920,10 +926,13 @@ export default function Playlists() {
             </button>
           </div>
         </ModalBox>
+        </>
       )}
 
       {/* SHARE */}
       {shareModalOpen && shareTarget && (
+        <>
+        <ModalOverlay onClick={() => { setShareModalOpen(false); setShareTarget(null); setSharedExistingEmails([]); setShareEmails([]); setShareInput(""); setShareSuggestions([]); }} />
         <ModalBox onSubmit={handleShareSubmit}>
           <h3>Compartilhar “{shareTarget.nome}”</h3>
 
@@ -1054,10 +1063,13 @@ export default function Playlists() {
             </button>
           </div>
         </ModalBox>
+        </>
       )}
 
       {/* DELETE */}
       {modalDelete && chosen && (
+        <>
+        <ModalOverlay onClick={() => setModalDelete(false)} />
         <ModalDelete>
           <h3>Excluir “{chosen.nome}”?</h3>
           <p>Essa ação é irreversível e removerá a playlist permanentemente.</p>
@@ -1079,6 +1091,7 @@ export default function Playlists() {
             </button>
           </div>
         </ModalDelete>
+        </>
       )}
     </Page>
   );

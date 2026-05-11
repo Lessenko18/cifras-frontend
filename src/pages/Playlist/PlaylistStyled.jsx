@@ -295,22 +295,28 @@ export const CifrasGrid = styled.div`
   }
 `;
 
+export const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 300;
+`;
+
 export const ModalBox = styled.form`
   background-color: var(--light);
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 5px 15px -5px #1a1a1a8d;
   max-width: 350px;
-  width: 100%;
-  margin: 20px auto;
+  width: calc(100% - 40px);
   border: 1px solid #000;
-  max-height: 500px;
-  overflow-y: scroll;
+  max-height: 85dvh;
+  overflow-y: auto;
 
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 10;
+  z-index: 400;
   transform: translate(-50%, -50%);
 
   display: grid;
@@ -403,8 +409,7 @@ export const ModalDelete = styled.div`
   border-radius: 10px;
   box-shadow: 0 5px 15px -5px #1a1a1a8d;
   max-width: 350px;
-  width: 100%;
-  margin: 15px auto;
+  width: calc(100% - 40px);
   text-align: center;
   border: 1px solid #000;
   display: grid;
@@ -413,7 +418,7 @@ export const ModalDelete = styled.div`
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 10;
+  z-index: 400;
   transform: translate(-50%, -50%);
 
   div {

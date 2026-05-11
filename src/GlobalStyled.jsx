@@ -76,6 +76,7 @@ body {
   background-color: var(--bg);
   color: var(--text-primary);
   transition: background-color 0.3s, color 0.3s;
+  overflow-x: hidden;
 }
 
 body,

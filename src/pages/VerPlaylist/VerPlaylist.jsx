@@ -9,12 +9,12 @@ import {
   Header,
   CifraCard,
   TituloMusica,
-  TextoCifra,
   Empty,
   Velocimetro,
   Sumario,
   PlaylistBody,
 } from "./VerPlaylistStyled";
+import { CifraRenderer } from "../../components/CifraRenderer/CifraRenderer";
 import {
   ModalTom,
   Overlay,
@@ -51,6 +51,7 @@ export default function VerPlaylist() {
     const saved = localStorage.getItem("cifra_fontSize");
     return saved ? parseInt(saved, 10) : 18;
   });
+  const [velocimetroVisivel, setVelocimetroVisivel] = useState(true);
 
   useWakeLock();
 
@@ -131,10 +132,13 @@ export default function VerPlaylist() {
   useEffect(() => {
     (async () => {
       try {
-        const [viewData, playlistData] = await Promise.all([
+        const [viewResult, playlistResult] = await Promise.allSettled([
           getPlaylistViewService(id),
           getPlaylistByIdService(id),
         ]);
+        if (viewResult.status === "rejected") throw viewResult.reason;
+        const viewData = viewResult.value;
+        const playlistData = playlistResult.status === "fulfilled" ? playlistResult.value : null;
         const ordenado = applySavedOrder(viewData, playlistData);
         setData(ordenado);
 
@@ -202,26 +206,28 @@ export default function VerPlaylist() {
         <img src="/back.svg" alt="Voltar" />
       </button>
 
-      <Velocimetro>
-        <button onClick={() => setVelocity((v) => Math.min(9, v + 2))}>-</button>
-        <button onClick={interruptor}>
-          <img src="/pause.svg" alt="toggle" />
-        </button>
-        <button onClick={() => setVelocity((v) => Math.max(1, v - 2))}>+</button>
-        <span className="velocimetro-sep" />
-        <button aria-label="Diminuir tamanho do texto" onClick={() => changeFontSize(-2)}>A-</button>
-        <button aria-label="Aumentar tamanho do texto" onClick={() => changeFontSize(2)}>A+</button>
-      </Velocimetro>
-
-      <button
-        id={sumarioVisivel ? "Closeeye" : "Openeye"}
-        onClick={() => setSumarioVisivel(!sumarioVisivel)}
-      >
-        <img
-          src={sumarioVisivel ? "/closeeye.svg" : "/openeye.svg"}
-          alt="toggle sumario"
-        />
-      </button>
+      {velocimetroVisivel && (
+        <Velocimetro>
+          <button onClick={() => setVelocity((v) => Math.min(9, v + 2))}>-</button>
+          <button onClick={interruptor}>
+            <img src="/pause.svg" alt="toggle" />
+          </button>
+          <button onClick={() => setVelocity((v) => Math.max(1, v - 2))}>+</button>
+          <span className="velocimetro-sep" />
+          <button aria-label="Diminuir tamanho do texto" onClick={() => changeFontSize(-2)}>A-</button>
+          <button aria-label="Aumentar tamanho do texto" onClick={() => changeFontSize(2)}>A+</button>
+          <span className="velocimetro-sep" />
+          <button
+            aria-label="Sumário"
+            onClick={() => setSumarioVisivel(!sumarioVisivel)}
+          >
+            <img
+              src={sumarioVisivel ? "/closeeye.svg" : "/openeye.svg"}
+              alt="toggle sumario"
+            />
+          </button>
+        </Velocimetro>
+      )}
 
       <Header>
         <h2>{data.nome}</h2>
@@ -261,18 +267,31 @@ export default function VerPlaylist() {
               <CifraCard key={`${songId}-${i}`} id={`musica-${i}`}>
                 <div className="card-header">
                   <TituloMusica>{m.nome}</TituloMusica>
-                  {origKey && (
-                    <TomButton
+                  <div className="card-actions">
+                    <button
+                      className="eye-toggle"
                       type="button"
-                      aria-label="Abrir seletor de tom"
-                      onClick={() => setModalMusicaId(songId)}
+                      aria-label="Mostrar/ocultar controles"
+                      onClick={() => setVelocimetroVisivel((v) => !v)}
                     >
-                      <span className="tom-label">Tom:</span>
-                      <span className="tom-value">{currentKey}</span>
-                    </TomButton>
-                  )}
+                      <img
+                        src={velocimetroVisivel ? "/closeeye.svg" : "/openeye.svg"}
+                        alt="toggle controles"
+                      />
+                    </button>
+                    {origKey && (
+                      <TomButton
+                        type="button"
+                        aria-label="Abrir seletor de tom"
+                        onClick={() => setModalMusicaId(songId)}
+                      >
+                        <span className="tom-label">Tom:</span>
+                        <span className="tom-value">{currentKey}</span>
+                      </TomButton>
+                    )}
+                  </div>
                 </div>
-                <TextoCifra style={{ fontSize: `${fontSize}px` }}>{conteudo}</TextoCifra>
+                <CifraRenderer text={conteudo} style={{ fontSize: `${fontSize}px` }} />
               </CifraCard>
             );
           })}

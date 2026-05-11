@@ -3,7 +3,7 @@ import styled from "styled-components";
 export const NavContainer = styled.nav`
   max-width: 1400px;
   width: 100%;
-  margin: 15px auto 20px;
+  margin: 0 auto 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -22,15 +22,21 @@ export const NavContainer = styled.nav`
   }
 
   #logo {
-    max-width: 250px;
+    max-width: 200px;
     filter: drop-shadow(0 2px 2px #0000007b);
+  }
+
+  @media only screen and (max-width: 600px) {
+    #logo {
+      max-width: 160px;
+    }
   }
 
   @media only screen and (max-width: 420px) {
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding: 12px 12px 16px;
+    gap: 6px;
+    padding: 8px 12px 10px;
   }
 `;
 export const NavContent = styled.div`
@@ -40,7 +46,7 @@ export const NavContent = styled.div`
   gap: 15px;
   color: #fff;
   align-items: center;
-  padding: 20px 0;
+  padding: 14px 0;
   margin-left: auto;
 
   .nav-link {
@@ -100,6 +106,11 @@ export const NavContent = styled.div`
     color: #fbbf24;
   }
 
+  @media only screen and (max-width: 600px) {
+    font-size: 14px;
+    gap: 10px;
+  }
+
   @media only screen and (max-width: 528px) {
     padding-top: 0;
   }
@@ -107,14 +118,15 @@ export const NavContent = styled.div`
   @media only screen and (max-width: 420px) {
     width: 100%;
     justify-content: center;
-    gap: 10px;
-    padding: 6px 0 0;
+    gap: 8px;
+    padding: 4px 0 0;
+    font-size: 13px;
   }
 `;
 
 export const UserArea = styled.div`
   position: relative;
-  z-index: 1000;
+  z-index: 100;
   display: flex;
   align-items: center;
 
@@ -158,20 +170,27 @@ export const UserArea = styled.div`
     object-fit: cover;
   }
 
+  @media only screen and (max-width: 600px) {
+    img {
+      width: 36px;
+      height: 36px;
+    }
+  }
+
   @media only screen and (max-width: 420px) {
     .user-btn {
       gap: 6px;
     }
 
     img {
-      width: 42px;
-      height: 42px;
+      width: 32px;
+      height: 32px;
     }
 
     .initials {
-      width: 32px;
-      height: 32px;
-      font-size: 14px;
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
     }
   }
 
@@ -197,7 +216,7 @@ export const UserArea = styled.div`
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     padding: 12px;
     min-width: 290px;
-    z-index: 2000;
+    z-index: 200;
     display: flex;
     flex-direction: column;
     gap: 8px;

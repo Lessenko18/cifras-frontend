@@ -139,7 +139,7 @@ export const Overlay = styled.div`
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.35);
-  z-index: 9;
+  z-index: 300;
 `;
 
 export const ModalTom = styled.div`
@@ -152,7 +152,7 @@ export const ModalTom = styled.div`
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 10;
+  z-index: 400;
   transform: translate(-50%, -50%);
 
   .tom-titulo {
@@ -245,7 +245,7 @@ export const ModalDelete = styled.div`
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 10;
+  z-index: 400;
   transform: translate(-50%, -50%);
 
   div {

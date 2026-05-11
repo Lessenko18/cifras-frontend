@@ -61,7 +61,7 @@ export const ModalCategoria = styled.form`
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 10;
+  z-index: 400;
   transform: translate(-50%, -50%);
   div {
     display: grid;

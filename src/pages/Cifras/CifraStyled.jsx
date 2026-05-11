@@ -291,7 +291,7 @@ export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
-  z-index: 9;
+  z-index: 300;
 `;
 
 // Modal criar/editar
@@ -307,7 +307,7 @@ export const ModalCifra = styled.form`
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 10;
+  z-index: 400;
   transform: translate(-50%, -50%);
 
   display: grid;
