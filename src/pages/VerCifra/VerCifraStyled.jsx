@@ -25,7 +25,7 @@ export const CifraBody = styled.div``;
 export const CifraContent = styled.div`
   display: grid;
   margin: 50px auto;
-  justify-items: center;
+  justify-items: stretch;
 
   background: var(--bg-card);
   color: var(--text-secondary);
@@ -51,6 +51,30 @@ export const CifraContent = styled.div`
       text-decoration: underline;
       font-style: italic;
       margin-left: auto;
+    }
+  }
+
+  .eye-toggle {
+    all: unset;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    opacity: 0.55;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    img {
+      width: 18px;
+      height: 18px;
+      display: block;
     }
   }
 

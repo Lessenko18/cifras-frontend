@@ -37,6 +37,7 @@ import {
   searchCategoria,
 } from "../../service/categoriaService";
 import { Velocimetro } from "../VerPlaylist/VerPlaylistStyled";
+import { CifraRenderer } from "../../components/CifraRenderer/CifraRenderer";
 import { useWakeLock } from "../../hooks/useWakeLock";
 export default function VerCifra() {
   const { id } = useParams();
@@ -52,6 +53,7 @@ export default function VerCifra() {
   const [part2, setPart2] = useState("");
   const [scrolling, setScrolling] = useState(false);
   const [velocity, setVelocity] = useState(5);
+  const [velocimetroVisivel, setVelocimetroVisivel] = useState(true);
   const [semitones, setSemitones] = useState(0);
   const [modalTom, setModalTom] = useState(false);
   const intervalRef = useRef(null);
@@ -282,48 +284,6 @@ export default function VerCifra() {
     <VerCifraContainer className={part1 !== "" && "partes"}>
       <UsersHeader>
         <div className="ver-cifra-left">
-          <Velocimetro>
-            <button
-              type="button"
-              aria-label="Diminuir velocidade da rolagem"
-              onClick={() => setVelocity((v) => Math.min(9, v + 2))}
-            >
-              -
-            </button>
-            <button
-              type="button"
-              aria-label="Iniciar ou pausar rolagem"
-              onClick={interruptor}
-            >
-              {scrolling ? (
-                <img src="/pause.svg" alt="pause" />
-              ) : (
-                <img src="/pause.svg" alt="play" />
-              )}
-            </button>
-            <button
-              type="button"
-              aria-label="Aumentar velocidade da rolagem"
-              onClick={() => setVelocity((v) => Math.max(1, v - 2))}
-            >
-              +
-            </button>
-            <span className="velocimetro-sep" />
-            <button
-              type="button"
-              aria-label="Diminuir tamanho do texto"
-              onClick={() => changeFontSize(-2)}
-            >
-              A-
-            </button>
-            <button
-              type="button"
-              aria-label="Aumentar tamanho do texto"
-              onClick={() => changeFontSize(2)}
-            >
-              A+
-            </button>
-          </Velocimetro>
           <button
             type="button"
             aria-label="Voltar"
@@ -358,6 +318,57 @@ export default function VerCifra() {
           </div>
         )}
       </UsersHeader>
+
+      {velocimetroVisivel && (
+        <Velocimetro>
+          <button
+            type="button"
+            aria-label="Diminuir velocidade da rolagem"
+            onClick={() => setVelocity((v) => Math.min(9, v + 2))}
+          >
+            -
+          </button>
+          <button
+            type="button"
+            aria-label="Iniciar ou pausar rolagem"
+            onClick={interruptor}
+          >
+            <img src="/pause.svg" alt={scrolling ? "pause" : "play"} />
+          </button>
+          <button
+            type="button"
+            aria-label="Aumentar velocidade da rolagem"
+            onClick={() => setVelocity((v) => Math.max(1, v - 2))}
+          >
+            +
+          </button>
+          <span className="velocimetro-sep" />
+          <button
+            type="button"
+            aria-label="Diminuir tamanho do texto"
+            onClick={() => changeFontSize(-2)}
+          >
+            A-
+          </button>
+          <button
+            type="button"
+            aria-label="Aumentar tamanho do texto"
+            onClick={() => changeFontSize(2)}
+          >
+            A+
+          </button>
+          <span className="velocimetro-sep" />
+          <button
+            type="button"
+            className="eye-toggle"
+            aria-label="Ocultar controles"
+            onClick={() => setVelocimetroVisivel(false)}
+          >
+            <img src="/closeeye.svg" alt="ocultar controles" />
+          </button>
+        </Velocimetro>
+      )}
+
       {/* UPDATE */}
       <CifraBody>
         {!update || !canManageCifra ? (
@@ -381,14 +392,25 @@ export default function VerCifra() {
               <a target="_blank" href={cifra.link}>
                 Acesse a cifra original
               </a>
+              <button
+                type="button"
+                className="eye-toggle"
+                aria-label="Mostrar/ocultar controles"
+                onClick={() => setVelocimetroVisivel((v) => !v)}
+              >
+                <img
+                  src={velocimetroVisivel ? "/closeeye.svg" : "/openeye.svg"}
+                  alt="toggle controles"
+                />
+              </button>
             </div>
             {part1 === "" && part2 === "" ? (
-              <pre style={{ fontSize: `${fontSize}px` }}>{observacaoTransposta}</pre>
+              <CifraRenderer text={observacaoTransposta} style={{ fontSize: `${fontSize}px` }} />
             ) : (
               <div className="cifra-partes">
-                {part1 !== "" && <pre style={{ fontSize: `${fontSize}px` }}>{observacaoTransposta.split("!!!")[0]}</pre>}
+                {part1 !== "" && <CifraRenderer text={observacaoTransposta.split("!!!")[0]} style={{ fontSize: `${fontSize}px` }} />}
                 <span></span>
-                {part2 !== "" && <pre style={{ fontSize: `${fontSize}px` }}>{observacaoTransposta.split("!!!")[1]}</pre>}
+                {part2 !== "" && <CifraRenderer text={observacaoTransposta.split("!!!")[1]} style={{ fontSize: `${fontSize}px` }} />}
               </div>
             )}
           </CifraContent>
