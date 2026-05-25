@@ -170,6 +170,7 @@ export default function Playlists() {
 
   const fetchSuggestions = useCallback(
     async (query, blocked, setSuggestions) => {
+      if (!isAdmin) return; // GET /user/search requires admin
       try {
         const response = await searchUsersService(query);
         const list = buildSuggestionList(response?.data, blocked);
@@ -179,7 +180,7 @@ export default function Playlists() {
         setSuggestions([]);
       }
     },
-    [buildSuggestionList],
+    [buildSuggestionList, isAdmin],
   );
 
   const removeEmailFromList = useCallback((email, setCurrent) => {
@@ -637,13 +638,6 @@ export default function Playlists() {
     async (email) => {
       if (!shareTarget?._id) return;
       if (!email) return;
-
-      // Deleted users are stored as raw ObjectIds — no valid email to send to the API
-      if (OBJECT_ID_PATTERN.test(email)) {
-        setSharedExistingEmails((prev) => prev.filter((item) => item !== email));
-        toast.success("Referência de usuário excluído removida.");
-        return;
-      }
 
       try {
         await unsharePlaylistService(shareTarget._id, { emails: [email] });
