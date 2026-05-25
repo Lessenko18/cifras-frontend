@@ -267,6 +267,11 @@ export default function Playlists() {
         return extractSharedEmails({ sharedWith: normalized });
       }
 
+      // Only admins can call GET /user/ to resolve IDs to emails
+      if (!isAdmin) {
+        return Array.from(new Set(normalized.filter(Boolean)));
+      }
+
       try {
         const usersResponse = await getUsersService();
         const users = Array.isArray(usersResponse?.data)
@@ -290,7 +295,7 @@ export default function Playlists() {
         return extractSharedEmails({ sharedWith: normalized });
       }
     },
-    [extractSharedEmails, getSharedList],
+    [extractSharedEmails, getSharedList, isAdmin],
   );
 
   const isSharedWithUser = useCallback(
@@ -527,7 +532,13 @@ export default function Playlists() {
         setSharedExistingEmails(emails);
       } catch (err) {
         console.error(err);
-        toast.error("Não foi possivel carregar os compartilhamentos.");
+        // Fallback: try resolving from the list data already available
+        try {
+          const emails = await resolveSharedEmails(playlist);
+          setSharedExistingEmails(emails);
+        } catch {
+          // Modal still opens, just without the shared user list
+        }
       }
     },
     [closeAllModals, resolveSharedEmails],
@@ -627,6 +638,8 @@ export default function Playlists() {
       if (!shareTarget?._id) return;
       if (!email) return;
 
+      const isObjectId = OBJECT_ID_PATTERN.test(email);
+
       try {
         await unsharePlaylistService(shareTarget._id, { emails: [email] });
         setSharedExistingEmails((prev) =>
@@ -634,6 +647,14 @@ export default function Playlists() {
         );
         toast.success("Compartilhamento removido.");
       } catch (err) {
+        // If backend rejected an ObjectId, the user was deleted — clean up the stale reference
+        if (isObjectId && err.response?.status === 400) {
+          setSharedExistingEmails((prev) =>
+            prev.filter((item) => item !== email),
+          );
+          toast.success("Referência de usuário excluído removida.");
+          return;
+        }
         const message =
           err.response?.data?.message || "Falha ao remover compartilhamento.";
         toast.error(message);
@@ -997,31 +1018,32 @@ export default function Playlists() {
 
             {sharedExistingEmails.length > 0 && (
               <ShareList>
-                {sharedExistingEmails.map((email) => (
-                  <div key={email} className="chip">
-                    <span>{email}</span>
-                    {(() => {
-                      const ownerId = getOwnerId(shareTarget);
-                      const isOwner = ownerId
-                        ? ownerId === currentUserId
-                        : false;
-                      const isAdm = isAdmin;
-                      const canRemove = isOwner || isAdm;
+                {sharedExistingEmails.map((value) => {
+                  const isDeletedUser = OBJECT_ID_PATTERN.test(value);
+                  const ownerId = getOwnerId(shareTarget);
+                  const canRemove =
+                    (ownerId ? ownerId === currentUserId : false) || isAdmin;
 
-                      return (
-                        canRemove && (
-                          <button
-                            type="button"
-                            aria-label={`Remover compartilhamento de ${email}`}
-                            onClick={() => handleUnshare(email)}
-                          >
-                            ×
-                          </button>
-                        )
-                      );
-                    })()}
-                  </div>
-                ))}
+                  return (
+                    <div
+                      key={value}
+                      className={`chip${isDeletedUser ? " chip-deleted" : ""}`}
+                    >
+                      <span>
+                        {isDeletedUser ? "Usuário excluído" : value}
+                      </span>
+                      {canRemove && (
+                        <button
+                          type="button"
+                          aria-label={`Remover compartilhamento de ${isDeletedUser ? "usuário excluído" : value}`}
+                          onClick={() => handleUnshare(value)}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </ShareList>
             )}
 

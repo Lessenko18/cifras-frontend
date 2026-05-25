@@ -316,6 +316,8 @@ export default function Home() {
     const raw = list.map((i) => typeof i === "string" ? i : i?.email || i?.mail || i?._id || i?.id || null).filter(Boolean);
     const hasIds = raw.some((v) => typeof v === "string" && OBJECT_ID_PATTERN.test(v));
     if (!hasIds) return extractSharedEmails({ sharedWith: raw });
+    // Only admins can call GET /user/ to resolve IDs to emails
+    if (!isAdmin) return Array.from(new Set(raw.filter(Boolean)));
     try {
       const users = await getCachedUsers();
       const byId = new Map(users.map((u) => [u._id || u.id, u.email]));
@@ -325,7 +327,7 @@ export default function Home() {
         return v;
       }).filter(Boolean)));
     } catch { return extractSharedEmails({ sharedWith: raw }); }
-  }, [extractSharedEmails, getSharedList]);
+  }, [extractSharedEmails, getSharedList, isAdmin]);
 
   const parseEmails = useCallback((raw) =>
     raw.split(/[\s,;]+/).map((v) => v.trim().toLowerCase()).filter(Boolean), []);
@@ -452,13 +454,14 @@ export default function Home() {
     setShareInput(""); setShareSuggestions([]); setSharedExistingEmails([]);
     setShareModalOpen(true);
     try {
-      // Busca detalhes da playlist e pré-aquece cache de usuários em paralelo
-      const [detail] = await Promise.all([
-        getPlaylistByIdService(pl._id),
-        getCachedUsers(),
-      ]);
+      const detail = await getPlaylistByIdService(pl._id);
       setSharedExistingEmails(await resolveSharedEmails(detail));
-    } catch { toast.error("Não foi possível carregar compartilhamentos."); }
+    } catch {
+      // Fallback: resolve from list data already available
+      try {
+        setSharedExistingEmails(await resolveSharedEmails(pl));
+      } catch { /* Modal still opens without shared user list */ }
+    }
   }, [closeAllModals, resolveSharedEmails]);
 
   const handleShareSubmit = useCallback(async (e) => {
@@ -481,11 +484,20 @@ export default function Home() {
 
   const handleUnshare = useCallback(async (email) => {
     if (!shareTarget?._id) return;
+    const isObjectId = OBJECT_ID_PATTERN.test(email);
     try {
       await unsharePlaylistService(shareTarget._id, { emails: [email] });
       setSharedExistingEmails((prev) => prev.filter((e) => e !== email));
       toast.success("Compartilhamento removido.");
-    } catch { toast.error("Falha ao remover compartilhamento."); }
+    } catch (err) {
+      // If backend rejected an ObjectId, the user was deleted — clean up the stale reference
+      if (isObjectId && err.response?.status === 400) {
+        setSharedExistingEmails((prev) => prev.filter((e) => e !== email));
+        toast.success("Referência de usuário excluído removida.");
+        return;
+      }
+      toast.error(err.response?.data?.message || "Falha ao remover compartilhamento.");
+    }
   }, [shareTarget]);
 
   /* ── Categorias helper ──────────────────────────── */
@@ -807,15 +819,16 @@ export default function Home() {
             )}
             {sharedExistingEmails.length > 0 && (
               <ShareList>
-                {sharedExistingEmails.map((email) => {
+                {sharedExistingEmails.map((value) => {
+                  const isDeletedUser = OBJECT_ID_PATTERN.test(value);
                   const ownerId = getOwnerId(shareTarget);
                   const canRemove = (ownerId && ownerId === currentUserId) || isAdmin;
                   return (
-                    <div key={email} className="chip">
-                      <span>{email}</span>
+                    <div key={value} className={`chip${isDeletedUser ? " chip-deleted" : ""}`}>
+                      <span>{isDeletedUser ? "Usuário excluído" : value}</span>
                       {canRemove && (
-                        <button type="button" aria-label={`Remover ${email}`}
-                          onClick={() => handleUnshare(email)}>×</button>
+                        <button type="button" aria-label={`Remover ${isDeletedUser ? "usuário excluído" : value}`}
+                          onClick={() => handleUnshare(value)}>×</button>
                       )}
                     </div>
                   );

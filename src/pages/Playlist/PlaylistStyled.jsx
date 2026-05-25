@@ -371,6 +371,13 @@ export const ShareList = styled.div`
     border: 1px solid #e2e8f0;
   }
 
+  .chip-deleted {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #b91c1c;
+    font-style: italic;
+  }
+
   .chip button {
     border: none;
     background: #fff;
