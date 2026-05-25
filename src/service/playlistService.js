@@ -39,3 +39,8 @@ export async function unsharePlaylistService(id, payload) {
   const response = await api.delete(`/playlist/${id}/share`, { data: payload });
   return response;
 }
+
+export async function getPlaylistSharesService(id) {
+  const { data } = await api.get(`/playlist/${id}/shares`);
+  return data;
+}

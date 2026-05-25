@@ -17,6 +17,7 @@ import {
   getPlaylistByIdService,
   sharePlaylistService,
   unsharePlaylistService,
+  getPlaylistSharesService,
 } from "../../service/playlistService";
 import { getMeRequest } from "../../service/auth.service";
 import { searchUsersService } from "../../service/userService";
@@ -455,12 +456,18 @@ export default function Home() {
     setShareInput(""); setShareSuggestions([]); setSharedExistingEmails([]);
     setShareModalOpen(true);
     try {
-      const detail = await getPlaylistByIdService(pl._id);
-      setSharedExistingEmails(await resolveSharedEmails(detail));
+      const { emails } = await getPlaylistSharesService(pl._id);
+      setSharedExistingEmails(emails || []);
     } catch {
-      // Fallback: resolve from list data already available
+      // Fallback for older API versions
       try {
-        setSharedExistingEmails(await resolveSharedEmails(pl));
+        const detail = await getPlaylistByIdService(pl._id);
+        const emails = await resolveSharedEmails(detail);
+        const staleIds = emails.filter((v) => OBJECT_ID_PATTERN.test(v));
+        if (staleIds.length > 0) {
+          unsharePlaylistService(pl._id, { emails: staleIds }).catch(() => {});
+        }
+        setSharedExistingEmails(emails.filter((v) => !OBJECT_ID_PATTERN.test(v)));
       } catch { /* Modal still opens without shared user list */ }
     }
   }, [closeAllModals, resolveSharedEmails]);

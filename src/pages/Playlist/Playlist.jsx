@@ -25,6 +25,7 @@ import {
   getPlaylistByIdService,
   sharePlaylistService,
   unsharePlaylistService,
+  getPlaylistSharesService,
 } from "../../service/playlistService";
 import { getCifrasService } from "../../service/cifraService";
 import { useNavigate } from "react-router-dom";
@@ -528,15 +529,19 @@ export default function Playlists() {
       setShareModalOpen(true);
 
       try {
-        const detail = await getPlaylistByIdService(playlist._id);
-        const emails = await resolveSharedEmails(detail);
-        setSharedExistingEmails(emails);
+        const { emails } = await getPlaylistSharesService(playlist._id);
+        setSharedExistingEmails(emails || []);
       } catch (err) {
         console.error(err);
-        // Fallback: try resolving from the list data already available
+        // Fallback for older API versions
         try {
-          const emails = await resolveSharedEmails(playlist);
-          setSharedExistingEmails(emails);
+          const detail = await getPlaylistByIdService(playlist._id);
+          const emails = await resolveSharedEmails(detail);
+          const staleIds = emails.filter((v) => OBJECT_ID_PATTERN.test(v));
+          if (staleIds.length > 0) {
+            unsharePlaylistService(playlist._id, { emails: staleIds }).catch(() => {});
+          }
+          setSharedExistingEmails(emails.filter((v) => !OBJECT_ID_PATTERN.test(v)));
         } catch {
           // Modal still opens, just without the shared user list
         }

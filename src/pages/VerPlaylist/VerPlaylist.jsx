@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  getPlaylistByIdService,
-  getPlaylistViewService,
-} from "../../service/playlistService";
+import { getPlaylistViewService } from "../../service/playlistService";
 import {
   Page,
   Header,
@@ -132,14 +129,8 @@ export default function VerPlaylist() {
   useEffect(() => {
     (async () => {
       try {
-        const [viewResult, playlistResult] = await Promise.allSettled([
-          getPlaylistViewService(id),
-          getPlaylistByIdService(id),
-        ]);
-        if (viewResult.status === "rejected") throw viewResult.reason;
-        const viewData = viewResult.value;
-        const playlistData = playlistResult.status === "fulfilled" ? playlistResult.value : null;
-        const ordenado = applySavedOrder(viewData, playlistData);
+        const viewData = await getPlaylistViewService(id);
+        const ordenado = applySavedOrder(viewData, null);
         setData(ordenado);
 
         // Carrega os tons salvos no localStorage para cada música
