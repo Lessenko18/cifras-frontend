@@ -459,16 +459,7 @@ export default function Home() {
       const { emails } = await getPlaylistSharesService(pl._id);
       setSharedExistingEmails(emails || []);
     } catch {
-      // Fallback for older API versions
-      try {
-        const detail = await getPlaylistByIdService(pl._id);
-        const emails = await resolveSharedEmails(detail);
-        const staleIds = emails.filter((v) => OBJECT_ID_PATTERN.test(v));
-        if (staleIds.length > 0) {
-          unsharePlaylistService(pl._id, { emails: staleIds }).catch(() => {});
-        }
-        setSharedExistingEmails(emails.filter((v) => !OBJECT_ID_PATTERN.test(v)));
-      } catch { /* Modal still opens without shared user list */ }
+      setSharedExistingEmails([]);
     }
   }, [closeAllModals, resolveSharedEmails]);
 

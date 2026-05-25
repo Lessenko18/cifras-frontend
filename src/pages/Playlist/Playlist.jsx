@@ -531,20 +531,8 @@ export default function Playlists() {
       try {
         const { emails } = await getPlaylistSharesService(playlist._id);
         setSharedExistingEmails(emails || []);
-      } catch (err) {
-        console.error(err);
-        // Fallback for older API versions
-        try {
-          const detail = await getPlaylistByIdService(playlist._id);
-          const emails = await resolveSharedEmails(detail);
-          const staleIds = emails.filter((v) => OBJECT_ID_PATTERN.test(v));
-          if (staleIds.length > 0) {
-            unsharePlaylistService(playlist._id, { emails: staleIds }).catch(() => {});
-          }
-          setSharedExistingEmails(emails.filter((v) => !OBJECT_ID_PATTERN.test(v)));
-        } catch {
-          // Modal still opens, just without the shared user list
-        }
+      } catch {
+        setSharedExistingEmails([]);
       }
     },
     [closeAllModals, resolveSharedEmails],
