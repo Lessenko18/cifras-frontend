@@ -638,7 +638,12 @@ export default function Playlists() {
       if (!shareTarget?._id) return;
       if (!email) return;
 
-      const isObjectId = OBJECT_ID_PATTERN.test(email);
+      // Deleted users are stored as raw ObjectIds — no valid email to send to the API
+      if (OBJECT_ID_PATTERN.test(email)) {
+        setSharedExistingEmails((prev) => prev.filter((item) => item !== email));
+        toast.success("Referência de usuário excluído removida.");
+        return;
+      }
 
       try {
         await unsharePlaylistService(shareTarget._id, { emails: [email] });
@@ -647,14 +652,6 @@ export default function Playlists() {
         );
         toast.success("Compartilhamento removido.");
       } catch (err) {
-        // If backend rejected an ObjectId, the user was deleted — clean up the stale reference
-        if (isObjectId && err.response?.status === 400) {
-          setSharedExistingEmails((prev) =>
-            prev.filter((item) => item !== email),
-          );
-          toast.success("Referência de usuário excluído removida.");
-          return;
-        }
         const message =
           err.response?.data?.message || "Falha ao remover compartilhamento.";
         toast.error(message);
@@ -1024,6 +1021,8 @@ export default function Playlists() {
                   const canRemove =
                     (ownerId ? ownerId === currentUserId : false) || isAdmin;
 
+                  // Non-admins/non-owners can't remove anyone, hide deleted user entries for them
+                  if (isDeletedUser && !canRemove) return null;
                   return (
                     <div
                       key={value}

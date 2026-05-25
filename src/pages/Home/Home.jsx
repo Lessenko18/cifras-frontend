@@ -484,18 +484,17 @@ export default function Home() {
 
   const handleUnshare = useCallback(async (email) => {
     if (!shareTarget?._id) return;
-    const isObjectId = OBJECT_ID_PATTERN.test(email);
+    // Deleted users are stored as raw ObjectIds — no valid email to send to the API
+    if (OBJECT_ID_PATTERN.test(email)) {
+      setSharedExistingEmails((prev) => prev.filter((e) => e !== email));
+      toast.success("Referência de usuário excluído removida.");
+      return;
+    }
     try {
       await unsharePlaylistService(shareTarget._id, { emails: [email] });
       setSharedExistingEmails((prev) => prev.filter((e) => e !== email));
       toast.success("Compartilhamento removido.");
     } catch (err) {
-      // If backend rejected an ObjectId, the user was deleted — clean up the stale reference
-      if (isObjectId && err.response?.status === 400) {
-        setSharedExistingEmails((prev) => prev.filter((e) => e !== email));
-        toast.success("Referência de usuário excluído removida.");
-        return;
-      }
       toast.error(err.response?.data?.message || "Falha ao remover compartilhamento.");
     }
   }, [shareTarget]);
@@ -823,6 +822,8 @@ export default function Home() {
                   const isDeletedUser = OBJECT_ID_PATTERN.test(value);
                   const ownerId = getOwnerId(shareTarget);
                   const canRemove = (ownerId && ownerId === currentUserId) || isAdmin;
+                  // Non-admins/non-owners can't remove anyone, hide deleted user entries for them
+                  if (isDeletedUser && !canRemove) return null;
                   return (
                     <div key={value} className={`chip${isDeletedUser ? " chip-deleted" : ""}`}>
                       <span>{isDeletedUser ? "Usuário excluído" : value}</span>
