@@ -15,8 +15,12 @@ function normalizeUser(user) {
 // LOGIN
 export async function loginRequest(email, password, remember = false) {
   try {
-    // O backend define o cookie httpOnly access_token na resposta
-    await api.post("/auth/login", { email, password, remember });
+    const loginResponse = await api.post("/auth/login", { email, password, remember });
+
+    // Salva o token para ambientes cross-origin onde cookies são bloqueados (iOS Safari / ITP)
+    if (loginResponse.data?.token) {
+      localStorage.setItem("access_token", loginResponse.data.token);
+    }
 
     const meResponse = await api.get("/auth/me");
     const user = normalizeUser(meResponse.data?.user || meResponse.data);
@@ -88,5 +92,6 @@ export async function logout() {
     // ignora erros (ex: token já expirado)
   } finally {
     localStorage.removeItem("user");
+    localStorage.removeItem("access_token");
   }
 }

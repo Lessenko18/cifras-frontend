@@ -5,15 +5,24 @@ const API_BASE_URL =
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // envia o cookie httpOnly em todas as requisições
+  withCredentials: true,
 });
 
-// INTERCEPTOR DE RESPOSTA
+// Envia o token via header em ambientes cross-origin (ex: iOS Safari bloqueia cookies entre domínios)
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("user");
+      localStorage.removeItem("access_token");
       window.location.href = "/login";
     }
 
