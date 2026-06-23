@@ -25,7 +25,6 @@ import {
   getPlaylistByIdService,
   sharePlaylistService,
   unsharePlaylistService,
-  getPlaylistSharesService,
 } from "../../service/playlistService";
 import { getCifrasService } from "../../service/cifraService";
 import { useNavigate } from "react-router-dom";
@@ -529,13 +528,13 @@ export default function Playlists() {
       setShareModalOpen(true);
 
       try {
-        const { emails } = await getPlaylistSharesService(playlist._id);
-        setSharedExistingEmails(emails || []);
+        const detail = await getPlaylistByIdService(playlist._id);
+        setSharedExistingEmails(detail.sharedEmails || []);
       } catch {
         setSharedExistingEmails([]);
       }
     },
-    [closeAllModals, resolveSharedEmails],
+    [closeAllModals],
   );
 
   const handleOpenCreate = useCallback(() => {

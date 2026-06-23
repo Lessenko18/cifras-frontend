@@ -17,7 +17,6 @@ import {
   getPlaylistByIdService,
   sharePlaylistService,
   unsharePlaylistService,
-  getPlaylistSharesService,
 } from "../../service/playlistService";
 import { getMeRequest } from "../../service/auth.service";
 import { searchUsersService } from "../../service/userService";
@@ -456,12 +455,12 @@ export default function Home() {
     setShareInput(""); setShareSuggestions([]); setSharedExistingEmails([]);
     setShareModalOpen(true);
     try {
-      const { emails } = await getPlaylistSharesService(pl._id);
-      setSharedExistingEmails(emails || []);
+      const detail = await getPlaylistByIdService(pl._id);
+      setSharedExistingEmails(detail.sharedEmails || []);
     } catch {
       setSharedExistingEmails([]);
     }
-  }, [closeAllModals, resolveSharedEmails]);
+  }, [closeAllModals]);
 
   const handleShareSubmit = useCallback(async (e) => {
     e.preventDefault();
