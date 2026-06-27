@@ -307,8 +307,8 @@ export const ModalBox = styled.form`
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 5px 15px -5px #1a1a1a8d;
-  max-width: 350px;
-  width: calc(100% - 40px);
+  max-width: 420px;
+  width: calc(100% - 32px);
   border: 1px solid #000;
   max-height: 85dvh;
   overflow-y: auto;
@@ -415,8 +415,8 @@ export const ModalDelete = styled.div`
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 5px 15px -5px #1a1a1a8d;
-  max-width: 350px;
-  width: calc(100% - 40px);
+  max-width: 420px;
+  width: calc(100% - 32px);
   text-align: center;
   border: 1px solid #000;
   display: grid;

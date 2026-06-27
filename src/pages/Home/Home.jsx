@@ -32,7 +32,6 @@ import {
 } from "../Playlist/PlaylistStyled";
 import toast from "react-hot-toast";
 
-import BorderGlow from "../../components/BorderGlow/BorderGlow";
 import { FiShare2, FiEdit2, FiTrash2, FiMusic } from "react-icons/fi";
 import {
   HomeWrapper,
@@ -508,7 +507,6 @@ export default function Home() {
   return (
     <HomeWrapper>
       {/* ══ PAINEL ESQUERDO: PLAYLISTS ══ */}
-      <BorderGlow borderRadius={16} colors={['#c084fc', '#818cf8', '#38bdf8']} glowColor="270 70 75">
       <Panel>
         <PanelHeader>
           <PanelTitle>Minhas Playlists</PanelTitle>
@@ -564,10 +562,8 @@ export default function Home() {
           </PaginationContainer>
         )}
       </Panel>
-      </BorderGlow>
 
       {/* ══ PAINEL DIREITO: CIFRAS ══ */}
-      <BorderGlow borderRadius={16} colors={['#c084fc', '#818cf8', '#38bdf8']} glowColor="270 70 75">
       <Panel>
         <FiltersContainer>
           <FilterInput
@@ -693,7 +689,6 @@ export default function Home() {
           </>
         )}
       </Panel>
-      </BorderGlow>
 
       {/* ══ MODAIS DE PLAYLIST ══ */}
 
