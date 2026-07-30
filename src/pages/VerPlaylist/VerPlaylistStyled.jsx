@@ -211,6 +211,55 @@ export const Velocimetro = styled.div`
       display: block;
     }
   }
+
+  .metronomo {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .bpm-value {
+    min-width: 30px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    cursor: text;
+  }
+
+  .bpm-input {
+    all: unset;
+    width: 34px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--text-secondary);
+    background: var(--velocimetro-hover);
+    border-radius: 4px;
+    padding: 2px 0;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    -moz-appearance: textfield;
+  }
+
+  .metronomo-play {
+    font-size: 1.1rem !important;
+  }
+
+  .metronomo-play.playing {
+    background: var(--velocimetro-hover);
+    color: #7c3aed;
+  }
+
+  .metronomo-save {
+    font-size: 0.9rem !important;
+  }
 `;
 
 export const Sumario = styled.aside`

@@ -27,6 +27,8 @@ import { UsersHeader } from "../Users/UsersStyled";
 import { Title } from "../Playlist/PlaylistStyled";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
 import { useSearch } from "../../hooks/useSearch";
+import { useRequireAuth } from "../../hooks/useRequireAuth";
+import { useAuth } from "../../context/AuthContext";
 
 const CATEGORY_ICONS = {
   "Igreja":    "⛪",
@@ -61,6 +63,7 @@ export default function Cifras() {
   const [formNome, setFormNome] = useState("");
   const [formArtista, setFormArtista] = useState("");
   const [formLink, setFormLink] = useState("");
+  const [formBpm, setFormBpm] = useState("");
   const [formObservacao, setFormObservacao] = useState("");
   const [fetchingCifra, setFetchingCifra] = useState(false);
 
@@ -74,6 +77,8 @@ export default function Cifras() {
   const favoritosSet = useMemo(() => new Set(favoritosIds), [favoritosIds]);
 
   const navigate = useNavigate();
+  const requireAuth = useRequireAuth();
+  const { isAuthenticated } = useAuth();
 
   const getCategoriaParentName = (categoria) => {
     if (!categoria) return "";
@@ -150,19 +155,21 @@ export default function Cifras() {
   }, [getCategorias]);
 
   useEffect(() => {
+    if (!isAuthenticated) { setFavoritosIds([]); return; }
     getFavoritosService()
       .then(setFavoritosIds)
       .catch(() => {});
-  }, []);
+  }, [isAuthenticated]);
 
   const handleToggleFavorito = useCallback(async (cifraId) => {
+    if (!requireAuth("Você precisa fazer login para favoritar músicas.")) return;
     try {
       const updated = await toggleFavoritoService(cifraId);
       setFavoritosIds(updated);
     } catch (err) {
       console.error(err);
     }
-  }, []);
+  }, [requireAuth]);
 
   useEffect(() => {
     fetchCifras();
@@ -176,6 +183,7 @@ export default function Cifras() {
     setFormNome("");
     setFormArtista("");
     setFormLink("");
+    setFormBpm("");
     setFormObservacao("");
     setChosenCategorias([]);
   }, []);
@@ -207,6 +215,7 @@ export default function Cifras() {
       const link = formLink.trim();
       const observacao = formObservacao.trim();
       const artista = formArtista.trim();
+      const bpm = formBpm.trim() ? Number(formBpm.trim()) : undefined;
       const categorias = chosenCategorias.map((c) => c._id);
 
       if (!nome || !link) {
@@ -216,7 +225,7 @@ export default function Cifras() {
       }
 
       try {
-        await createCifraService({ nome, link, observacao, artista, categorias });
+        await createCifraService({ nome, link, observacao, artista, bpm, categorias });
         setIsCreating(false);
         resetForm();
         await fetchCifras();
@@ -228,7 +237,7 @@ export default function Cifras() {
         setSending(false);
       }
     },
-    [formNome, formLink, formObservacao, formArtista, chosenCategorias, fetchCifras, resetForm],
+    [formNome, formLink, formObservacao, formArtista, formBpm, chosenCategorias, fetchCifras, resetForm],
   );
 
   const updateCategoria = useCallback((lista) => {
@@ -242,7 +251,13 @@ export default function Cifras() {
           <img src="/back.svg" alt="Voltar" className="img-hover" />
         </button>
         <Title>Cifras</Title>
-        <button className="btn adicionar-primary" onClick={() => setIsCreating(true)}>
+        <button
+          className="btn adicionar-primary"
+          onClick={() => {
+            if (!requireAuth("Você precisa fazer login para adicionar uma cifra.")) return;
+            setIsCreating(true);
+          }}
+        >
           Adicionar Cifra
         </button>
       </UsersHeader>
@@ -380,6 +395,20 @@ export default function Cifras() {
                 placeholder="Nome do artista (opcional)"
                 value={formArtista}
                 onChange={(e) => setFormArtista(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="cifra-bpm">BPM (batidas por minuto)</label>
+              <Input
+                id="cifra-bpm"
+                name="bpm"
+                type="number"
+                min={30}
+                max={300}
+                placeholder="Ex: 90 (opcional, dá pra ajustar depois)"
+                value={formBpm}
+                onChange={(e) => setFormBpm(e.target.value)}
               />
             </div>
 

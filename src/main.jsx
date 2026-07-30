@@ -1,17 +1,17 @@
 import React, { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
-import { useEffect, useState } from "react";
 import {
   RouterProvider,
   createBrowserRouter,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { Navbar } from "./components/Navbar/Navbar.jsx";
 import { GlobalStyled } from "./GlobalStyled.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
+import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { Toaster } from "react-hot-toast";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import { getMeRequest } from "./service/auth.service";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary.jsx";
 
 // Páginas carregadas imediatamente (fluxo crítico)
@@ -39,33 +39,32 @@ function PageLoader() {
 }
 
 function AdminRoute({ children }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function checkAdminAccess() {
-      try {
-        const user = await getMeRequest();
-        const level = String(user?.level || "").toUpperCase();
-        if (isMounted) setIsAdmin(level === "ADM");
-      } catch {
-        if (isMounted) setIsAdmin(false);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    }
-    checkAdminAccess();
-    return () => { isMounted = false; };
-  }, []);
+  const { isLoading, isAuthenticated, isAdmin } = useAuth();
+  const location = useLocation();
 
   if (isLoading) return null;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
   if (!isAdmin) return <Navigate to="/home" replace />;
   return children;
 }
 
+// Rotas que exigem login (dashboard, playlists, perfil) — cifras continuam públicas.
+function RequireAuthRoute({ children }) {
+  const { isLoading, isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) return null;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+  return children;
+}
+
 const router = createBrowserRouter([
-  { path: "/",               element: <Login /> },
+  // Página inicial é pública: mostra cifras (e um convite pra logar pra ver playlists).
+  { path: "/",               element: <Navigate to="/home" replace /> },
   { path: "/login",          element: <Login /> },
   { path: "/signup",         element: <Signup /> },
   { path: "/forgot-password", element: <ForgotPassword /> },
@@ -74,10 +73,19 @@ const router = createBrowserRouter([
     path: "/home",
     element: <Navbar />,
     children: [
-      { path: "/home", element: <Home /> },
+      {
+        // Pública: cifras são visíveis sem login; o painel de playlists mostra
+        // um aviso pedindo login em vez de bloquear a rota inteira.
+        path: "/home",
+        element: <Home />,
+      },
       {
         path: "/home/profile",
-        element: <Suspense fallback={<PageLoader />}><Profile /></Suspense>,
+        element: (
+          <RequireAuthRoute>
+            <Suspense fallback={<PageLoader />}><Profile /></Suspense>
+          </RequireAuthRoute>
+        ),
       },
       {
         path: "/home/users",
@@ -96,20 +104,30 @@ const router = createBrowserRouter([
         ),
       },
       {
+        // Pública: ver e listar cifras não exige login.
         path: "/home/cifras",
         element: <Suspense fallback={<PageLoader />}><Cifras /></Suspense>,
       },
       {
+        // Pública: ver uma cifra individual não exige login.
         path: "/home/cifra/:id",
         element: <Suspense fallback={<PageLoader />}><VerCifra /></Suspense>,
       },
       {
         path: "/home/playlists",
-        element: <Suspense fallback={<PageLoader />}><Playlist /></Suspense>,
+        element: (
+          <RequireAuthRoute>
+            <Suspense fallback={<PageLoader />}><Playlist /></Suspense>
+          </RequireAuthRoute>
+        ),
       },
       {
         path: "/home/playlists/:id/ver",
-        element: <Suspense fallback={<PageLoader />}><VerPlaylist /></Suspense>,
+        element: (
+          <RequireAuthRoute>
+            <Suspense fallback={<PageLoader />}><VerPlaylist /></Suspense>
+          </RequireAuthRoute>
+        ),
       },
     ],
   },
@@ -118,12 +136,14 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ThemeProvider>
-      <GlobalStyled />
-      <ErrorBoundary>
-        <RouterProvider router={router} />
-      </ErrorBoundary>
-      <Toaster />
-      <SpeedInsights />
+      <AuthProvider>
+        <GlobalStyled />
+        <ErrorBoundary>
+          <RouterProvider router={router} />
+        </ErrorBoundary>
+        <Toaster />
+        <SpeedInsights />
+      </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>,
 );

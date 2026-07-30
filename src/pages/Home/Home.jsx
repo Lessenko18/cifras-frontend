@@ -6,6 +6,7 @@ import { getCifrasService } from "../../service/cifraService";
 import { getCategoriasService } from "../../service/categoriaService";
 import { getFavoritosService, toggleFavoritoService } from "../../service/favoritosService";
 import { useSearch } from "../../hooks/useSearch";
+import { useRequireAuth } from "../../hooks/useRequireAuth";
 
 // Playlists
 import {
@@ -18,7 +19,7 @@ import {
   sharePlaylistService,
   unsharePlaylistService,
 } from "../../service/playlistService";
-import { getMeRequest } from "../../service/auth.service";
+import { useAuth } from "../../context/AuthContext";
 import { searchUsersService } from "../../service/userService";
 import { getPublicAppUrl } from "../../utils/getPublicAppUrl";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
@@ -142,6 +143,8 @@ const CifraListItem = memo(function CifraListItem({ cifra, isFav, onToggleFav, g
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user: authenticatedUser, isAdmin, isAuthenticated } = useAuth();
+  const requireAuth = useRequireAuth();
 
   /* ── Estado: cifras ─────────────────────────────── */
   const [cifras, setCifras] = useState([]);
@@ -176,8 +179,6 @@ export default function Home() {
   const [createShareEmails, setCreateShareEmails] = useState([]);
   const [createShareInput, setCreateShareInput] = useState("");
   const [createShareSuggestions, setCreateShareSuggestions] = useState([]);
-  const [authenticatedUser, setAuthenticatedUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const shareSearchTimer = useRef(null);
   const createSearchTimer = useRef(null);
   const currentUserId = authenticatedUser?._id || authenticatedUser?.id || null;
@@ -220,15 +221,10 @@ export default function Home() {
   /* ── Efeitos iniciais ───────────────────────────── */
   useEffect(() => {
     getCategoriasService().then((r) => setCategorias(r.data || [])).catch(() => {});
+    if (!isAuthenticated) { setFavoritosIds([]); setPlaylists([]); return; }
     getFavoritosService().then(setFavoritosIds).catch(() => {});
     fetchPlaylists();
-    getMeRequest()
-      .then((u) => {
-        setAuthenticatedUser(u);
-        setIsAdmin(String(u?.level || "").toUpperCase() === "ADM");
-      })
-      .catch(() => {});
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -263,11 +259,12 @@ export default function Home() {
 
   /* ── Favoritos ──────────────────────────────────── */
   const handleToggleFavorito = useCallback(async (cifraId) => {
+    if (!requireAuth("Você precisa fazer login para favoritar músicas.")) return;
     try {
       const updated = await toggleFavoritoService(cifraId);
       setFavoritosIds(updated);
     } catch {}
-  }, []);
+  }, [requireAuth]);
 
   /* ── Fetch playlists ────────────────────────────── */
   const fetchPlaylists = useCallback(async () => {
@@ -508,58 +505,74 @@ export default function Home() {
     <HomeWrapper>
       {/* ══ PAINEL ESQUERDO: PLAYLISTS ══ */}
       <Panel>
-        <PanelHeader>
-          <PanelTitle>Minhas Playlists</PanelTitle>
-          <CreatePlaylistBtn type="button" onClick={handleOpenCreate}>
-            + Criar Nova Playlist
-          </CreatePlaylistBtn>
-        </PanelHeader>
-
-        {playlists.length === 0 ? (
-          <PlaylistEmpty>
-            <p>Você ainda não tem playlists.</p>
-            <CreatePlaylistBtn type="button" onClick={handleOpenCreate}>
-              Criar primeira playlist
-            </CreatePlaylistBtn>
-          </PlaylistEmpty>
+        {!isAuthenticated ? (
+          <>
+            <PanelHeader>
+              <PanelTitle>Minhas Playlists</PanelTitle>
+            </PanelHeader>
+            <PlaylistEmpty>
+              <p>Você precisa fazer login para ver, criar e gerenciar suas playlists.</p>
+              <CreatePlaylistBtn as={Link} to="/login" state={{ from: "/home" }}>
+                Fazer login
+              </CreatePlaylistBtn>
+            </PlaylistEmpty>
+          </>
         ) : (
-          <PlaylistCardsGrid>
-            {visiblePlaylists.map((pl) => {
-              const ownerId = getOwnerId(pl);
-              const shared = isSharedWithUser(pl);
-              const isOwner = ownerId ? ownerId === currentUserId : !shared;
-              return (
-                <PlaylistCardItem
-                  key={pl._id}
-                  pl={pl}
-                  canShare={isOwner || isAdmin}
-                  canEdit={isOwner || isAdmin || shared}
-                  canDelete={isOwner || isAdmin}
-                  stripEmoji={stripEmoji}
-                  onView={(id) => navigate(`/home/playlists/${id}/ver`)}
-                  onShare={handleOpenShare}
-                  onEdit={handleClickEdit}
-                  onDelete={(p) => { closeAllModals(); setChosen(p); setModalDelete(true); }}
-                />
-              );
-            })}
-          </PlaylistCardsGrid>
-        )}
+          <>
+            <PanelHeader>
+              <PanelTitle>Minhas Playlists</PanelTitle>
+              <CreatePlaylistBtn type="button" onClick={handleOpenCreate}>
+                + Criar Nova Playlist
+              </CreatePlaylistBtn>
+            </PanelHeader>
 
-        {totalPlaylistPages > 1 && (
-          <PaginationContainer>
-            <PaginationButton disabled={playlistPage === 0}
-              onClick={() => setPlaylistPage((p) => p - 1)}>
-              Anterior
-            </PaginationButton>
-            <PaginationInfo>
-              {playlistPage + 1} / {totalPlaylistPages}
-            </PaginationInfo>
-            <PaginationButton disabled={playlistPage + 1 >= totalPlaylistPages}
-              onClick={() => setPlaylistPage((p) => p + 1)}>
-              Próxima
-            </PaginationButton>
-          </PaginationContainer>
+            {playlists.length === 0 ? (
+              <PlaylistEmpty>
+                <p>Você ainda não tem playlists.</p>
+                <CreatePlaylistBtn type="button" onClick={handleOpenCreate}>
+                  Criar primeira playlist
+                </CreatePlaylistBtn>
+              </PlaylistEmpty>
+            ) : (
+              <PlaylistCardsGrid>
+                {visiblePlaylists.map((pl) => {
+                  const ownerId = getOwnerId(pl);
+                  const shared = isSharedWithUser(pl);
+                  const isOwner = ownerId ? ownerId === currentUserId : !shared;
+                  return (
+                    <PlaylistCardItem
+                      key={pl._id}
+                      pl={pl}
+                      canShare={isOwner || isAdmin}
+                      canEdit={isOwner || isAdmin || shared}
+                      canDelete={isOwner || isAdmin}
+                      stripEmoji={stripEmoji}
+                      onView={(id) => navigate(`/home/playlists/${id}/ver`)}
+                      onShare={handleOpenShare}
+                      onEdit={handleClickEdit}
+                      onDelete={(p) => { closeAllModals(); setChosen(p); setModalDelete(true); }}
+                    />
+                  );
+                })}
+              </PlaylistCardsGrid>
+            )}
+
+            {totalPlaylistPages > 1 && (
+              <PaginationContainer>
+                <PaginationButton disabled={playlistPage === 0}
+                  onClick={() => setPlaylistPage((p) => p - 1)}>
+                  Anterior
+                </PaginationButton>
+                <PaginationInfo>
+                  {playlistPage + 1} / {totalPlaylistPages}
+                </PaginationInfo>
+                <PaginationButton disabled={playlistPage + 1 >= totalPlaylistPages}
+                  onClick={() => setPlaylistPage((p) => p + 1)}>
+                  Próxima
+                </PaginationButton>
+              </PaginationContainer>
+            )}
+          </>
         )}
       </Panel>
 

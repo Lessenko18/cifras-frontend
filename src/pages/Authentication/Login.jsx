@@ -2,7 +2,7 @@ import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Background, LoginContainer } from "./LoginStyled";
 import { useState } from "react";
 import { loginRequest } from "../../service/auth.service";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 export default function Login() {
@@ -13,6 +13,8 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = location.state?.from || "/home";
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isFormValid = emailRegex.test(email.trim()) && password.length >= 6;
   const isSubmitDisabled = !isFormValid || isSubmitting;
@@ -67,8 +69,11 @@ export default function Login() {
         return;
       }
 
+      // Avisa o AuthContext (e a Navbar) que há um usuário novo no localStorage
+      window.dispatchEvent(new Event("userUpdated"));
+
       toast.success("Login realizado com sucesso!");
-      navigate("/home");
+      navigate(redirectTo);
     } catch (error) {
       toast.error(error || "Erro ao realizar login.");
     } finally {

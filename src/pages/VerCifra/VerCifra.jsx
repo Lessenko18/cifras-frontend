@@ -5,7 +5,7 @@ import {
   editCifraService,
   getCifraById,
 } from "../../service/cifraService";
-import { getMeRequest } from "../../service/auth.service";
+import { useAuth } from "../../context/AuthContext";
 import { UsersHeader } from "../Users/UsersStyled";
 import {
   CifraBody,
@@ -39,11 +39,11 @@ import {
 import { Velocimetro } from "../VerPlaylist/VerPlaylistStyled";
 import { CifraRenderer } from "../../components/CifraRenderer/CifraRenderer";
 import { useWakeLock } from "../../hooks/useWakeLock";
+import { useMetronome } from "../../hooks/useMetronome";
 export default function VerCifra() {
   const { id } = useParams();
+  const { user: authenticatedUser, isAdmin } = useAuth();
   const [cifra, setCifra] = useState({});
-  const [authenticatedUser, setAuthenticatedUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [update, setUpdate] = useState(false);
   const [modalDelete, setModalDelete] = useState(false);
   const [escolhidos, setEscolhidos] = useState([]);
@@ -56,6 +56,8 @@ export default function VerCifra() {
   const [velocimetroVisivel, setVelocimetroVisivel] = useState(true);
   const [semitones, setSemitones] = useState(0);
   const [modalTom, setModalTom] = useState(false);
+  const [editingBpm, setEditingBpm] = useState(false);
+  const [bpmInput, setBpmInput] = useState("90");
   const intervalRef = useRef(null);
   const navigate = useNavigate();
   const [fontSize, setFontSize] = useState(() => {
@@ -64,6 +66,23 @@ export default function VerCifra() {
   });
 
   useWakeLock();
+  const metronome = useMetronome(90);
+
+  // Assim que a cifra carrega, o metrônomo já nasce no BPM salvo pra ela
+  useEffect(() => {
+    if (cifra?.bpm) metronome.setBpm(cifra.bpm);
+  }, [cifra?.bpm]);
+
+  // Mantém o campo de digitação do BPM sincronizado enquanto não está em edição
+  useEffect(() => {
+    if (!editingBpm) setBpmInput(String(metronome.bpm));
+  }, [metronome.bpm, editingBpm]);
+
+  function commitBpmInput() {
+    const n = parseInt(bpmInput, 10);
+    if (!Number.isNaN(n)) metronome.setBpm(n);
+    setEditingBpm(false);
+  }
 
   const changeFontSize = useCallback((delta) => {
     setFontSize((prev) => {
@@ -119,31 +138,6 @@ export default function VerCifra() {
   function interruptor() {
     setScrolling((s) => !s);
   }
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function syncAuthenticatedUser() {
-      try {
-        const user = await getMeRequest();
-        if (!isMounted) return;
-
-        setAuthenticatedUser(user);
-        setIsAdmin(String(user?.level || "").toUpperCase() === "ADM");
-      } catch {
-        if (isMounted) {
-          setAuthenticatedUser(null);
-          setIsAdmin(false);
-        }
-      }
-    }
-
-    syncAuthenticatedUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (!canManageCifra) {
@@ -214,9 +208,12 @@ export default function VerCifra() {
     const formdata = new FormData(event.target);
     const data = Object.fromEntries(formdata.entries());
     data.categorias = escolhidos.map((c) => c._id);
+    if (data.bpm === "") delete data.bpm;
+    else data.bpm = Number(data.bpm);
     try {
       await editCifraService(id, data);
       toast.success("Cifra atualizada com sucesso!");
+      metronome.setBpm(data.bpm || 90);
     } catch (err) {
       console.error(err);
       toast.error("Falha ao atualizar a cifra.");
@@ -224,6 +221,17 @@ export default function VerCifra() {
     setUpdate(false);
     getCifra();
   }
+  async function handleSaveBpm() {
+    if (!canManageCifra) return;
+    try {
+      await editCifraService(id, { bpm: metronome.bpm });
+      setCifra((c) => ({ ...c, bpm: metronome.bpm }));
+      toast.success("BPM salvo na cifra!");
+    } catch {
+      toast.error("Falha ao salvar o BPM.");
+    }
+  }
+
   function handleSelect(item) {
     let lista = [...escolhidos];
     if (lista.find((i) => i._id === item._id)) {
@@ -358,6 +366,70 @@ export default function VerCifra() {
             A+
           </button>
           <span className="velocimetro-sep" />
+
+          <div className="metronomo">
+            <button
+              type="button"
+              aria-label="Diminuir BPM"
+              onClick={() => metronome.setBpm((b) => b - 1)}
+            >
+              -
+            </button>
+            {editingBpm ? (
+              <input
+                type="number"
+                className="bpm-input"
+                autoFocus
+                min={30}
+                max={300}
+                value={bpmInput}
+                aria-label="Digitar BPM"
+                onChange={(e) => setBpmInput(e.target.value)}
+                onBlur={commitBpmInput}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { e.preventDefault(); commitBpmInput(); }
+                  if (e.key === "Escape") { setBpmInput(String(metronome.bpm)); setEditingBpm(false); }
+                }}
+              />
+            ) : (
+              <span
+                className="bpm-value"
+                title="Batidas por minuto (duplo clique para digitar)"
+                onDoubleClick={() => setEditingBpm(true)}
+              >
+                {metronome.bpm}
+              </span>
+            )}
+            <button
+              type="button"
+              aria-label="Aumentar BPM"
+              onClick={() => metronome.setBpm((b) => b + 1)}
+            >
+              +
+            </button>
+            <button
+              type="button"
+              className={`metronomo-play${metronome.isPlaying ? " playing" : ""}`}
+              aria-label={metronome.isPlaying ? "Parar metrônomo" : "Iniciar metrônomo"}
+              aria-pressed={metronome.isPlaying}
+              onClick={metronome.toggle}
+            >
+              {metronome.isPlaying ? (metronome.beatPulse ? "●" : "○") : "♩"}
+            </button>
+            {canManageCifra && (
+              <button
+                type="button"
+                className="metronomo-save"
+                aria-label="Salvar este BPM na cifra"
+                title="Salvar BPM na cifra"
+                onClick={handleSaveBpm}
+              >
+                💾
+              </button>
+            )}
+          </div>
+
+          <span className="velocimetro-sep" />
           <button
             type="button"
             className="eye-toggle"
@@ -427,6 +499,17 @@ export default function VerCifra() {
             <div>
               <label htmlFor="link">Link da cifra</label>
               <Input type="text" name="link" defaultValue={cifra.link} />
+            </div>
+            <div>
+              <label htmlFor="bpm">BPM (batidas por minuto)</label>
+              <Input
+                type="number"
+                name="bpm"
+                min={30}
+                max={300}
+                defaultValue={cifra.bpm || ""}
+                placeholder="Ex: 90 (opcional)"
+              />
             </div>
             <MultSeletorContainer>
               <GuardaEscolhidos>

@@ -1,26 +1,16 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { NavContainer, NavContent, UserArea } from "./NavbarStyled";
-import { getMeRequest, logout } from "../../service/auth.service";
-import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
+import { logout } from "../../service/auth.service";
+import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { FiSun, FiMoon } from "react-icons/fi";
 
 export function Navbar() {
-  const [user, setUser] = useState(() => {
-    const stored = JSON.parse(localStorage.getItem("user"));
-    if (!stored) return stored;
-
-    return {
-      ...stored,
-      avatar: normalizeAvatarUrl(stored.avatar),
-      photo: normalizeAvatarUrl(stored.photo),
-    };
-  });
+  const { user, isAuthenticated, isAdmin, setUser } = useAuth();
 
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const menuRef = useRef(null);
   const { dark, toggle } = useTheme();
 
@@ -43,54 +33,10 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [openMenu]);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function syncAdminLevel() {
-      try {
-        const authenticatedUser = await getMeRequest();
-        if (!isMounted) return;
-
-        const level = String(authenticatedUser?.level || "").toUpperCase();
-        setIsAdmin(level === "ADM");
-      } catch {
-        if (isMounted) setIsAdmin(false);
-      }
-    }
-
-    syncAdminLevel();
-
-    function syncUser() {
-      const stored = JSON.parse(localStorage.getItem("user"));
-      if (!stored) {
-        setUser(stored);
-        setIsAdmin(false);
-        return;
-      }
-
-      setUser({
-        ...stored,
-        avatar: normalizeAvatarUrl(stored.avatar),
-        photo: normalizeAvatarUrl(stored.photo),
-      });
-
-      syncAdminLevel();
-    }
-    JSON.parse(localStorage.getItem("user"))?.avatar;
-
-    window.addEventListener("userUpdated", syncUser);
-    window.addEventListener("storage", syncUser);
-
-    return () => {
-      isMounted = false;
-      window.removeEventListener("userUpdated", syncUser);
-      window.removeEventListener("storage", syncUser);
-    };
-  }, []);
-
   const handleLogout = async () => {
     await logout();
     setUser(null);
+    setOpenMenu(false);
     navigate("/login");
   };
 
@@ -121,52 +67,58 @@ export function Navbar() {
             {dark ? <FiSun size={20} /> : <FiMoon size={20} />}
           </button>
 
-          <UserArea ref={menuRef}>
-            <button
-              className="user-btn"
-              onClick={() => setOpenMenu((s) => !s)}
-              aria-expanded={openMenu}
-            >
-              {user?.avatar || user?.photo ? (
-                <img
-                  src={user.avatar || user.photo}
-                  alt={user.name || "Usuário"}
-                />
-              ) : (
-                <span className="initials">{initials}</span>
-              )}
-            </button>
+          {isAuthenticated ? (
+            <UserArea ref={menuRef}>
+              <button
+                className="user-btn"
+                onClick={() => setOpenMenu((s) => !s)}
+                aria-expanded={openMenu}
+              >
+                {user?.avatar || user?.photo ? (
+                  <img
+                    src={user.avatar || user.photo}
+                    alt={user.name || "Usuário"}
+                  />
+                ) : (
+                  <span className="initials">{initials}</span>
+                )}
+              </button>
 
-            {openMenu && (
-              <div className="user-menu">
-                <div className="user-info">
-                  {user?.avatar || user?.photo ? (
-                    <img
-                      src={user.avatar || user.photo}
-                      alt={user.name || "Usuário"}
-                    />
-                  ) : (
-                    <div className="initials big">{initials}</div>
-                  )}
-                  <div className="meta">
-                    <strong>{user?.name}</strong>
-                    <span>{user?.email}</span>
+              {openMenu && (
+                <div className="user-menu">
+                  <div className="user-info">
+                    {user?.avatar || user?.photo ? (
+                      <img
+                        src={user.avatar || user.photo}
+                        alt={user.name || "Usuário"}
+                      />
+                    ) : (
+                      <div className="initials big">{initials}</div>
+                    )}
+                    <div className="meta">
+                      <strong>{user?.name}</strong>
+                      <span>{user?.email}</span>
+                    </div>
                   </div>
-                </div>
 
-                <Link
-                  className="perfil-btn"
-                  to="/home/profile"
-                  onClick={() => setOpenMenu(false)}
-                >
-                  Perfil
-                </Link>
-                <button className="logout-btn" onClick={handleLogout}>
-                  Sair
-                </button>
-              </div>
-            )}
-          </UserArea>
+                  <Link
+                    className="perfil-btn"
+                    to="/home/profile"
+                    onClick={() => setOpenMenu(false)}
+                  >
+                    Perfil
+                  </Link>
+                  <button className="logout-btn" onClick={handleLogout}>
+                    Sair
+                  </button>
+                </div>
+              )}
+            </UserArea>
+          ) : (
+            <Link className="nav-link login-btn" to="/login">
+              Entrar
+            </Link>
+          )}
         </NavContent>
       </NavContainer>
 

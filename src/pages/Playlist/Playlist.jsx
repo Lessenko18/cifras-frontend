@@ -33,7 +33,7 @@ import toast from "react-hot-toast";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
 import { getUsersService, searchUsersService } from "../../service/userService";
 import { getPublicAppUrl } from "../../utils/getPublicAppUrl";
-import { getMeRequest } from "../../service/auth.service";
+import { useAuth } from "../../context/AuthContext";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
@@ -58,40 +58,13 @@ export default function Playlists() {
   const [createShareEmails, setCreateShareEmails] = useState([]);
   const [createShareInput, setCreateShareInput] = useState("");
   const [createShareSuggestions, setCreateShareSuggestions] = useState([]);
-  const [authenticatedUser, setAuthenticatedUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user: authenticatedUser, isAdmin } = useAuth();
   const shareSearchTimer = useRef(null);
   const createSearchTimer = useRef(null);
 
   const navigate = useNavigate();
   const currentUserId = authenticatedUser?._id || authenticatedUser?.id || null;
   const currentUserEmail = authenticatedUser?.email?.toLowerCase() || "";
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function syncAdminAccess() {
-      try {
-        const authenticatedUser = await getMeRequest();
-        if (!isMounted) return;
-        setAuthenticatedUser(authenticatedUser);
-        setIsAdmin(
-          String(authenticatedUser?.level || "").toUpperCase() === "ADM",
-        );
-      } catch {
-        if (isMounted) {
-          setAuthenticatedUser(null);
-          setIsAdmin(false);
-        }
-      }
-    }
-
-    syncAdminAccess();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   /* ======================
      MAP DE CIFRAS (opcional)

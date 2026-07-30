@@ -21,9 +21,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // Só força redirect se havia sessão (token expirado/inválido).
+      // Visitantes sem login batendo em rota protegida (ex: favoritos) não devem ser expulsos.
+      const hadToken = Boolean(localStorage.getItem("access_token"));
       localStorage.removeItem("user");
       localStorage.removeItem("access_token");
-      window.location.href = "/login";
+      if (hadToken) {
+        window.location.href = "/login";
+      }
     }
 
     return Promise.reject(error);
