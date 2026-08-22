@@ -57,6 +57,30 @@ export const Header = styled.div`
     opacity: 0.7;
     white-space: nowrap;
   }
+
+  .export-pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border-light);
+    background: var(--light);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+
+    img {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
 `;
 
 export const CifraCard = styled.section`

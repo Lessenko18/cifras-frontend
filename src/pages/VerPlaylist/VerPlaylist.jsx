@@ -25,6 +25,7 @@ import {
   transposeText,
 } from "../../utils/transpose";
 import { useWakeLock } from "../../hooks/useWakeLock";
+import { exportPlaylistPdf, exportCifraPdf } from "../../utils/pdfExport";
 
 export default function VerPlaylist() {
   const { id } = useParams();
@@ -149,6 +150,40 @@ export default function VerPlaylist() {
     })();
   }, [id]);
 
+  function handleExportPlaylistPdf() {
+    if (!data?.musicas?.length) return;
+
+    const musicas = data.musicas.map((m) => {
+      const songId = getMusicId(m);
+      const semitones = toms[songId] || 0;
+      const origKey = detectOriginalKey(m.descricao);
+      const tom = origKey ? getKeyAtOffset(origKey, semitones) : null;
+
+      return {
+        nome: m.nome,
+        tom,
+        bpm: m.bpm,
+        text: transposeText(m.descricao || "", semitones),
+      };
+    });
+
+    exportPlaylistPdf({ nome: data.nome, musicas });
+  }
+
+  function handleExportMusicaPdf(m) {
+    const songId = getMusicId(m);
+    const semitones = toms[songId] || 0;
+    const origKey = detectOriginalKey(m.descricao);
+    const tom = origKey ? getKeyAtOffset(origKey, semitones) : null;
+
+    exportCifraPdf({
+      nome: m.nome,
+      tom,
+      bpm: m.bpm,
+      text: transposeText(m.descricao || "", semitones),
+    });
+  }
+
   function scrollToMusica(index) {
     const elemento = document.getElementById(`musica-${index}`);
     if (elemento) {
@@ -223,6 +258,17 @@ export default function VerPlaylist() {
       <Header>
         <h2>{data.nome}</h2>
         <span>{data.musicas?.length || 0} música(s)</span>
+        {data.musicas?.length > 0 && (
+          <button
+            type="button"
+            className="export-pdf"
+            aria-label="Exportar playlist em PDF"
+            onClick={handleExportPlaylistPdf}
+          >
+            <img src="/pdf.svg" alt="Exportar PDF" title="Exportar playlist em PDF" />
+            Exportar PDF
+          </button>
+        )}
       </Header>
 
       <div className="main-layout">
@@ -259,6 +305,15 @@ export default function VerPlaylist() {
                 <div className="card-header">
                   <TituloMusica>{m.nome}</TituloMusica>
                   <div className="card-actions">
+                    <button
+                      className="eye-toggle"
+                      type="button"
+                      aria-label={`Exportar "${m.nome}" em PDF`}
+                      title="Exportar cifra em PDF"
+                      onClick={() => handleExportMusicaPdf(m)}
+                    >
+                      <img src="/pdf.svg" alt="Exportar PDF" />
+                    </button>
                     <button
                       className="eye-toggle"
                       type="button"

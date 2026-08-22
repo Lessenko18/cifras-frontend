@@ -37,6 +37,102 @@ export const Page = styled.section`
   }
 `;
 
+export const FiltersContainer = styled.div`
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+
+  background: var(--bg-card);
+  padding: 14px 16px;
+  border-radius: 16px;
+
+  border: 1px solid var(--border-light);
+  box-shadow: 0 8px 24px -14px rgba(0, 0, 0, 0.25);
+
+  transition: box-shadow 0.2s ease;
+
+  &:focus-within {
+    box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.35);
+  }
+
+  @media (max-width: 700px) {
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+`;
+
+export const FilterInputWrapper = styled.div`
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+
+  @media (max-width: 700px) {
+    min-width: 100%;
+  }
+`;
+
+export const FilterInput = styled.input`
+  width: 100%;
+  height: 44px;
+  padding: 0 36px 0 14px;
+
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--main);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 700px) {
+    height: 40px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+`;
+
+export const FilterClearButton = styled.button`
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--border-light);
+    color: var(--text-primary);
+  }
+`;
+
 export const Title = styled.h1`
   text-align: center;
   line-height: 1.2em;

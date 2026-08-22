@@ -1,5 +1,5 @@
 const CHORD_RE =
-  /^[A-G][b#]?(maj|min|m|dim|aug|sus[24]?|add)?[0-9]*(b[0-9]+|#[0-9]+)?(\/[A-G][b#]?)?[+°]?$/;
+  /^[A-G][b#]?(maj|min|m|dim|aug|sus[24]?|add)?[0-9]*M?(b[0-9]+|#[0-9]+)?(\/[A-G][b#]?)?[+°]?$/;
 
 const SYMBOL_TOKENS = new Set(["-", "|", "||", "||:", ":||", "/"]);
 
@@ -7,7 +7,7 @@ export function isChord(word) {
   return CHORD_RE.test(word);
 }
 
-function isChordLine(line) {
+export function isChordLine(line) {
   if (!line.trim()) return false;
   if (/^Tom:/i.test(line.trim())) return false;
   const words = line.trim().split(/\s+/).filter(Boolean);

@@ -40,6 +40,7 @@ import { Velocimetro } from "../VerPlaylist/VerPlaylistStyled";
 import { CifraRenderer } from "../../components/CifraRenderer/CifraRenderer";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { useMetronome } from "../../hooks/useMetronome";
+import { exportCifraPdf } from "../../utils/pdfExport";
 export default function VerCifra() {
   const { id } = useParams();
   const { user: authenticatedUser, isAdmin } = useAuth();
@@ -232,6 +233,21 @@ export default function VerCifra() {
     }
   }
 
+  function handleExportPdf() {
+    const text =
+      part1 !== "" || part2 !== ""
+        ? observacaoTransposta.split("!!!").filter(Boolean).join("\n\n")
+        : observacaoTransposta;
+
+    exportCifraPdf({
+      nome: cifra.nome,
+      artista: cifra.artista,
+      tom: originalKey ? currentKey : null,
+      bpm: cifra.bpm,
+      text,
+    });
+  }
+
   function handleSelect(item) {
     let lista = [...escolhidos];
     if (lista.find((i) => i._id === item._id)) {
@@ -307,24 +323,33 @@ export default function VerCifra() {
           </button>
         </div>
         <Title>{cifra.nome}</Title>
-        {canManageCifra && (
-          <div className="btns-header">
-            <button
-              type="button"
-              aria-label="Editar cifra"
-              onClick={() => setUpdate(!update)}
-            >
-              <img src="/update.svg" alt="Update" title="editar" />
-            </button>
-            <button
-              type="button"
-              aria-label="Excluir cifra"
-              onClick={() => setModalDelete(!modalDelete)}
-            >
-              <img src="/delete.svg" alt="Delete" title="Excluir" />
-            </button>
-          </div>
-        )}
+        <div className="btns-header">
+          <button
+            type="button"
+            aria-label="Exportar cifra em PDF"
+            onClick={handleExportPdf}
+          >
+            <img src="/pdf.svg" alt="Exportar PDF" title="Exportar PDF" />
+          </button>
+          {canManageCifra && (
+            <>
+              <button
+                type="button"
+                aria-label="Editar cifra"
+                onClick={() => setUpdate(!update)}
+              >
+                <img src="/update.svg" alt="Update" title="editar" />
+              </button>
+              <button
+                type="button"
+                aria-label="Excluir cifra"
+                onClick={() => setModalDelete(!modalDelete)}
+              >
+                <img src="/delete.svg" alt="Delete" title="Excluir" />
+              </button>
+            </>
+          )}
+        </div>
       </UsersHeader>
 
       {velocimetroVisivel && (

@@ -14,7 +14,12 @@ import {
   ShareInputRow,
   ShareList,
   SuggestList,
+  FiltersContainer,
+  FilterInputWrapper,
+  FilterInput,
+  FilterClearButton,
 } from "./PlaylistStyled";
+import { useSearch } from "../../hooks/useSearch";
 
 import {
   getPlaylistsService,
@@ -61,6 +66,7 @@ export default function Playlists() {
   const { user: authenticatedUser, isAdmin } = useAuth();
   const shareSearchTimer = useRef(null);
   const createSearchTimer = useRef(null);
+  const { search: searchNome, setSearch: setSearchNome, debounced, normalize } = useSearch();
 
   const navigate = useNavigate();
   const currentUserId = authenticatedUser?._id || authenticatedUser?.id || null;
@@ -164,6 +170,15 @@ export default function Playlists() {
     if (typeof value !== "string") return value || "";
     return value.replace(/^[\s]*(?:🎵|🎶|♪|♫)\s*/u, "");
   }, []);
+
+  const filteredPlaylists = useMemo(() => {
+    const sorted = [...playlists].sort((a, b) => a.nome.localeCompare(b.nome));
+    const query = normalize(debounced.trim());
+    if (!query) return sorted;
+    return sorted.filter((pl) =>
+      normalize(stripMusicEmoji(pl.nome)).includes(query),
+    );
+  }, [playlists, debounced, normalize, stripMusicEmoji]);
 
   const closeAllModals = useCallback(() => {
     setIsCreating(false);
@@ -631,6 +646,29 @@ export default function Playlists() {
         </button>
       </UsersHeader>
 
+      {playlists.length > 0 && (
+        <FiltersContainer>
+          <FilterInputWrapper>
+            <FilterInput
+              type="text"
+              placeholder="Pesquisar playlist"
+              value={searchNome}
+              aria-label="Pesquisar playlist"
+              onChange={(e) => setSearchNome(e.target.value)}
+            />
+            {searchNome && (
+              <FilterClearButton
+                type="button"
+                aria-label="Limpar pesquisa"
+                onClick={() => setSearchNome("")}
+              >
+                ×
+              </FilterClearButton>
+            )}
+          </FilterInputWrapper>
+        </FiltersContainer>
+      )}
+
       {!isLoadingPlaylists && playlists.length === 0 ? (
         <EmptyState>
           <img src="/music.svg" alt="" aria-hidden="true" className="icon" />
@@ -646,10 +684,15 @@ export default function Playlists() {
             Criar primeira playlist
           </button>
         </EmptyState>
+      ) : filteredPlaylists.length === 0 ? (
+        <EmptyState>
+          <img src="/music.svg" alt="" aria-hidden="true" className="icon" />
+          <h3>Nenhuma playlist encontrada</h3>
+          <p>Tente pesquisar por outro nome.</p>
+        </EmptyState>
       ) : (
         <CardsGrid>
-          {[...playlists]
-            .sort((a, b) => a.nome.localeCompare(b.nome))
+          {filteredPlaylists
             .map((pl) => {
               const ownerId = getOwnerId(pl);
               const shared = isSharedWithUser(pl);
