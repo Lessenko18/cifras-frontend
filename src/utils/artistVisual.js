@@ -3,8 +3,7 @@
  * linha aqui com o nome do artista (case/acento não importam). Quem não
  * estiver no mapa continua mostrando o círculo com as iniciais. */
 const ARTIST_IMAGES = {
-  // "shalom": "/artistas/shalom.jpg",
-  // "eugenio jorge": "/artistas/eugenio-jorge.jpg",
+  "colo de deus": "/colo_de_deus.jpg",
 };
 
 const normalize = (str) =>
