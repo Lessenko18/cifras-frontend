@@ -4,6 +4,7 @@ import {
   deleteCifraService,
   editCifraService,
   getCifraById,
+  registerCifraAccessService,
 } from "../../service/cifraService";
 import { useAuth } from "../../context/AuthContext";
 import { UsersHeader } from "../Users/UsersStyled";
@@ -60,6 +61,7 @@ export default function VerCifra() {
   const [editingBpm, setEditingBpm] = useState(false);
   const [bpmInput, setBpmInput] = useState("90");
   const intervalRef = useRef(null);
+  const accessRegisteredRef = useRef(null);
   const navigate = useNavigate();
   const [fontSize, setFontSize] = useState(() => {
     const saved = localStorage.getItem("cifra_fontSize");
@@ -304,6 +306,14 @@ export default function VerCifra() {
   useEffect(() => {
     getCifra();
   }, []);
+
+  // Registra o acesso uma única vez por música, mesmo com o double-invoke de efeitos do StrictMode
+  useEffect(() => {
+    if (!id || accessRegisteredRef.current === id) return;
+    accessRegisteredRef.current = id;
+    registerCifraAccessService(id).catch(() => {});
+  }, [id]);
+
   return (
     <VerCifraContainer className={part1 !== "" && "partes"}>
       <UsersHeader>

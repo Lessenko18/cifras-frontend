@@ -15,6 +15,268 @@ export const HomeWrapper = styled.div`
   }
 `;
 
+/* ── Insights (mais acessadas / músicas / artistas) ─ */
+export const InsightsWrapper = styled.section`
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+export const InsightsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+
+  @media (max-width: 1050px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const InsightPanel = styled.div`
+  position: relative;
+  overflow: hidden;
+  background: ${({ $bgImage }) =>
+    $bgImage
+      ? `linear-gradient(160deg, rgba(20, 12, 40, 0.82) 0%, rgba(30, 16, 55, 0.78) 55%, rgba(35, 18, 60, 0.85) 100%), url("${$bgImage}")`
+      : "linear-gradient(160deg, #1b1030 0%, #241542 55%, #2a1750 100%)"};
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 14px 34px -16px rgba(76, 29, 149, 0.55);
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.35), transparent 70%);
+    pointer-events: none;
+  }
+`;
+
+export const InsightPanelHeader = styled.div`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+`;
+
+export const InsightIconBadge = styled.div`
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  background: ${({ $gradient }) => $gradient || "linear-gradient(135deg, #8b5cf6, #6d28d9)"};
+  box-shadow: 0 6px 16px -4px rgba(124, 58, 237, 0.6);
+`;
+
+export const InsightPanelTitleGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+`;
+
+export const InsightPanelTitle = styled.h3`
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const InsightPanelSubtitle = styled.p`
+  margin: 2px 0 0;
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const SeeAllButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: #c4b5fd;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    color: #ddd6fe;
+    text-decoration: underline;
+  }
+`;
+
+/* Listas ranqueadas (músicas / artistas / novas) */
+export const RankedList = styled.div`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+export const RankedRow = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 6px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+`;
+
+export const RankIndex = styled.span`
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: #c4b5fd;
+  font-weight: 800;
+  font-size: 0.76rem;
+`;
+
+const SQUARE_GRADIENTS = [
+  "linear-gradient(135deg, #7c3aed, #4c1d95)",
+  "linear-gradient(135deg, #0ea5e9, #0369a1)",
+  "linear-gradient(135deg, #f59e0b, #b45309)",
+  "linear-gradient(135deg, #ec4899, #9d174d)",
+  "linear-gradient(135deg, #14b8a6, #0f766e)",
+];
+
+export const RankIconSquare = styled.div`
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: ${({ $index = 0 }) => SQUARE_GRADIENTS[$index % SQUARE_GRADIENTS.length]};
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+`;
+
+export const RankAvatar = styled.div`
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: ${({ $bg }) => $bg};
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const RankAvatarImg = styled.img`
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+`;
+
+export const RankInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+`;
+
+export const RankName = styled.span`
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const RankSub = styled.span`
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const RankStat = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: ${({ $variant }) =>
+    $variant === "date" ? "rgba(255, 255, 255, 0.5)" : $variant === "plays" ? "#a78bfa" : "#fbbf24"};
+`;
+
+export const InsightEmpty = styled.p`
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.88rem;
+  margin: 0;
+`;
+
+export const ActiveFilterChip = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--main);
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--main);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+`;
+
 /* ── Painel genérico (card escuro/claro) ──────────── */
 export const Panel = styled.div`
   background: var(--panel-bg);
@@ -76,16 +338,24 @@ export const PlaylistCardsGrid = styled.div`
   }
 `;
 
-/* ── Card de playlist ─────────────────────────────── */
+/* ── Card de playlist (com capa/foto de fundo) ────── */
 export const PlaylistCard = styled.article`
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: 12px;
+  --cover: ${({ $bannerUrl }) =>
+    $bannerUrl ? `url("${$bannerUrl}")` : "none"};
+
+  background-image:
+    linear-gradient(180deg, rgba(30, 20, 60, 0.15) 0%, rgba(20, 12, 46, 0.88) 78%),
+    var(--cover), linear-gradient(135deg, #4c3a94, #2a1f5e);
+  background-size: cover;
+  background-position: center;
+  border-radius: 14px;
   overflow: hidden;
+  min-height: 170px;
+  position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 160px;
-  position: relative;
+  justify-content: flex-end;
+  padding: 14px 44px 14px 16px;
   transition: transform 0.2s;
 
   &:hover {
@@ -93,52 +363,53 @@ export const PlaylistCard = styled.article`
   }
 
   .card-head {
-    background: var(--card-head-bg);
-    color: var(--card-head-text);
-    padding: 12px 40px 12px 14px;
     display: flex;
     align-items: center;
     gap: 8px;
+    color: #fff;
     font-weight: 800;
-    font-size: 0.95rem;
-    min-height: 52px;
+    font-size: 0.98rem;
+    margin-bottom: 4px;
 
     span {
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      line-height: 1.2;
+      line-height: 1.25;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
     }
 
     img {
       width: 15px;
       height: 15px;
       flex-shrink: 0;
+      filter: brightness(0) invert(1);
     }
   }
 
   .card-body {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
-    flex: 1;
-    padding: 10px 14px 14px;
     gap: 10px;
   }
 
   .card-count {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.75);
     font-weight: 500;
   }
 
   .card-actions-corner {
     position: absolute;
-    top: 56px;
+    top: 10px;
     right: 8px;
+    z-index: 2;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
   }
 
@@ -146,21 +417,23 @@ export const PlaylistCard = styled.article`
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     border: none;
-    background: transparent;
+    background: rgba(0, 0, 0, 0.28);
+    color: #fff;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 50%;
     transition: background 0.2s;
 
     img {
-      width: 15px;
-      height: 15px;
+      width: 14px;
+      height: 14px;
+      filter: brightness(0) invert(1);
     }
 
     &:hover {
-      background: var(--bg-input);
+      background: rgba(0, 0, 0, 0.5);
     }
   }
 
@@ -176,7 +449,6 @@ export const PlaylistCard = styled.article`
     font-weight: 700;
     font-size: 0.82rem;
     cursor: pointer;
-    margin-top: auto;
     box-shadow: 0 4px 10px rgba(107, 92, 255, 0.3);
     transition: transform 0.15s, box-shadow 0.15s;
     align-self: flex-start;
@@ -326,9 +598,8 @@ export const CifraItem = styled.article`
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: 12px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  padding: 12px 40px 12px 16px;
+  position: relative;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
 
@@ -338,58 +609,52 @@ export const CifraItem = styled.article`
   }
 
   .cifra-head {
-    background: var(--card-head-bg);
-    color: var(--card-head-text);
-    padding: 10px 42px 10px 14px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 48px;
-    position: relative;
+    align-items: flex-start;
   }
 
   h2 {
     font-size: 0.95rem;
     font-weight: 700;
     margin: 0;
+    color: var(--text-primary);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 1.2;
+    line-height: 1.25;
   }
 
   .heart-btn {
     position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 12px;
+    top: 12px;
     background: transparent;
     border: none;
     cursor: pointer;
     font-size: 18px;
-    color: var(--card-head-text);
+    color: var(--text-muted);
     padding: 0;
     line-height: 1;
     flex-shrink: 0;
     transition: transform 0.15s;
 
     &:hover {
-      transform: translateY(-50%) scale(1.25);
+      transform: scale(1.2);
     }
   }
 
   .cifra-body {
-    padding: 10px 14px 12px;
+    margin-top: 4px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
 
   .cifra-artista {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
   }
 
   .cifra-cats {

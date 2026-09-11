@@ -1,25 +1,17 @@
 import styled from "styled-components";
 
 export const NavContainer = styled.nav`
-  max-width: 1400px;
   width: 100%;
-  margin: 0 auto 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
-  background-image: url("/fundoviolao.PNG");
+  margin: 0 0 20px;
+  background-color: #050810;
+  background-image: url("/navbar.png");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center 42%;
-  padding: 10px 20px;
-  border-radius: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0px;
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.5);
   overflow: visible;
-
-  @media only screen and (max-width: 450px) {
-    border-radius: 0;
-  }
 
   #logo {
     max-width: 200px;
@@ -31,6 +23,17 @@ export const NavContainer = styled.nav`
       max-width: 160px;
     }
   }
+`;
+
+export const NavInner = styled.div`
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 10px 20px;
 
   @media only screen and (max-width: 420px) {
     flex-direction: column;
@@ -42,18 +45,25 @@ export const NavContainer = styled.nav`
 export const NavContent = styled.div`
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 15px;
+  justify-content: flex-start;
+  gap: 26px;
   color: #fff;
   align-items: center;
   padding: 14px 0;
-  margin-left: auto;
 
   .nav-link {
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     font-weight: 600;
-    color: #fff;
-    padding-bottom: 4px;
+    color: rgba(255, 255, 255, 0.85);
+    padding-bottom: 8px;
+    transition: color 0.2s;
+
+    svg {
+      flex-shrink: 0;
+    }
 
     &::after {
       content: "";
@@ -69,46 +79,27 @@ export const NavContent = styled.div`
       transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    &:hover {
+      color: #fff;
+    }
+
     &:hover::after {
       transform: scaleX(1);
     }
 
+    &.active {
+      color: #a78bfa;
+    }
+
     &.active::after {
       transform: scaleX(1);
-      background: linear-gradient(90deg, #c084fc, #38bdf8);
+      background: linear-gradient(90deg, #c084fc, #7c3aed);
     }
-
-    &.active {
-      text-shadow: 0 0 12px rgba(192, 132, 252, 0.6);
-    }
-  }
-
-  .theme-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 8px;
-    padding: 6px;
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, color 0.2s;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.28);
-    }
-  }
-
-  [data-theme="dark"] & .theme-toggle {
-    background: rgba(251, 191, 36, 0.18);
-    border-color: rgba(251, 191, 36, 0.5);
-    color: #fbbf24;
   }
 
   @media only screen and (max-width: 600px) {
     font-size: 14px;
-    gap: 10px;
+    gap: 16px;
   }
 
   @media only screen and (max-width: 528px) {
@@ -121,6 +112,46 @@ export const NavContent = styled.div`
     gap: 8px;
     padding: 4px 0 0;
     font-size: 13px;
+  }
+`;
+
+export const RightArea = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+  }
+
+  [data-theme="dark"] & .icon-btn.theme-toggle {
+    background: rgba(251, 191, 36, 0.18);
+    border-color: rgba(251, 191, 36, 0.5);
+    color: #fbbf24;
+  }
+
+  @media only screen and (max-width: 420px) {
+    gap: 8px;
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+    }
   }
 `;
 
@@ -164,8 +195,8 @@ export const UserArea = styled.div`
   }
 
   img {
-    width: 56px;
-    height: 56px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     object-fit: cover;
   }
@@ -195,15 +226,16 @@ export const UserArea = styled.div`
   }
 
   .initials {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: var(--light);
-    color: var(--main);
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
+    font-size: 0.85rem;
   }
 
   .user-menu {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // Cifras
-import { getCifrasService } from "../../service/cifraService";
+import { getCifrasService, getCifraHomeInsightsService } from "../../service/cifraService";
 import { getCategoriasService } from "../../service/categoriaService";
 import { getFavoritosService, toggleFavoritoService } from "../../service/favoritosService";
 import { useSearch } from "../../hooks/useSearch";
@@ -12,13 +12,16 @@ import { useRequireAuth } from "../../hooks/useRequireAuth";
 import {
   getPlaylistsService,
   createPlaylistService,
+  createPlaylistWithBannerService,
   editPlaylistService,
+  editPlaylistWithBannerService,
   deletePlaylistService,
   getPlaylistViewService,
   getPlaylistByIdService,
   sharePlaylistService,
   unsharePlaylistService,
 } from "../../service/playlistService";
+import { getImageSizeError } from "../../service/s3Service";
 import { useAuth } from "../../context/AuthContext";
 import { searchUsersService } from "../../service/userService";
 import { getPublicAppUrl } from "../../utils/getPublicAppUrl";
@@ -34,6 +37,8 @@ import {
 import toast from "react-hot-toast";
 
 import { FiShare2, FiEdit2, FiTrash2, FiMusic } from "react-icons/fi";
+import { getPlaylistBgImage } from "../../utils/playlistVisual";
+import { getArtistImage } from "../../utils/artistVisual";
 import {
   HomeWrapper,
   Panel,
@@ -55,6 +60,27 @@ import {
   PaginationContainer,
   PaginationButton,
   PaginationInfo,
+  InsightsWrapper,
+  InsightsGrid,
+  InsightPanel,
+  InsightPanelHeader,
+  InsightIconBadge,
+  InsightPanelTitleGroup,
+  InsightPanelTitle,
+  InsightPanelSubtitle,
+  SeeAllButton,
+  RankedList,
+  RankedRow,
+  RankIndex,
+  RankIconSquare,
+  RankAvatar,
+  RankAvatarImg,
+  RankInfo,
+  RankName,
+  RankSub,
+  RankStat,
+  InsightEmpty,
+  ActiveFilterChip,
 } from "./HomeStyled";
 
 /* ── helpers ─────────────────────────────────────── */
@@ -73,10 +99,37 @@ async function getCachedUsers() {
 const sortByNome = (a, b) =>
   (a?.nome || "").localeCompare(b?.nome || "", "pt-BR", { sensitivity: "base" });
 
+const AVATAR_PALETTE = ["#7c3aed", "#0ea5e9", "#f59e0b", "#14b8a6", "#6366f1", "#ec4899"];
+
+const formatCount = (n) => {
+  if (!n) return null;
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return String(n);
+};
+
+const formatRelativeDate = (dateStr) => {
+  if (!dateStr) return null;
+  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round((startOfDay(new Date()) - startOfDay(new Date(dateStr))) / 86400000);
+  if (diffDays <= 0) return "Hoje";
+  if (diffDays === 1) return "Ontem";
+  return `${diffDays} dias`;
+};
+
+const getInitials = (name) =>
+  (name || "?")
+    .trim()
+    .split(/\s+/)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
 /* ── Componentes memoizados ── evitam re-render quando o estado pai muda */
 const PlaylistCardItem = memo(function PlaylistCardItem({ pl, onView, onShare, onEdit, onDelete, canShare, canEdit, canDelete, stripEmoji }) {
+  const bannerUrl = pl.bannerUrl || getPlaylistBgImage(pl.nome);
   return (
-    <PlaylistCard>
+    <PlaylistCard $bannerUrl={bannerUrl}>
       <div className="card-head">
         <FiMusic size={14} aria-hidden="true" />
         <span>{stripEmoji(pl.nome)}</span>
@@ -109,6 +162,15 @@ const PlaylistCardItem = memo(function PlaylistCardItem({ pl, onView, onShare, o
       )}
     </PlaylistCard>
   );
+});
+
+const ArtistAvatar = memo(function ArtistAvatar({ artista, bg }) {
+  const [imgError, setImgError] = useState(false);
+  const imgSrc = getArtistImage(artista);
+  if (imgSrc && !imgError) {
+    return <RankAvatarImg src={imgSrc} alt={artista} onError={() => setImgError(true)} />;
+  }
+  return <RankAvatar $bg={bg}>{getInitials(artista)}</RankAvatar>;
 });
 
 const CifraListItem = memo(function CifraListItem({ cifra, isFav, onToggleFav, getCatLabel }) {
@@ -153,9 +215,13 @@ export default function Home() {
   const [categorias, setCategorias] = useState([]);
   const { search: searchNome, setSearch: setSearchNome, debounced } = useSearch();
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
+  const [artistaFiltro, setArtistaFiltro] = useState("");
+  const [insights, setInsights] = useState({ maisAcessadasMes: [], maisAcessadas: [], novas: [], artistasMaisAcessados: [] });
+  const [expandedPanels, setExpandedPanels] = useState({ musicas: false, artistas: false, novas: false });
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterExpanded, setFilterExpanded] = useState(new Set());
   const filterRef = useRef(null);
+  const cifraPanelRef = useRef(null);
   const [favoritosIds, setFavoritosIds] = useState([]);
   const [favoritosMode, setFavoritosMode] = useState(false);
   const favoritosSet = useMemo(() => new Set(favoritosIds), [favoritosIds]);
@@ -221,6 +287,7 @@ export default function Home() {
   /* ── Efeitos iniciais ───────────────────────────── */
   useEffect(() => {
     getCategoriasService().then((r) => setCategorias(r.data || [])).catch(() => {});
+    getCifraHomeInsightsService(10).then((r) => setInsights(r.data || {})).catch(() => {});
     if (!isAuthenticated) { setFavoritosIds([]); setPlaylists([]); return; }
     getFavoritosService().then(setFavoritosIds).catch(() => {});
     fetchPlaylists();
@@ -244,6 +311,7 @@ export default function Home() {
     try {
       const res = await getCifrasService({
         nome: debounced || undefined,
+        artista: artistaFiltro || undefined,
         categorias: relevantCategoriaIds.length ? relevantCategoriaIds : undefined,
         favoritos: favoritosMode ? favoritosIds : undefined,
         page: currentPage,
@@ -252,10 +320,10 @@ export default function Home() {
       setCifras(res.data.cifras || []);
       setPages(res.data.pages || 0);
     } catch {}
-  }, [debounced, relevantCategoriaIds, currentPage, favoritosMode, favoritosIds]);
+  }, [debounced, artistaFiltro, relevantCategoriaIds, currentPage, favoritosMode, favoritosIds]);
 
   useEffect(() => { fetchCifras(); }, [fetchCifras]);
-  useEffect(() => { setCurrentPage(0); }, [debounced, categoriaFiltro, favoritosMode]);
+  useEffect(() => { setCurrentPage(0); }, [debounced, artistaFiltro, categoriaFiltro, favoritosMode]);
 
   /* ── Favoritos ──────────────────────────────────── */
   const handleToggleFavorito = useCallback(async (cifraId) => {
@@ -412,8 +480,18 @@ export default function Home() {
     const appUrl = getPublicAppUrl();
     if (appUrl) { data.appUrl = appUrl; data.frontendUrl = appUrl; }
     if (createShareEmails.length) data.sharedWithEmails = createShareEmails;
+    const bannerFile = data.banner instanceof File && data.banner.size > 0 ? data.banner : null;
+    delete data.banner;
+    if (bannerFile) {
+      const sizeError = getImageSizeError(bannerFile);
+      if (sizeError) { toast.error(sizeError); return; }
+    }
     try {
-      await createPlaylistService(data);
+      if (bannerFile) {
+        await createPlaylistWithBannerService({ ...data, bannerFile });
+      } else {
+        await createPlaylistService(data);
+      }
       toast.success("Playlist criada!");
       e.target.reset(); setChosenCifras([]); setCreateShareEmails([]);
       setCreateShareInput(""); setIsCreating(false);
@@ -427,8 +505,18 @@ export default function Home() {
     const data = Object.fromEntries(new FormData(e.target).entries());
     if (!data.nome?.trim()) { toast.error("Informe o nome da playlist."); return; }
     data.cifras = chosenCifras.map((c) => c._id || c.id);
+    const bannerFile = data.banner instanceof File && data.banner.size > 0 ? data.banner : null;
+    delete data.banner;
+    if (bannerFile) {
+      const sizeError = getImageSizeError(bannerFile);
+      if (sizeError) { toast.error(sizeError); return; }
+    }
     try {
-      await editPlaylistService(chosen._id, data);
+      if (bannerFile) {
+        await editPlaylistWithBannerService(chosen._id, { ...data, bannerFile });
+      } else {
+        await editPlaylistService(chosen._id, data);
+      }
       toast.success("Playlist editada!");
       setModalEdit(false); setChosen(null); setChosenCifras([]); fetchPlaylists();
     } catch { toast.error("Falha ao editar playlist."); }
@@ -500,8 +588,15 @@ export default function Home() {
     return parent ? `${c.nome} (${parent.nome})` : c.nome;
   };
 
+  const handleFilterByArtist = useCallback((nome) => {
+    setArtistaFiltro(nome);
+    setSearchNome("");
+    cifraPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [setSearchNome]);
+
   /* ── Render ─────────────────────────────────────── */
   return (
+    <>
     <HomeWrapper>
       {/* ══ PAINEL ESQUERDO: PLAYLISTS ══ */}
       <Panel>
@@ -577,7 +672,7 @@ export default function Home() {
       </Panel>
 
       {/* ══ PAINEL DIREITO: CIFRAS ══ */}
-      <Panel>
+      <Panel ref={cifraPanelRef}>
         <FiltersContainer>
           <FilterInput
             type="text"
@@ -656,9 +751,15 @@ export default function Home() {
             {favoritosMode ? "♥" : "♡"} Favoritos
           </FavBtn>
 
-          {(searchNome || categoriaFiltro) && (
+          {artistaFiltro && (
+            <ActiveFilterChip type="button" onClick={() => setArtistaFiltro("")}>
+              Artista: {artistaFiltro} ×
+            </ActiveFilterChip>
+          )}
+
+          {(searchNome || categoriaFiltro || artistaFiltro) && (
             <button type="button" className="btn"
-              onClick={() => { setSearchNome(""); setCategoriaFiltro(""); }}>
+              onClick={() => { setSearchNome(""); setCategoriaFiltro(""); setArtistaFiltro(""); }}>
               Limpar
             </button>
           )}
@@ -702,6 +803,125 @@ export default function Home() {
           </>
         )}
       </Panel>
+    </HomeWrapper>
+
+    {/* ══ INSIGHTS: músicas / artistas / novas ══ */}
+    <InsightsWrapper>
+      <InsightsGrid>
+        {/* Músicas mais acessadas — lista ranqueada */}
+        <InsightPanel $bgImage="/fundoGuitarra.png">
+          <InsightPanelHeader>
+            <InsightPanelTitleGroup>
+              <InsightIconBadge $gradient="linear-gradient(135deg, #8b5cf6, #6d28d9)">🎵</InsightIconBadge>
+              <div>
+                <InsightPanelTitle>Músicas mais acessadas</InsightPanelTitle>
+                <InsightPanelSubtitle>As cifras que estão em alta por aqui</InsightPanelSubtitle>
+              </div>
+            </InsightPanelTitleGroup>
+            {insights.maisAcessadas?.length > 5 && (
+              <SeeAllButton type="button"
+                onClick={() => setExpandedPanels((p) => ({ ...p, musicas: !p.musicas }))}>
+                {expandedPanels.musicas ? "Ver menos" : "Ver tudo →"}
+              </SeeAllButton>
+            )}
+          </InsightPanelHeader>
+          {insights.maisAcessadas?.length ? (
+            <RankedList>
+              {insights.maisAcessadas.slice(0, expandedPanels.musicas ? 10 : 5).map((cifra, i) => (
+                <RankedRow key={cifra._id} type="button" onClick={() => navigate(`/home/cifra/${cifra._id}`)}>
+                  <RankIndex>{i + 1}</RankIndex>
+                  <RankIconSquare $index={i}><FiMusic size={15} /></RankIconSquare>
+                  <RankInfo>
+                    <RankName>{cifra.nome}</RankName>
+                    {cifra.artista && <RankSub>{cifra.artista}</RankSub>}
+                  </RankInfo>
+                  {formatCount(cifra.acessos) && (
+                    <RankStat $variant="fire">🔥 {formatCount(cifra.acessos)}</RankStat>
+                  )}
+                </RankedRow>
+              ))}
+            </RankedList>
+          ) : (
+            <InsightEmpty>Ainda não há dados suficientes de acesso.</InsightEmpty>
+          )}
+        </InsightPanel>
+
+        {/* Artistas mais acessados — lista ranqueada */}
+        <InsightPanel $bgImage="/MaisAcessados.jpg">
+          <InsightPanelHeader>
+            <InsightPanelTitleGroup>
+              <InsightIconBadge $gradient="linear-gradient(135deg, #38bdf8, #0369a1)">👥</InsightIconBadge>
+              <div>
+                <InsightPanelTitle>Artistas mais acessados</InsightPanelTitle>
+                <InsightPanelSubtitle>Os artistas que você mais ouve</InsightPanelSubtitle>
+              </div>
+            </InsightPanelTitleGroup>
+            {insights.artistasMaisAcessados?.length > 5 && (
+              <SeeAllButton type="button"
+                onClick={() => setExpandedPanels((p) => ({ ...p, artistas: !p.artistas }))}>
+                {expandedPanels.artistas ? "Ver menos" : "Ver tudo →"}
+              </SeeAllButton>
+            )}
+          </InsightPanelHeader>
+          {insights.artistasMaisAcessados?.length ? (
+            <RankedList>
+              {insights.artistasMaisAcessados.slice(0, expandedPanels.artistas ? 10 : 5).map((item, i) => (
+                <RankedRow key={item.artista} type="button" onClick={() => handleFilterByArtist(item.artista)}>
+                  <RankIndex>{i + 1}</RankIndex>
+                  <ArtistAvatar artista={item.artista} bg={AVATAR_PALETTE[i % AVATAR_PALETTE.length]} />
+                  <RankInfo>
+                    <RankName>{item.artista}</RankName>
+                  </RankInfo>
+                  {formatCount(item.acessos) && (
+                    <RankStat $variant="plays">▶ {formatCount(item.acessos)}</RankStat>
+                  )}
+                </RankedRow>
+              ))}
+            </RankedList>
+          ) : (
+            <InsightEmpty>Ainda não há dados suficientes de acesso.</InsightEmpty>
+          )}
+        </InsightPanel>
+
+        {/* Novas músicas — lista ranqueada */}
+        <InsightPanel $bgImage="/NovasMusicas.jpg">
+          <InsightPanelHeader>
+            <InsightPanelTitleGroup>
+              <InsightIconBadge $gradient="linear-gradient(135deg, #a78bfa, #7c3aed)">🆕</InsightIconBadge>
+              <div>
+                <InsightPanelTitle>Novas músicas</InsightPanelTitle>
+                <InsightPanelSubtitle>As últimas cifras adicionadas</InsightPanelSubtitle>
+              </div>
+            </InsightPanelTitleGroup>
+            {insights.novas?.length > 5 && (
+              <SeeAllButton type="button"
+                onClick={() => setExpandedPanels((p) => ({ ...p, novas: !p.novas }))}>
+                {expandedPanels.novas ? "Ver menos" : "Ver tudo →"}
+              </SeeAllButton>
+            )}
+          </InsightPanelHeader>
+          {insights.novas?.length ? (
+            <RankedList>
+              {insights.novas.slice(0, expandedPanels.novas ? 10 : 5).map((cifra, i) => (
+                <RankedRow key={cifra._id} type="button" onClick={() => navigate(`/home/cifra/${cifra._id}`)}>
+                  <RankIndex>{i + 1}</RankIndex>
+                  <RankIconSquare $index={i}><FiMusic size={15} /></RankIconSquare>
+                  <RankInfo>
+                    <RankName>{cifra.nome}</RankName>
+                    {cifra.artista && <RankSub>{cifra.artista}</RankSub>}
+                  </RankInfo>
+                  {formatRelativeDate(cifra.createdAt) && (
+                    <RankStat $variant="date">🗓 {formatRelativeDate(cifra.createdAt)}</RankStat>
+                  )}
+                </RankedRow>
+              ))}
+            </RankedList>
+          ) : (
+            <InsightEmpty>Nenhuma música cadastrada ainda.</InsightEmpty>
+          )}
+        </InsightPanel>
+      </InsightsGrid>
+    </InsightsWrapper>
 
       {/* ══ MODAIS DE PLAYLIST ══ */}
 
@@ -712,6 +932,10 @@ export default function Home() {
           <div>
             <label htmlFor="create-nome">Nome da Playlist</label>
             <Input id="create-nome" name="nome" required placeholder="Nome da Playlist" />
+          </div>
+          <div>
+            <label htmlFor="create-banner">Capa da playlist (opcional)</label>
+            <input id="create-banner" name="banner" type="file" accept="image/*" />
           </div>
           <div>
             <MultSeletor className="playlist-mult" tipo="cifra"
@@ -771,6 +995,10 @@ export default function Home() {
           <div>
             <label htmlFor="edit-nome">Nome da Playlist</label>
             <Input id="edit-nome" name="nome" defaultValue={chosen.nome} required />
+          </div>
+          <div>
+            <label htmlFor="edit-banner">Capa da playlist (opcional)</label>
+            <input id="edit-banner" name="banner" type="file" accept="image/*" />
           </div>
           <div>
             <label>Músicas</label>
@@ -875,6 +1103,6 @@ export default function Home() {
           </div>
         </PlaylistModalDelete>
       )}
-    </HomeWrapper>
+    </>
   );
 }

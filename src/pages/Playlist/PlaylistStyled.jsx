@@ -214,34 +214,33 @@ export const EmptyState = styled.div`
 `;
 
 export const Card = styled.article`
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: 12px;
-  padding: 22px 24px;
-  padding-right: 72px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: 0.3s;
+  --cover: ${({ $bannerUrl }) => ($bannerUrl ? `url("${$bannerUrl}")` : "none")};
+
+  background-image:
+    linear-gradient(180deg, rgba(30, 20, 60, 0.15) 0%, rgba(20, 12, 46, 0.88) 78%),
+    var(--cover), linear-gradient(135deg, #4c3a94, #2a1f5e);
+  background-size: cover;
+  background-position: center;
+  border-radius: 14px;
+  padding: 16px 44px 16px 18px;
+  transition: transform 0.2s;
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 170px;
+  justify-content: flex-end;
+  min-height: 190px;
+
   &:hover {
-    transform: scale(1.01);
+    transform: translateY(-2px);
   }
 
   .playlist-title {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 8px;
-    padding: 14px 24px;
-    border-radius: 0;
-    background: var(--card-head-bg);
-    color: var(--card-head-text);
+    color: #fff;
     font-weight: 800;
-    margin: -22px -72px 12px -24px;
-    align-self: stretch;
-    justify-content: flex-start;
-    height: 56px;
+    margin: 0 0 4px;
   }
 
   .playlist-title span {
@@ -251,38 +250,39 @@ export const Card = styled.article`
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: left;
-    line-height: 1.2;
-    max-height: calc(1.2em * 2);
+    line-height: 1.25;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
   }
 
   .playlist-count {
+    position: relative;
+    z-index: 1;
     display: inline-flex;
     align-items: center;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.75);
     font-weight: 500;
-    margin: 12px 0 16px;
-    max-width: calc(100% - 40px);
-    align-self: flex-start;
-    justify-content: flex-start;
+    margin: 0 0 12px;
   }
 
   .playlist-title img {
     width: 16px;
     height: 16px;
+    filter: brightness(0) invert(1);
   }
 
   .actions {
+    position: relative;
+    z-index: 1;
     display: flex;
     gap: 12px;
-    margin-top: auto;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .playlist-action {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 7px 7px;
+    padding: 7px 14px;
     border-radius: 10px;
     border: none;
     background: linear-gradient(135deg, #6b5cff, #5a4ad9);
@@ -296,8 +296,8 @@ export const Card = styled.article`
   }
 
   .playlist-action img {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     filter: brightness(0) invert(1);
   }
 
@@ -308,20 +308,20 @@ export const Card = styled.article`
 
   .share-actions {
     position: absolute;
-    top: 70px;
-    right: 12px;
+    top: 10px;
+    right: 8px;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    transform: none;
+    gap: 4px;
   }
 
   .icon-actions {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
   }
 `;
 
@@ -331,22 +331,23 @@ export const IconButton = styled.button`
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: 50%;
   border: none;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.28);
   cursor: pointer;
   transition:
-    transform 0.15s ease,
-    opacity 0.15s ease;
+    background 0.2s ease,
+    transform 0.15s ease;
 
   img {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
+    filter: brightness(0) invert(1);
   }
 
   &:hover {
+    background: rgba(0, 0, 0, 0.5);
     transform: translateY(-1px);
-    opacity: 0.95;
   }
 `;
 

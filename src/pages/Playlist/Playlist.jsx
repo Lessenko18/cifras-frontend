@@ -20,17 +20,21 @@ import {
   FilterClearButton,
 } from "./PlaylistStyled";
 import { useSearch } from "../../hooks/useSearch";
+import { getPlaylistBgImage } from "../../utils/playlistVisual";
 
 import {
   getPlaylistsService,
   createPlaylistService,
+  createPlaylistWithBannerService,
   editPlaylistService,
+  editPlaylistWithBannerService,
   deletePlaylistService,
   getPlaylistViewService,
   getPlaylistByIdService,
   sharePlaylistService,
   unsharePlaylistService,
 } from "../../service/playlistService";
+import { getImageSizeError } from "../../service/s3Service";
 import { getCifrasService } from "../../service/cifraService";
 import { useNavigate } from "react-router-dom";
 import { UsersHeader } from "../Users/UsersStyled";
@@ -426,8 +430,19 @@ export default function Playlists() {
         data.sharedWithEmails = createShareEmails;
       }
 
+      const bannerFile = data.banner instanceof File && data.banner.size > 0 ? data.banner : null;
+      delete data.banner;
+      if (bannerFile) {
+        const sizeError = getImageSizeError(bannerFile);
+        if (sizeError) { toast.error(sizeError); return; }
+      }
+
       try {
-        await createPlaylistService(data);
+        if (bannerFile) {
+          await createPlaylistWithBannerService({ ...data, bannerFile });
+        } else {
+          await createPlaylistService(data);
+        }
         toast.success("Playlist criada com sucesso!");
         e.target.reset();
         setChosenCifras([]);
@@ -462,8 +477,19 @@ export default function Playlists() {
 
       data.cifras = chosenCifras.map((c) => c._id || c.id);
 
+      const bannerFile = data.banner instanceof File && data.banner.size > 0 ? data.banner : null;
+      delete data.banner;
+      if (bannerFile) {
+        const sizeError = getImageSizeError(bannerFile);
+        if (sizeError) { toast.error(sizeError); return; }
+      }
+
       try {
-        await editPlaylistService(chosen._id, data);
+        if (bannerFile) {
+          await editPlaylistWithBannerService(chosen._id, { ...data, bannerFile });
+        } else {
+          await editPlaylistService(chosen._id, data);
+        }
         toast.success("Playlist editada com sucesso!");
         setModalEdit(false);
         setChosen(null);
@@ -704,8 +730,10 @@ export default function Playlists() {
               const showCornerActions = canShare || canEdit || canDelete;
               const displayName = stripMusicEmoji(pl.nome);
 
+              const bannerUrl = pl.bannerUrl || getPlaylistBgImage(pl.nome);
+
               return (
-                <Card key={pl._id}>
+                <Card key={pl._id} $bannerUrl={bannerUrl}>
                   <div className="playlist-title">
                     <img src="/music.svg" alt="" aria-hidden="true" />
                     <span>{displayName}</span>
@@ -781,6 +809,11 @@ export default function Playlists() {
               required
               placeholder="Nome da Playlist"
             />
+          </div>
+
+          <div>
+            <label htmlFor="create-playlist-banner">Capa da playlist (opcional)</label>
+            <input id="create-playlist-banner" name="banner" type="file" accept="image/*" />
           </div>
 
           <div>
@@ -912,6 +945,11 @@ export default function Playlists() {
               defaultValue={chosen.nome}
               required
             />
+          </div>
+
+          <div>
+            <label htmlFor="edit-playlist-banner">Capa da playlist (opcional)</label>
+            <input id="edit-playlist-banner" name="banner" type="file" accept="image/*" />
           </div>
 
           <div>
