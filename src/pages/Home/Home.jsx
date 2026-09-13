@@ -250,8 +250,19 @@ export default function Home() {
   const currentUserId = authenticatedUser?._id || authenticatedUser?.id || null;
   const currentUserEmail = authenticatedUser?.email?.toLowerCase() || "";
 
-  /* ── Computed: playlists paginadas ─────────────── */
-  const sortedPlaylists = useMemo(() => [...playlists].sort(sortByNome), [playlists]);
+  /* ── Computed: playlists paginadas (mais recentes primeiro) ─────────────── */
+  const sortedPlaylists = useMemo(
+    () =>
+      [...playlists].sort((a, b) => {
+        if (a?.createdAt && b?.createdAt) {
+          const diff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          if (diff !== 0) return diff;
+        }
+        // ObjectId do MongoDB é cronologicamente ordenável — usado como fallback/critério principal
+        return String(b?._id || "").localeCompare(String(a?._id || ""));
+      }),
+    [playlists]
+  );
   const totalPlaylistPages = Math.ceil(sortedPlaylists.length / PLAYLISTS_PER_PAGE);
   const visiblePlaylists = useMemo(
     () => sortedPlaylists.slice(playlistPage * PLAYLISTS_PER_PAGE, (playlistPage + 1) * PLAYLISTS_PER_PAGE),
