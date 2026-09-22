@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "../../components/Input/Input";
 import {
   Page,
-  Title,
   CardsGrid,
   EmptyState,
   Card,
@@ -14,12 +13,9 @@ import {
   ShareInputRow,
   ShareList,
   SuggestList,
-  FiltersContainer,
-  FilterInputWrapper,
-  FilterInput,
-  FilterClearButton,
 } from "./PlaylistStyled";
 import { useSearch } from "../../hooks/useSearch";
+import { usePageSearchBox } from "../../context/PageSearchContext";
 import { getPlaylistBgImage } from "../../utils/playlistVisual";
 
 import {
@@ -71,6 +67,12 @@ export default function Playlists() {
   const shareSearchTimer = useRef(null);
   const createSearchTimer = useRef(null);
   const { search: searchNome, setSearch: setSearchNome, debounced, normalize } = useSearch();
+
+  usePageSearchBox({
+    placeholder: "Pesquisar playlist",
+    value: searchNome,
+    onChange: setSearchNome,
+  });
 
   const navigate = useNavigate();
   const currentUserId = authenticatedUser?._id || authenticatedUser?.id || null;
@@ -663,37 +665,12 @@ export default function Playlists() {
   return (
     <Page>
       <UsersHeader>
-        <button onClick={() => navigate(-1)}>
-          <img src="/back.svg" alt="Voltar" className="img-hover" />
-        </button>
-        <Title>Minhas Playlists</Title>
-        <button className="btn adicionar-primary" onClick={handleOpenCreate}>
-          Criar Nova Playlist
-        </button>
+        <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end" }}>
+          <button className="btn adicionar-primary" onClick={handleOpenCreate}>
+            Criar Nova Playlist
+          </button>
+        </div>
       </UsersHeader>
-
-      {playlists.length > 0 && (
-        <FiltersContainer>
-          <FilterInputWrapper>
-            <FilterInput
-              type="text"
-              placeholder="Pesquisar playlist"
-              value={searchNome}
-              aria-label="Pesquisar playlist"
-              onChange={(e) => setSearchNome(e.target.value)}
-            />
-            {searchNome && (
-              <FilterClearButton
-                type="button"
-                aria-label="Limpar pesquisa"
-                onClick={() => setSearchNome("")}
-              >
-                ×
-              </FilterClearButton>
-            )}
-          </FilterInputWrapper>
-        </FiltersContainer>
-      )}
 
       {!isLoadingPlaylists && playlists.length === 0 ? (
         <EmptyState>

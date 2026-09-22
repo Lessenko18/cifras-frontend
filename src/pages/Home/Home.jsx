@@ -841,7 +841,7 @@ export default function Home() {
               {insights.maisAcessadas.slice(0, expandedPanels.musicas ? 10 : 5).map((cifra, i) => (
                 <RankedRow key={cifra._id} type="button" onClick={() => navigate(`/home/cifra/${cifra._id}`)}>
                   <RankIndex>{i + 1}</RankIndex>
-                  <RankIconSquare $index={i}><FiMusic size={15} /></RankIconSquare>
+                  <RankIconSquare $variant="purple"><FiMusic size={15} /></RankIconSquare>
                   <RankInfo>
                     <RankName>{cifra.nome}</RankName>
                     {cifra.artista && <RankSub>{cifra.artista}</RankSub>}
@@ -916,7 +916,7 @@ export default function Home() {
               {insights.novas.slice(0, expandedPanels.novas ? 10 : 5).map((cifra, i) => (
                 <RankedRow key={cifra._id} type="button" onClick={() => navigate(`/home/cifra/${cifra._id}`)}>
                   <RankIndex>{i + 1}</RankIndex>
-                  <RankIconSquare $index={i}><FiMusic size={15} /></RankIconSquare>
+                  <RankIconSquare $variant="blue"><FiMusic size={15} /></RankIconSquare>
                   <RankInfo>
                     <RankName>{cifra.nome}</RankName>
                     {cifra.artista && <RankSub>{cifra.artista}</RankSub>}

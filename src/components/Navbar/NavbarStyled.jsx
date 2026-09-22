@@ -155,6 +155,58 @@ export const RightArea = styled.div`
   }
 `;
 
+export const SearchBox = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #fff;
+  transition: background 0.2s, border-color 0.2s;
+
+  &:focus-within {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+
+  input {
+    width: 150px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 0.85rem;
+    outline: none;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  @media only screen and (max-width: 600px) {
+    input {
+      width: 110px;
+    }
+  }
+
+  @media only screen and (max-width: 420px) {
+    height: 32px;
+    padding: 0 10px;
+
+    input {
+      width: 90px;
+      font-size: 0.8rem;
+    }
+  }
+`;
+
 export const UserArea = styled.div`
   position: relative;
   z-index: 100;

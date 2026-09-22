@@ -181,12 +181,18 @@ const SQUARE_GRADIENTS = [
   "linear-gradient(135deg, #14b8a6, #0f766e)",
 ];
 
+const SQUARE_VARIANTS = {
+  purple: "linear-gradient(135deg, #7c3aed, #4c1d95)",
+  blue: "linear-gradient(135deg, #0ea5e9, #0369a1)",
+};
+
 export const RankIconSquare = styled.div`
   width: 38px;
   height: 38px;
   flex-shrink: 0;
   border-radius: 10px;
-  background: ${({ $index = 0 }) => SQUARE_GRADIENTS[$index % SQUARE_GRADIENTS.length]};
+  background: ${({ $variant, $index = 0 }) =>
+    SQUARE_VARIANTS[$variant] || SQUARE_GRADIENTS[$index % SQUARE_GRADIENTS.length]};
   color: #fff;
   display: flex;
   align-items: center;

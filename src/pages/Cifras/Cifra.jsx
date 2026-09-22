@@ -13,8 +13,6 @@ import {
   PaginationContainer,
   PaginationButton,
   PaginationInfo,
-  FiltersContainer,
-  FilterInput,
   FilterDropdownWrapper,
   FilterDropdownTrigger,
   FilterDropdownPanel,
@@ -22,13 +20,13 @@ import {
 } from "./CifraStyled";
 import { Input } from "../../components/Input/Input";
 import { getCategoriasService } from "../../service/categoriaService";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { UsersHeader } from "../Users/UsersStyled";
-import { Title } from "../Playlist/PlaylistStyled";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
 import { useSearch } from "../../hooks/useSearch";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
 import { useAuth } from "../../context/AuthContext";
+import { usePageSearchBox } from "../../context/PageSearchContext";
 
 const CATEGORY_ICONS = {
   "Igreja":    "⛪",
@@ -68,6 +66,12 @@ export default function Cifras() {
   const [fetchingCifra, setFetchingCifra] = useState(false);
 
   const { search: searchNome, setSearch: setSearchNome, debounced } = useSearch();
+
+  usePageSearchBox({
+    placeholder: "Pesquisar música",
+    value: searchNome,
+    onChange: setSearchNome,
+  });
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterExpanded, setFilterExpanded] = useState(new Set());
@@ -76,7 +80,6 @@ export default function Cifras() {
   const [favoritosIds, setFavoritosIds] = useState([]);
   const favoritosSet = useMemo(() => new Set(favoritosIds), [favoritosIds]);
 
-  const navigate = useNavigate();
   const requireAuth = useRequireAuth();
   const { isAuthenticated } = useAuth();
 
@@ -247,30 +250,7 @@ export default function Cifras() {
   return (
     <CifrasContainer>
       <UsersHeader>
-        <button onClick={() => navigate(-1)}>
-          <img src="/back.svg" alt="Voltar" className="img-hover" />
-        </button>
-        <Title>Cifras</Title>
-        <button
-          className="btn adicionar-primary"
-          onClick={() => {
-            if (!requireAuth("Você precisa fazer login para adicionar uma cifra.")) return;
-            setIsCreating(true);
-          }}
-        >
-          Adicionar Cifra
-        </button>
-      </UsersHeader>
-
-      <FiltersContainer>
-        <FilterInput
-          type="text"
-          placeholder="Pesquisar música"
-          value={searchNome}
-          aria-label="Pesquisar música"
-          onChange={(e) => setSearchNome(e.target.value)}
-        />
-
+        <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", justifyContent: "flex-end" }}>
         <FilterDropdownWrapper ref={filterRef}>
           <FilterDropdownTrigger
             type="button"
@@ -362,7 +342,18 @@ export default function Cifras() {
             Limpar filtro
           </button>
         )}
-      </FiltersContainer>
+
+        <button
+          className="btn adicionar-primary"
+          onClick={() => {
+            if (!requireAuth("Você precisa fazer login para adicionar uma cifra.")) return;
+            setIsCreating(true);
+          }}
+        >
+          Adicionar Nova Cifra
+        </button>
+        </div>
+      </UsersHeader>
 
       {isCreating && (
         <>

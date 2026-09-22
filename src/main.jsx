@@ -29,6 +29,7 @@ const Playlist    = lazy(() => import("./pages/Playlist/Playlist.jsx"));
 const Profile     = lazy(() => import("./pages/Users/Profile.jsx"));
 const Users       = lazy(() => import("./pages/Users/Users.jsx"));
 const Categorias  = lazy(() => import("./pages/Categoria/Categoria.jsx"));
+const Ferramentas = lazy(() => import("./pages/Ferramentas/Ferramentas.jsx"));
 
 function PageLoader() {
   return (
@@ -112,6 +113,11 @@ const router = createBrowserRouter([
         // Pública: ver uma cifra individual não exige login.
         path: "/home/cifra/:id",
         element: <Suspense fallback={<PageLoader />}><VerCifra /></Suspense>,
+      },
+      {
+        // Pública: afinador e notas de referência não exigem login.
+        path: "/home/ferramentas",
+        element: <Suspense fallback={<PageLoader />}><Ferramentas /></Suspense>,
       },
       {
         path: "/home/playlists",

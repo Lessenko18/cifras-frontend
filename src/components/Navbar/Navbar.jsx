@@ -1,14 +1,24 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { NavContainer, NavInner, NavContent, RightArea, UserArea } from "./NavbarStyled";
+import { NavContainer, NavInner, NavContent, RightArea, UserArea, SearchBox } from "./NavbarStyled";
 import { logout } from "../../service/auth.service";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { FiSun, FiMoon, FiHome, FiMusic, FiList, FiUsers, FiTag, FiSearch } from "react-icons/fi";
+import { FiSun, FiMoon, FiHome, FiMusic, FiList, FiUsers, FiTag, FiSearch, FiTool } from "react-icons/fi";
 import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
+import { PageSearchProvider, usePageSearchConfig } from "../../context/PageSearchContext";
 
 export function Navbar() {
+  return (
+    <PageSearchProvider>
+      <NavbarContent />
+    </PageSearchProvider>
+  );
+}
+
+function NavbarContent() {
   const { user, isAuthenticated, isAdmin, setUser } = useAuth();
+  const pageSearch = usePageSearchConfig();
 
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
@@ -67,6 +77,9 @@ export function Navbar() {
           <NavLink to="/home/playlists" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
             <FiList size={17} /> Playlists
           </NavLink>
+          <NavLink to="/home/ferramentas" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+            <FiTool size={17} /> Ferramentas
+          </NavLink>
 
           {isAdmin && (
             <>
@@ -87,9 +100,22 @@ export function Navbar() {
         </NavContent>
 
         <RightArea>
-          <Link to="/home/cifras" className="icon-btn" aria-label="Pesquisar músicas">
-            <FiSearch size={18} />
-          </Link>
+          {pageSearch ? (
+            <SearchBox>
+              <FiSearch size={16} />
+              <input
+                type="text"
+                placeholder={pageSearch.placeholder}
+                value={pageSearch.value}
+                onChange={(e) => pageSearch.onChange(e.target.value)}
+                aria-label={pageSearch.placeholder}
+              />
+            </SearchBox>
+          ) : (
+            <Link to="/home/cifras" className="icon-btn" aria-label="Pesquisar músicas">
+              <FiSearch size={18} />
+            </Link>
+          )}
 
           <button
             className="icon-btn theme-toggle"
