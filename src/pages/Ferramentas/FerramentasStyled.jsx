@@ -205,6 +205,29 @@ export const TunerDisplay = styled.div`
   }
 `;
 
+export const NoteStrip = styled.div`
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 22px;
+`;
+
+export const NeighborNote = styled.span`
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  opacity: 0.55;
+
+  sub {
+    font-size: 0.9rem;
+    margin-left: 1px;
+  }
+
+  @media (max-width: 420px) {
+    font-size: 1.2rem;
+  }
+`;
+
 export const Gauge = styled.div`
   position: relative;
   width: 100%;

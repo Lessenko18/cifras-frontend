@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FiMic, FiMicOff, FiChevronDown } from "react-icons/fi";
-import { useTuner } from "../../hooks/useTuner";
+import { useTuner, noteFromMidi } from "../../hooks/useTuner";
 import {
   Page,
   CardsStack,
@@ -12,6 +12,8 @@ import {
   DeviceOption,
   TunerError,
   TunerDisplay,
+  NoteStrip,
+  NeighborNote,
   Gauge,
   GaugeTrack,
   GaugeNeedle,
@@ -45,6 +47,9 @@ export default function Ferramentas() {
     const clamped = Math.max(-50, Math.min(50, note.cents));
     return 50 + clamped;
   }, [note]);
+
+  const prevNote = useMemo(() => (note ? noteFromMidi(note.midi - 1) : null), [note]);
+  const nextNote = useMemo(() => (note ? noteFromMidi(note.midi + 1) : null), [note]);
 
   return (
     <Page>
@@ -105,10 +110,20 @@ export default function Ferramentas() {
           <TunerDisplay $status={status}>
             {note ? (
               <>
-                <div className="note">
-                  {note.name}
-                  <span className="octave">{note.octave}</span>
-                </div>
+                <NoteStrip>
+                  <NeighborNote>
+                    {prevNote.name}
+                    <sub>{prevNote.octave}</sub>
+                  </NeighborNote>
+                  <div className="note">
+                    {note.name}
+                    <span className="octave">{note.octave}</span>
+                  </div>
+                  <NeighborNote>
+                    {nextNote.name}
+                    <sub>{nextNote.octave}</sub>
+                  </NeighborNote>
+                </NoteStrip>
                 <div className="freq">
                   {pitch.toFixed(1)} Hz · {note.cents > 0 ? "+" : ""}
                   {note.cents} cents

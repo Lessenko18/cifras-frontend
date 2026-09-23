@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const NOTE_NAMES = ["Dó", "Dó#", "Ré", "Ré#", "Mi", "Fá", "Fá#", "Sol", "Sol#", "Lá", "Lá#", "Si"];
+export const NOTE_NAMES = ["Dó", "Dó#", "Ré", "Ré#", "Mi", "Fá", "Fá#", "Sol", "Sol#", "Lá", "Lá#", "Si"];
 const FFT_SIZE = 2048;
-const RMS_THRESHOLD = 0.01; // ignora silêncio/ruído de fundo
+const RMS_THRESHOLD = 0.025; // ignora silêncio e ruído de fundo baixo (ex.: ar-condicionado)
+const CLARITY_THRESHOLD = 0.85; // exige um pico de periodicidade bem definido pra aceitar a leitura
+const STABLE_FRAMES = 2; // nº de leituras seguidas concordando antes de atualizar a nota exibida
+
+export function noteFromMidi(midi) {
+  const name = NOTE_NAMES[((midi % 12) + 12) % 12];
+  const octave = Math.floor(midi / 12) - 1;
+  return { name, octave };
+}
 
 // Afinador cromático via Web Audio API — captura o microfone e detecta a
 // frequência fundamental por autocorrelação (algoritmo ACF2+, clássico de
@@ -22,6 +30,8 @@ export function useTuner() {
   const bufferRef = useRef(null);
   const frameSkipRef = useRef(0);
   const deviceIdRef = useRef("");
+  const lastMidiRef = useRef(null);
+  const stableCountRef = useRef(0);
 
   const refreshDevices = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -41,6 +51,8 @@ export function useTuner() {
     if (audioCtxRef.current) audioCtxRef.current.close().catch(() => {});
     audioCtxRef.current = null;
     analyserRef.current = null;
+    lastMidiRef.current = null;
+    stableCountRef.current = 0;
     setListening(false);
     setPitch(null);
     setNote(null);
@@ -59,12 +71,26 @@ export function useTuner() {
 
       if (freq > 0) {
         const midi = noteFromPitch(freq);
-        const name = NOTE_NAMES[((midi % 12) + 12) % 12];
-        const octave = Math.floor(midi / 12) - 1;
-        const cents = centsOffFromPitch(freq, midi);
-        setPitch(freq);
-        setNote({ name, octave, cents, midi });
+
+        // exige a mesma nota em leituras consecutivas antes de exibir —
+        // evita o "afinador maluco" quando ruído de fundo (ar-condicionado,
+        // ventilador) gera um pico periódico isolado
+        if (midi === lastMidiRef.current) {
+          stableCountRef.current += 1;
+        } else {
+          lastMidiRef.current = midi;
+          stableCountRef.current = 1;
+        }
+
+        if (stableCountRef.current >= STABLE_FRAMES) {
+          const { name, octave } = noteFromMidi(midi);
+          const cents = centsOffFromPitch(freq, midi);
+          setPitch(freq);
+          setNote({ name, octave, cents, midi });
+        }
       } else {
+        lastMidiRef.current = null;
+        stableCountRef.current = 0;
         setPitch(null);
         setNote(null);
       }
@@ -84,7 +110,8 @@ export function useTuner() {
         audio: {
           deviceId: deviceIdRef.current ? { exact: deviceIdRef.current } : undefined,
           echoCancellation: false,
-          noiseSuppression: false,
+          // ligado pra filtrar ruído estacionário de fundo (ar-condicionado, ventilador)
+          noiseSuppression: true,
           autoGainControl: false,
         },
       });
@@ -189,6 +216,11 @@ function autoCorrelate(buffer, sampleRate) {
   }
 
   if (maxpos <= 0) return -1;
+
+  // c[0] é a energia total do sinal (autocorrelação em lag 0); ruído de
+  // banda larga (ar-condicionado, ventilador) não forma um pico bem definido
+  // em nenhum outro lag, então essa razão fica baixa e a leitura é descartada
+  if (c[0] <= 0 || maxval / c[0] < CLARITY_THRESHOLD) return -1;
 
   let T0 = maxpos;
   const x1 = c[T0 - 1] ?? c[T0];
