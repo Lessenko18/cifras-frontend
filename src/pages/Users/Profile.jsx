@@ -152,9 +152,9 @@ export default function Profile() {
         payload.password = form.password;
       }
 
-      if (avatarUrl) {
-        payload.avatar = normalizeAvatarUrl(avatarUrl); // URL do S3
-      }
+      // Não envia "avatar" aqui: o upload já persistiu a key correta no
+      // backend (/user/upload-avatar). Reenviar a URL assinada quebraria o
+      // valor salvo, já que essa rota grava o campo como veio.
 
       toast.loading("💾 Salvando perfil...");
       const response = await editUserService(id, payload);

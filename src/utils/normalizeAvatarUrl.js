@@ -1,18 +1,6 @@
+// O backend agora sempre retorna uma URL do avatar já assinada e pronta pra
+// uso (bucket R2 é privado). Não mexemos mais na URL aqui — remover a query
+// string quebraria o acesso, já que sem assinatura o R2 recusa a requisição.
 export function normalizeAvatarUrl(url) {
-  if (typeof url !== "string" || !url) {
-    return url;
-  }
-
-  if (!url.includes("?")) {
-    return url;
-  }
-
-  const query = url.split("?")[1] || "";
-  const isSigned = /X-Amz-|AWSAccessKeyId|Signature|Expires/i.test(query);
-
-  if (!isSigned) {
-    return url;
-  }
-
-  return url.split("?")[0];
+  return url;
 }
