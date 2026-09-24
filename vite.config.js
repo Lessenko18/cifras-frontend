@@ -41,6 +41,14 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
+            // Auth e dados do usuário logado nunca podem vir de cache: um
+            // avatar novo (ou logout/login com outra conta) precisa sempre
+            // bater no servidor, senão a página fica com dados de sessões
+            // anteriores.
+            urlPattern: /^https:\/\/cifras-backend\.onrender\.com\/(auth|user)\/.*/i,
+            handler: "NetworkOnly",
+          },
+          {
             urlPattern: /^https:\/\/cifras-backend\.onrender\.com\/.*/i,
             handler: "NetworkFirst",
             options: {
