@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export const NOTE_NAMES = ["Dó", "Dó#", "Ré", "Ré#", "Mi", "Fá", "Fá#", "Sol", "Sol#", "Lá", "Lá#", "Si"];
-const FFT_SIZE = 2048;
+const FFT_SIZE = 4096; // janela longa o bastante pra vários ciclos do Mi grave (~82 Hz)
+const MIN_FREQ = 60; // cobre afinações baixas (ex.: drop D, 73 Hz)
+const MAX_FREQ = 1500;
+const PEAK_PICK_RATIO = 0.9; // aceita o 1º pico com ≥90% do maior — evita erro de oitava
 const RMS_THRESHOLD = 0.025; // ignora silêncio e ruído de fundo baixo (ex.: ar-condicionado)
 const CLARITY_THRESHOLD = 0.85; // exige um pico de periodicidade bem definido pra aceitar a leitura
 const STABLE_FRAMES = 2; // nº de leituras seguidas concordando antes de atualizar a nota exibida
@@ -166,69 +169,63 @@ export function useTuner() {
   return { listening, error, pitch, note, devices, deviceId, setDeviceId, start, stop, toggle };
 }
 
-// ACF2+: autocorrelação com interpolação parabólica pro pico, e recorte das
-// bordas de baixa amplitude pra reduzir ruído na estimativa do período.
+// Autocorrelação normalizada (NSDF, método de McLeod) com interpolação
+// parabólica pro pico. A normalização por lag é essencial pras notas graves:
+// na autocorrelação crua, quanto maior o período, menos amostras se sobrepõem
+// e o pico "encolhe" — Mi/Lá/Ré graves nunca passavam no limiar de clareza.
 function autoCorrelate(buffer, sampleRate) {
-  const SIZE = buffer.length;
+  const n = buffer.length;
 
   let rms = 0;
-  for (let i = 0; i < SIZE; i++) rms += buffer[i] * buffer[i];
-  rms = Math.sqrt(rms / SIZE);
+  for (let i = 0; i < n; i++) rms += buffer[i] * buffer[i];
+  rms = Math.sqrt(rms / n);
   if (rms < RMS_THRESHOLD) return -1;
 
-  let r1 = 0;
-  let r2 = SIZE - 1;
-  const thres = 0.2;
-  for (let i = 0; i < SIZE / 2; i++) {
-    if (Math.abs(buffer[i]) < thres) {
-      r1 = i;
-      break;
-    }
-  }
-  for (let i = 1; i < SIZE / 2; i++) {
-    if (Math.abs(buffer[SIZE - i]) < thres) {
-      r2 = SIZE - i;
-      break;
-    }
+  const minLag = Math.max(2, Math.floor(sampleRate / MAX_FREQ));
+  const maxLag = Math.min(n - 2, Math.ceil(sampleRate / MIN_FREQ));
+
+  // nsdf[lag] = 2·Σ x[j]·x[j+lag] / Σ (x[j]² + x[j+lag]²), sempre em [-1, 1]
+  const nsdf = new Float32Array(maxLag + 2);
+  let m = 0;
+  for (let j = 0; j < n; j++) m += 2 * buffer[j] * buffer[j];
+  for (let lag = 0; lag <= maxLag + 1; lag++) {
+    if (lag > 0) m -= buffer[lag - 1] * buffer[lag - 1] + buffer[n - lag] * buffer[n - lag];
+    let acf = 0;
+    for (let j = 0; j < n - lag; j++) acf += buffer[j] * buffer[j + lag];
+    nsdf[lag] = m > 0 ? (2 * acf) / m : 0;
   }
 
-  const trimmed = buffer.slice(r1, r2);
-  const n = trimmed.length;
-  if (n < 2) return -1;
+  // pula o lóbulo inicial (lag ~0) até a primeira passagem por zero
+  let lag = 1;
+  while (lag <= maxLag && nsdf[lag] > 0) lag++;
+  if (lag > maxLag) return -1;
 
-  const c = new Array(n).fill(0);
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n - i; j++) {
-      c[i] += trimmed[j] * trimmed[j + i];
+  // coleta os máximos locais positivos dentro da faixa de frequências válida
+  const peaks = [];
+  let globalMax = 0;
+  for (lag = Math.max(lag, minLag); lag <= maxLag; lag++) {
+    const v = nsdf[lag];
+    if (v > 0 && v > nsdf[lag - 1] && v >= nsdf[lag + 1]) {
+      peaks.push(lag);
+      if (v > globalMax) globalMax = v;
     }
   }
+  if (!peaks.length) return -1;
 
-  let d = 0;
-  while (d < n - 1 && c[d] > c[d + 1]) d++;
+  // primeiro pico próximo do máximo global: evita erro de oitava abaixo
+  const T = peaks.find((p) => nsdf[p] >= PEAK_PICK_RATIO * globalMax);
 
-  let maxval = -1;
-  let maxpos = -1;
-  for (let i = d; i < n; i++) {
-    if (c[i] > maxval) {
-      maxval = c[i];
-      maxpos = i;
-    }
-  }
+  // ruído de banda larga (ar-condicionado, ventilador) não forma um pico
+  // bem definido em nenhum lag, então a clareza fica baixa e é descartado
+  if (nsdf[T] < CLARITY_THRESHOLD) return -1;
 
-  if (maxpos <= 0) return -1;
-
-  // c[0] é a energia total do sinal (autocorrelação em lag 0); ruído de
-  // banda larga (ar-condicionado, ventilador) não forma um pico bem definido
-  // em nenhum outro lag, então essa razão fica baixa e a leitura é descartada
-  if (c[0] <= 0 || maxval / c[0] < CLARITY_THRESHOLD) return -1;
-
-  let T0 = maxpos;
-  const x1 = c[T0 - 1] ?? c[T0];
-  const x2 = c[T0];
-  const x3 = c[T0 + 1] ?? c[T0];
+  let T0 = T;
+  const x1 = nsdf[T - 1];
+  const x2 = nsdf[T];
+  const x3 = nsdf[T + 1];
   const a = (x1 + x3 - 2 * x2) / 2;
   const b = (x3 - x1) / 2;
-  if (a) T0 = T0 - b / (2 * a);
+  if (a) T0 = T - b / (2 * a);
 
   if (T0 <= 0) return -1;
   return sampleRate / T0;
