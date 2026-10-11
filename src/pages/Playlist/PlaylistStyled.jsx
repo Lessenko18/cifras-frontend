@@ -404,7 +404,7 @@ export const ModalBox = styled.form`
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 5px 15px -5px #1a1a1a8d;
-  max-width: 420px;
+  max-width: 640px;
   width: calc(100% - 32px);
   border: 1px solid #000;
   max-height: 85dvh;
@@ -442,6 +442,11 @@ export const ModalBox = styled.form`
     font-size: 14px;
     font-weight: 100;
     text-align: left;
+  }
+
+  /* itens acompanham a largura do modal (o padrão do MultSeletor é 400px) */
+  .playlist-mult p {
+    max-width: none;
   }
 `;
 

@@ -68,6 +68,29 @@ export const GuardaEscolhidos = styled.div`
       flex-shrink: 0;
     }
 
+    .move {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.35);
+      }
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+    }
+
     .drag-handle {
       font-weight: 900;
       letter-spacing: 1px;

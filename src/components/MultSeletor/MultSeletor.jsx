@@ -129,9 +129,30 @@ export default function MultSeletor({
               </span>
               <span className="item-actions">
                 {allowReorder && (
-                  <span className="drag-handle" title="Arraste para reordenar">
-                    ::
-                  </span>
+                  <>
+                    {/* botões além do arraste: drag HTML5 não funciona no toque (celular) */}
+                    <button
+                      type="button"
+                      className="move"
+                      title="Mover para cima"
+                      disabled={index === 0}
+                      onClick={() => moveItem(index, index - 1)}
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      className="move"
+                      title="Mover para baixo"
+                      disabled={index === escolhidos.length - 1}
+                      onClick={() => moveItem(index, index + 1)}
+                    >
+                      ▼
+                    </button>
+                    <span className="drag-handle" title="Arraste para reordenar">
+                      ::
+                    </span>
+                  </>
                 )}
                 <span className="remove" onClick={() => removeSelect(item)}>
                   ×

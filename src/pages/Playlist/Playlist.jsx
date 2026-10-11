@@ -799,6 +799,7 @@ export default function Playlists() {
               tipo="cifra"
               escolhidos={chosenCifras}
               addItem={updateCifra}
+              allowReorder
             />
           </div>
 

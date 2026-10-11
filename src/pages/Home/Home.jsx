@@ -950,7 +950,7 @@ export default function Home() {
           </div>
           <div>
             <MultSeletor className="playlist-mult" tipo="cifra"
-              escolhidos={chosenCifras} addItem={setChosenCifras} />
+              escolhidos={chosenCifras} addItem={setChosenCifras} allowReorder />
           </div>
           <div>
             <label>Compartilhar com (emails)</label>
