@@ -27,6 +27,8 @@ import { useSearch } from "../../hooks/useSearch";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
 import { useAuth } from "../../context/AuthContext";
 import { usePageSearchBox } from "../../context/PageSearchContext";
+import { useInitialUrlFilters, useResetPageOnChange, useSyncUrlFilters } from "../../hooks/useUrlFilters";
+import ImportarPdf from "../../components/ImportarPdf/ImportarPdf";
 
 const CATEGORY_ICONS = {
   "Igreja":    "⛪",
@@ -52,9 +54,11 @@ function getCategoryIcon(categoryName, parentName) {
 export default function Cifras() {
   const [cifras, setCifras] = useState([]);
   const [pages, setPages] = useState(0);
-  const [currentPage, setCurrentPage] = useState(0);
+  const urlFilters = useInitialUrlFilters();
+  const [currentPage, setCurrentPage] = useState(() => urlFilters.getNumber("page"));
   const [categorias, setCategorias] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [chosenCategorias, setChosenCategorias] = useState([]);
   const [sending, setSending] = useState(false);
 
@@ -65,14 +69,14 @@ export default function Cifras() {
   const [formObservacao, setFormObservacao] = useState("");
   const [fetchingCifra, setFetchingCifra] = useState(false);
 
-  const { search: searchNome, setSearch: setSearchNome, debounced } = useSearch();
+  const { search: searchNome, setSearch: setSearchNome, debounced } = useSearch(300, urlFilters.get("q"));
 
   usePageSearchBox({
     placeholder: "Pesquisar música",
     value: searchNome,
     onChange: setSearchNome,
   });
-  const [categoriaFiltro, setCategoriaFiltro] = useState("");
+  const [categoriaFiltro, setCategoriaFiltro] = useState(() => urlFilters.get("cat"));
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterExpanded, setFilterExpanded] = useState(new Set());
   const filterRef = useRef(null);
@@ -178,9 +182,8 @@ export default function Cifras() {
     fetchCifras();
   }, [fetchCifras]);
 
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [debounced, categoriaFiltro]);
+  useResetPageOnChange([debounced, categoriaFiltro], () => setCurrentPage(0));
+  useSyncUrlFilters({ q: searchNome, cat: categoriaFiltro, page: currentPage });
 
   const resetForm = useCallback(() => {
     setFormNome("");
@@ -221,21 +224,23 @@ export default function Cifras() {
       const bpm = formBpm.trim() ? Number(formBpm.trim()) : undefined;
       const categorias = chosenCategorias.map((c) => c._id);
 
-      if (!nome || !link) {
-        toast.warning("Preencha pelo menos Nome e Link da cifra.");
+      if (!nome) {
+        toast.warning("Preencha o título da música.");
         setSending(false);
         return;
       }
 
       try {
-        await createCifraService({ nome, link, observacao, artista, bpm, categorias });
+        await createCifraService({ nome, link: link || undefined, observacao, artista, bpm, categorias });
         setIsCreating(false);
         resetForm();
         await fetchCifras();
         toast.success("Cifra cadastrada com sucesso!");
       } catch (err) {
         console.error(err);
-        toast.error("Falha ao cadastrar a cifra.");
+        toast.error(
+          err?.response?.status === 409 ? err.response.data : "Falha ao cadastrar a cifra.",
+        );
       } finally {
         setSending(false);
       }
@@ -352,8 +357,26 @@ export default function Cifras() {
         >
           Adicionar Nova Cifra
         </button>
+
+        <button
+          className="btn"
+          onClick={() => {
+            if (!requireAuth("Você precisa fazer login para importar cifras.")) return;
+            setIsImporting(true);
+          }}
+        >
+          Importar PDF
+        </button>
         </div>
       </UsersHeader>
+
+      {isImporting && (
+        <ImportarPdf
+          categorias={categorias}
+          onClose={() => setIsImporting(false)}
+          onImported={fetchCifras}
+        />
+      )}
 
       {isCreating && (
         <>
@@ -404,14 +427,13 @@ export default function Cifras() {
             </div>
 
             <div>
-              <label htmlFor="cifra-link">Link da Cifra *</label>
+              <label htmlFor="cifra-link">Link da Cifra</label>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <Input
                   id="cifra-link"
                   name="link"
                   type="url"
-                  required
-                  placeholder="https://exemplo.com.br/sua-cifra"
+                  placeholder="https://exemplo.com.br/sua-cifra (opcional)"
                   value={formLink}
                   onChange={(e) => setFormLink(e.target.value)}
                   style={{ flex: 1 }}

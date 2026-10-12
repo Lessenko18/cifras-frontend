@@ -16,6 +16,7 @@ import {
 } from "./PlaylistStyled";
 import { useSearch } from "../../hooks/useSearch";
 import { usePageSearchBox } from "../../context/PageSearchContext";
+import { useInitialUrlFilters, useSyncUrlFilters } from "../../hooks/useUrlFilters";
 import { getPlaylistBgImage } from "../../utils/playlistVisual";
 
 import {
@@ -66,7 +67,9 @@ export default function Playlists() {
   const { user: authenticatedUser, isAdmin } = useAuth();
   const shareSearchTimer = useRef(null);
   const createSearchTimer = useRef(null);
-  const { search: searchNome, setSearch: setSearchNome, debounced, normalize } = useSearch();
+  const urlFilters = useInitialUrlFilters();
+  const { search: searchNome, setSearch: setSearchNome, debounced, normalize } = useSearch(300, urlFilters.get("q"));
+  useSyncUrlFilters({ q: searchNome });
 
   usePageSearchBox({
     placeholder: "Pesquisar playlist",

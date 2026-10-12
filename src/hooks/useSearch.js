@@ -6,9 +6,9 @@ const normalize = (text = "") =>
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "");
 
-export function useSearch(delay = 300) {
-  const [search, setSearch] = useState("");
-  const [debounced, setDebounced] = useState("");
+export function useSearch(delay = 300, initial = "") {
+  const [search, setSearch] = useState(initial);
+  const [debounced, setDebounced] = useState(initial);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search), delay);

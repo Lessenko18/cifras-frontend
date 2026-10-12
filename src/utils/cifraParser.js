@@ -1,5 +1,5 @@
 const CHORD_RE =
-  /^[A-G][b#]?(maj|min|m|dim|aug|sus[24]?|add)?[0-9]*M?(b[0-9]+|#[0-9]+)?(\/[A-G][b#]?)?[+°]?$/;
+  /^\(?[A-G][b#]?(maj|min|m|dim|aug|sus[24]?|add)?[0-9]*M?(\([0-9]+\))?(b[0-9]+|#[0-9]+)?(\/[A-G][b#]?)?[+°]?\)?$/;
 
 const SYMBOL_TOKENS = new Set(["-", "|", "||", "||:", ":||", "/"]);
 

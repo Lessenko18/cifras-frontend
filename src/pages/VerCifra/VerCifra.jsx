@@ -492,13 +492,15 @@ export default function VerCifra() {
                 </TomButton>
               )}
               {cifra.artista && (
-                <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.95rem", fontStyle: "italic" }}>
+                <p style={{ margin: 0, flex: 1, minWidth: 0, color: "var(--text-muted)", fontSize: "0.95rem", fontStyle: "italic" }}>
                   {cifra.artista}
                 </p>
               )}
-              <a target="_blank" href={cifra.link}>
-                Acesse a cifra original
-              </a>
+              {cifra.link && (
+                <a target="_blank" href={cifra.link}>
+                  Acesse a cifra original
+                </a>
+              )}
               <button
                 type="button"
                 className="eye-toggle"

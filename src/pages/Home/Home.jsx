@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useInitialUrlFilters, useResetPageOnChange, useSyncUrlFilters } from "../../hooks/useUrlFilters";
 
 // Cifras
 import { getCifrasService, getCifraHomeInsightsService } from "../../service/cifraService";
@@ -211,11 +212,12 @@ export default function Home() {
   /* ── Estado: cifras ─────────────────────────────── */
   const [cifras, setCifras] = useState([]);
   const [pages, setPages] = useState(0);
-  const [currentPage, setCurrentPage] = useState(0);
+  const urlFilters = useInitialUrlFilters();
+  const [currentPage, setCurrentPage] = useState(() => urlFilters.getNumber("page"));
   const [categorias, setCategorias] = useState([]);
-  const { search: searchNome, setSearch: setSearchNome, debounced } = useSearch();
-  const [categoriaFiltro, setCategoriaFiltro] = useState("");
-  const [artistaFiltro, setArtistaFiltro] = useState("");
+  const { search: searchNome, setSearch: setSearchNome, debounced } = useSearch(300, urlFilters.get("q"));
+  const [categoriaFiltro, setCategoriaFiltro] = useState(() => urlFilters.get("cat"));
+  const [artistaFiltro, setArtistaFiltro] = useState(() => urlFilters.get("artista"));
   const [insights, setInsights] = useState({ maisAcessadasMes: [], maisAcessadas: [], novas: [], artistasMaisAcessados: [] });
   const [expandedPanels, setExpandedPanels] = useState({ musicas: false, artistas: false, novas: false });
   const [filterOpen, setFilterOpen] = useState(false);
@@ -223,7 +225,7 @@ export default function Home() {
   const filterRef = useRef(null);
   const cifraPanelRef = useRef(null);
   const [favoritosIds, setFavoritosIds] = useState([]);
-  const [favoritosMode, setFavoritosMode] = useState(false);
+  const [favoritosMode, setFavoritosMode] = useState(() => urlFilters.get("fav") === "1");
   const favoritosSet = useMemo(() => new Set(favoritosIds), [favoritosIds]);
 
   /* ── Estado: playlists ──────────────────────────── */
@@ -334,7 +336,8 @@ export default function Home() {
   }, [debounced, artistaFiltro, relevantCategoriaIds, currentPage, favoritosMode, favoritosIds]);
 
   useEffect(() => { fetchCifras(); }, [fetchCifras]);
-  useEffect(() => { setCurrentPage(0); }, [debounced, artistaFiltro, categoriaFiltro, favoritosMode]);
+  useResetPageOnChange([debounced, artistaFiltro, categoriaFiltro, favoritosMode], () => setCurrentPage(0));
+  useSyncUrlFilters({ q: searchNome, cat: categoriaFiltro, artista: artistaFiltro, fav: favoritosMode ? "1" : "", page: currentPage });
 
   /* ── Favoritos ──────────────────────────────────── */
   const handleToggleFavorito = useCallback(async (cifraId) => {
