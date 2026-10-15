@@ -7,14 +7,24 @@ export function isChord(word) {
   return CHORD_RE.test(word);
 }
 
+// Acordes colados sem espaço após um baixo (ex: "E/GF#m7" = "E/G" + "F#m7").
+// Só separa logo depois de "/baixo", pra não confundir letras com acordes.
+export function splitGluedChords(word) {
+  return word.split(/(?<=\/[A-G][b#]?)(?=[A-G])/);
+}
+
+function isChordToken(word) {
+  return splitGluedChords(word).every(isChord);
+}
+
 export function isChordLine(line) {
   if (!line.trim()) return false;
   if (/^Tom:/i.test(line.trim())) return false;
   const words = line.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return false;
   return (
-    words.some((w) => isChord(w)) &&
-    words.every((w) => isChord(w) || SYMBOL_TOKENS.has(w))
+    words.some((w) => isChordToken(w)) &&
+    words.every((w) => isChordToken(w) || SYMBOL_TOKENS.has(w))
   );
 }
 
@@ -25,7 +35,11 @@ function extractChords(chordLine) {
     if (chordLine[i] !== " ") {
       let j = i;
       while (j < chordLine.length && chordLine[j] !== " ") j++;
-      chords.push({ text: chordLine.slice(i, j), pos: i });
+      let pos = i;
+      for (const part of splitGluedChords(chordLine.slice(i, j))) {
+        chords.push({ text: part, pos });
+        pos += part.length;
+      }
       i = j;
     } else {
       i++;

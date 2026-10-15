@@ -31,8 +31,9 @@ function transposeNote(note, semitones) {
 const CHORD_PATTERN =
   /^[A-G][#b]?(m(?:aj\d*)?|min\d*|dim\d*|aug\d*|sus\d*|add\d*)?\d*(sus\d*)?(\/[A-G][#b]?)?$/;
 
+// Aceita acordes colados após um baixo (ex: "E/GF#m7" = "E/G" + "F#m7")
 function isChord(token) {
-  return CHORD_PATTERN.test(token);
+  return token.split(/(?<=\/[A-G][#b]?)(?=[A-G])/).every((t) => CHORD_PATTERN.test(t));
 }
 
 // Uma linha é de acordes se TODOS os tokens forem acordes válidos

@@ -4,6 +4,8 @@
  * estiver no mapa continua mostrando o círculo com as iniciais. */
 const ARTIST_IMAGES = {
   "colo de deus": "/colo_de_deus.jpg",
+  shalom: "/shallom.png",
+  shallom: "/shallom.png",
 };
 
 const normalize = (str) =>
