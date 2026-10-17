@@ -23,7 +23,7 @@ export async function readPdfPages(file) {
   return pages;
 }
 
-export function toRawItems(items) {
+function toRawItems(items) {
   return items
     .filter((it) => typeof it.str === "string" && it.str.trim() !== "")
     .map((it) => ({
@@ -58,7 +58,7 @@ function median(nums, fallback = 0) {
 const SMALL_WORDS = new Set(["de", "da", "do", "dos", "das", "e", "a", "o", "em", "no", "na", "para", "por", "com"]);
 
 // "MUITOS GRÃOS DE TRIGO" -> "Muitos Grãos de Trigo". Só mexe em texto todo em maiúsculas.
-export function titleCase(s) {
+function titleCase(s) {
   const t = s.trim();
   if (t !== t.toUpperCase() || t === t.toLowerCase()) return t;
   return t
@@ -157,7 +157,7 @@ const JUNK_LINE = [
 
 const LARGE_RATIO = 1.2;
 
-export function processPage(items) {
+function processPage(items) {
   const all = groupLines(items).map((l) => ({ ...l, ...layoutLine(l) }));
   const lines = all.filter((l) => !JUNK_LINE.some((re) => re.test(l.text.trim())));
 
@@ -284,7 +284,7 @@ function stripUrl(s) {
   return s.replace(/https?:\/\/\S+/gi, "").replace(/[\s:–-]+$/, "").trim();
 }
 
-export function parseIndexPage(texts) {
+function parseIndexPage(texts) {
   const entries = [];
   for (const raw of texts) {
     const bullet = /^\s*[•·]/.test(raw);

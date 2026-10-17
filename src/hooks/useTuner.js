@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export const NOTE_NAMES = ["Dó", "Dó#", "Ré", "Ré#", "Mi", "Fá", "Fá#", "Sol", "Sol#", "Lá", "Lá#", "Si"];
+const NOTE_NAMES = ["Dó", "Dó#", "Ré", "Ré#", "Mi", "Fá", "Fá#", "Sol", "Sol#", "Lá", "Lá#", "Si"];
 const FFT_SIZE = 4096; // janela longa o bastante pra vários ciclos do Mi grave (~82 Hz)
 const MIN_FREQ = 60; // cobre afinações baixas (ex.: drop D, 73 Hz)
 const MAX_FREQ = 1500;
@@ -134,7 +134,7 @@ export function useTuner() {
       setListening(true);
       tick();
       refreshDevices(); // agora com permissão concedida, os rótulos ficam disponíveis
-    } catch (err) {
+    } catch {
       setError("Não foi possível acessar o microfone. Verifique as permissões do navegador.");
     }
   }, [tick, refreshDevices]);

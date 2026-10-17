@@ -32,7 +32,7 @@ export default class ErrorBoundary extends Component {
           <h2 style={{ fontSize: "1.25rem", fontWeight: 600 }}>
             Algo deu errado.
           </h2>
-          <p style={{ color: "#6b7280" }}>
+          <p style={{ color: "var(--text-muted)" }}>
             Ocorreu um erro inesperado. Tente recarregar a página.
           </p>
           <button

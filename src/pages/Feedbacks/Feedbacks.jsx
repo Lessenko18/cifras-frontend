@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiCheck, FiTrash2, FiRotateCcw } from "react-icons/fi";
 import { FeedbacksContainer, FeedbackCard, Filtros } from "./FeedbacksStyled";
+import EmptyState from "../../components/EmptyState/EmptyState";
+import { SkeletonRows } from "../../components/Skeleton/Skeleton";
 import {
   deleteFeedbackService,
   getFeedbacksService,
@@ -82,9 +84,13 @@ export default function Feedbacks() {
       </Filtros>
 
       {loading ? (
-        <p className="vazio">Carregando...</p>
+        <SkeletonRows count={3} />
       ) : visiveis.length === 0 ? (
-        <p className="vazio">Nenhum relato por aqui.</p>
+        <EmptyState
+          icon="relato"
+          title={filtro === "pendentes" ? "Nenhum relato pendente" : "Nenhum relato por aqui"}
+          text="Quando alguém enviar um relato ou sugestão, ele aparece aqui."
+        />
       ) : (
         visiveis.map((item) => (
           <FeedbackCard key={item._id} $lido={item.lido}>

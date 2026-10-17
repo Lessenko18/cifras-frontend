@@ -42,6 +42,8 @@ import { CifraRenderer } from "../../components/CifraRenderer/CifraRenderer";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { useMetronome } from "../../hooks/useMetronome";
 import { exportCifraPdf } from "../../utils/pdfExport";
+import StageMode from "../../components/StageMode/StageMode";
+import { FiMonitor } from "react-icons/fi";
 export default function VerCifra() {
   const { id } = useParams();
   const { user: authenticatedUser, isAdmin } = useAuth();
@@ -58,6 +60,7 @@ export default function VerCifra() {
   const [velocimetroVisivel, setVelocimetroVisivel] = useState(true);
   const [semitones, setSemitones] = useState(0);
   const [modalTom, setModalTom] = useState(false);
+  const [stageOpen, setStageOpen] = useState(false);
   const [editingBpm, setEditingBpm] = useState(false);
   const [bpmInput, setBpmInput] = useState("90");
   const intervalRef = useRef(null);
@@ -336,6 +339,15 @@ export default function VerCifra() {
         <div className="btns-header">
           <button
             type="button"
+            aria-label="Abrir modo palco"
+            title="Modo palco (tela cheia, letra grande)"
+            onClick={() => setStageOpen(true)}
+            style={{ color: "var(--text-primary)" }}
+          >
+            <FiMonitor size={24} />
+          </button>
+          <button
+            type="button"
             aria-label="Exportar cifra em PDF"
             onClick={handleExportPdf}
           >
@@ -496,8 +508,9 @@ export default function VerCifra() {
                   {cifra.artista}
                 </p>
               )}
-              {cifra.link && (
-                <a target="_blank" href={cifra.link}>
+              {/* Só http(s): links antigos com "javascript:" etc. não viram <a> */}
+              {/^https?:\/\//i.test(cifra.link || "") && (
+                <a target="_blank" rel="noopener noreferrer" href={cifra.link}>
                   Acesse a cifra original
                 </a>
               )}
@@ -690,6 +703,23 @@ export default function VerCifra() {
             </button>
           </div>
         </ModalDelete>
+      )}
+
+      {stageOpen && (
+        <StageMode
+          songs={[
+            {
+              id: String(cifra._id || id),
+              nome: cifra.nome,
+              artista: cifra.artista,
+              text: cifra.observacao,
+              bpm: cifra.bpm,
+            },
+          ]}
+          semitones={{ [String(cifra._id || id)]: semitones }}
+          onSemitonesChange={(_, n) => setSemitones(n)}
+          onClose={() => setStageOpen(false)}
+        />
       )}
     </VerCifraContainer>
   );

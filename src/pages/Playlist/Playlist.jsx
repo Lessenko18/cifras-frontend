@@ -3,7 +3,6 @@ import { Input } from "../../components/Input/Input";
 import {
   Page,
   CardsGrid,
-  EmptyState,
   Card,
   CifrasGrid,
   ModalBox,
@@ -18,26 +17,23 @@ import { useSearch } from "../../hooks/useSearch";
 import { usePageSearchBox } from "../../context/PageSearchContext";
 import { useInitialUrlFilters, useSyncUrlFilters } from "../../hooks/useUrlFilters";
 import { getPlaylistBgImage } from "../../utils/playlistVisual";
+import EmptyState from "../../components/EmptyState/EmptyState";
+import { SkeletonCards } from "../../components/Skeleton/Skeleton";
 
 import {
   getPlaylistsService,
-  createPlaylistService,
-  createPlaylistWithBannerService,
-  editPlaylistService,
-  editPlaylistWithBannerService,
   deletePlaylistService,
   getPlaylistViewService,
   getPlaylistByIdService,
   sharePlaylistService,
   unsharePlaylistService,
 } from "../../service/playlistService";
-import { getImageSizeError } from "../../service/s3Service";
-import { getCifrasService } from "../../service/cifraService";
+import { readPlaylistForm, submitCreatePlaylist, submitEditPlaylist } from "../../utils/playlistForm";
 import { useNavigate } from "react-router-dom";
 import { UsersHeader } from "../Users/UsersStyled";
 import toast from "react-hot-toast";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
-import { getUsersService, searchUsersService } from "../../service/userService";
+import { searchUsersService } from "../../service/userService";
 import { getPublicAppUrl } from "../../utils/getPublicAppUrl";
 import { useAuth } from "../../context/AuthContext";
 
@@ -47,7 +43,6 @@ const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
 export default function Playlists() {
   const [playlists, setPlaylists] = useState([]);
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(true);
-  const [cifras, setCifras] = useState([]);
 
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -84,12 +79,6 @@ export default function Playlists() {
   /* ======================
      MAP DE CIFRAS (opcional)
   ====================== */
-  const cifrasById = useMemo(() => {
-    const m = new Map();
-    cifras.forEach((c) => m.set(c._id, c));
-    return m;
-  }, [cifras]);
-
   /* ======================
      HANDLERS
   ====================== */
@@ -226,76 +215,6 @@ export default function Playlists() {
     );
   }, []);
 
-  const extractSharedEmails = useCallback(
-    (playlist) => {
-      const list = getSharedList(playlist);
-      if (!Array.isArray(list)) return [];
-
-      const emails = list
-        .map((item) => {
-          if (!item) return null;
-          if (typeof item === "string") return item;
-          return item.email || item.mail || null;
-        })
-        .filter(Boolean)
-        .map((email) => email.toLowerCase());
-
-      return Array.from(new Set(emails));
-    },
-    [getSharedList],
-  );
-
-  const resolveSharedEmails = useCallback(
-    async (playlist) => {
-      const list = getSharedList(playlist);
-      if (!Array.isArray(list) || list.length === 0) return [];
-
-      const rawValues = list.map((item) => {
-        if (!item) return null;
-        if (typeof item === "string") return item;
-        return item.email || item.mail || item._id || item.id || null;
-      });
-
-      const normalized = rawValues.filter(Boolean).map((value) => value);
-      const hasIds = normalized.some(
-        (value) => typeof value === "string" && OBJECT_ID_PATTERN.test(value),
-      );
-
-      if (!hasIds) {
-        return extractSharedEmails({ sharedWith: normalized });
-      }
-
-      // Only admins can call GET /user/ to resolve IDs to emails
-      if (!isAdmin) {
-        return Array.from(new Set(normalized.filter(Boolean)));
-      }
-
-      try {
-        const usersResponse = await getUsersService();
-        const users = Array.isArray(usersResponse?.data)
-          ? usersResponse.data
-          : [];
-        const userById = new Map(
-          users.map((user) => [user._id || user.id, user.email]),
-        );
-
-        const emails = normalized.map((value) => {
-          if (typeof value !== "string") return null;
-          if (EMAIL_PATTERN.test(value)) return value.toLowerCase();
-          if (OBJECT_ID_PATTERN.test(value))
-            return userById.get(value) || value;
-          return value;
-        });
-
-        return Array.from(new Set(emails.filter(Boolean)));
-      } catch (err) {
-        console.error(err);
-        return extractSharedEmails({ sharedWith: normalized });
-      }
-    },
-    [extractSharedEmails, getSharedList, isAdmin],
-  );
-
   const isSharedWithUser = useCallback(
     (playlist) => {
       const list = getSharedList(playlist);
@@ -334,19 +253,9 @@ export default function Playlists() {
     }
   }, []);
 
-  const fetchCifras = useCallback(async () => {
-    try {
-      const res = await getCifrasService({ limit: 1000 });
-      setCifras(res.data?.cifras || []);
-    } catch {
-      toast.error("Falha ao carregar cifras.");
-    }
-  }, []);
-
   useEffect(() => {
     fetchPlaylists();
-    fetchCifras();
-  }, [fetchPlaylists, fetchCifras]);
+  }, [fetchPlaylists]);
 
   useEffect(() => {
     if (!shareModalOpen) return;
@@ -415,15 +324,15 @@ export default function Playlists() {
     async (e) => {
       e.preventDefault();
 
-      const form = new FormData(e.target);
-      const data = Object.fromEntries(form.entries());
-
-      if (!data.nome?.trim()) {
-        toast.error("Informe o nome da playlist.");
+      const { error, data, bannerFile } = readPlaylistForm(
+        e.target,
+        chosenCifras.map((c) => c._id),
+      );
+      if (error) {
+        toast.error(error);
         return;
       }
 
-      data.cifras = chosenCifras.map((c) => c._id);
       const appUrl = getPublicAppUrl();
 
       if (appUrl) {
@@ -435,19 +344,8 @@ export default function Playlists() {
         data.sharedWithEmails = createShareEmails;
       }
 
-      const bannerFile = data.banner instanceof File && data.banner.size > 0 ? data.banner : null;
-      delete data.banner;
-      if (bannerFile) {
-        const sizeError = getImageSizeError(bannerFile);
-        if (sizeError) { toast.error(sizeError); return; }
-      }
-
       try {
-        if (bannerFile) {
-          await createPlaylistWithBannerService({ ...data, bannerFile });
-        } else {
-          await createPlaylistService(data);
-        }
+        await submitCreatePlaylist(data, bannerFile);
         toast.success("Playlist criada com sucesso!");
         e.target.reset();
         setChosenCifras([]);
@@ -472,29 +370,17 @@ export default function Playlists() {
       e.preventDefault();
       if (!chosen?._id) return;
 
-      const form = new FormData(e.target);
-      const data = Object.fromEntries(form.entries());
-
-      if (!data.nome?.trim()) {
-        toast.error("Informe o nome da playlist.");
+      const { error, data, bannerFile } = readPlaylistForm(
+        e.target,
+        chosenCifras.map((c) => c._id || c.id),
+      );
+      if (error) {
+        toast.error(error);
         return;
       }
 
-      data.cifras = chosenCifras.map((c) => c._id || c.id);
-
-      const bannerFile = data.banner instanceof File && data.banner.size > 0 ? data.banner : null;
-      delete data.banner;
-      if (bannerFile) {
-        const sizeError = getImageSizeError(bannerFile);
-        if (sizeError) { toast.error(sizeError); return; }
-      }
-
       try {
-        if (bannerFile) {
-          await editPlaylistWithBannerService(chosen._id, { ...data, bannerFile });
-        } else {
-          await editPlaylistService(chosen._id, data);
-        }
+        await submitEditPlaylist(chosen._id, data, bannerFile);
         toast.success("Playlist editada com sucesso!");
         setModalEdit(false);
         setChosen(null);
@@ -675,27 +561,25 @@ export default function Playlists() {
         </div>
       </UsersHeader>
 
-      {!isLoadingPlaylists && playlists.length === 0 ? (
-        <EmptyState>
-          <img src="/music.svg" alt="" aria-hidden="true" className="icon" />
-          <h3>Você ainda não tem playlists</h3>
-          <p>
-            Crie sua primeira playlist para organizar suas músicas favoritas.
-          </p>
-          <button
-            type="button"
-            className="btn adicionar-primary empty-action"
-            onClick={handleOpenCreate}
-          >
-            Criar primeira playlist
-          </button>
-        </EmptyState>
+      {isLoadingPlaylists ? (
+        <SkeletonCards count={6} columns={3} height={170} />
+      ) : playlists.length === 0 ? (
+        <EmptyState
+          icon="playlist"
+          title="Você ainda não tem playlists"
+          text="Crie sua primeira playlist para organizar suas músicas favoritas."
+          action={
+            <button
+              type="button"
+              className="btn adicionar-primary empty-action"
+              onClick={handleOpenCreate}
+            >
+              Criar primeira playlist
+            </button>
+          }
+        />
       ) : filteredPlaylists.length === 0 ? (
-        <EmptyState>
-          <img src="/music.svg" alt="" aria-hidden="true" className="icon" />
-          <h3>Nenhuma playlist encontrada</h3>
-          <p>Tente pesquisar por outro nome.</p>
-        </EmptyState>
+        <EmptyState icon="busca" title="Nenhuma playlist encontrada" text="Tente pesquisar por outro nome." />
       ) : (
         <CardsGrid>
           {filteredPlaylists

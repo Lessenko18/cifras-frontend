@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["logotlcifras.png", "tlcifras.png"],
+      includeAssets: ["logotlcifras.webp", "tlcifras.webp"],
       manifest: {
         name: "TL Cifras",
         short_name: "TL Cifras",
@@ -38,7 +38,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webp}"],
         runtimeCaching: [
           {
             // Auth e dados do usuário logado nunca podem vir de cache: um

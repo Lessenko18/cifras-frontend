@@ -9,35 +9,6 @@ export const CategoriasContainer = styled.section`
   gap: 40px;
 `;
 
-export const CategoriaHeader = styled.header`
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  text-align: center;
-  gap: 20px;
-
-  > :first-child {
-    justify-self: start;
-  }
-
-  > :nth-child(2) {
-    justify-self: center;
-    margin: 0;
-  }
-
-  > :last-child {
-    justify-self: end;
-  }
-
-  button {
-    max-width: fit-content;
-  }
-
-  .btn {
-    margin: 0;
-  }
-`;
-
 export const CategoriasBody = styled.div`
   display: flex;
   flex-direction: column;

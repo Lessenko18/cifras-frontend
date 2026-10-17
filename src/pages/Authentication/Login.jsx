@@ -87,7 +87,7 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
           <div className="title-container">
             <img
-              src="/logotlcifras.png"
+              src="/logotlcifras.webp"
               alt="TL Cifras Logo"
               className="logo"
             />

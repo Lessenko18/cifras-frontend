@@ -37,102 +37,6 @@ export const Page = styled.section`
   }
 `;
 
-export const FiltersContainer = styled.div`
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-
-  background: var(--bg-card);
-  padding: 14px 16px;
-  border-radius: 16px;
-
-  border: 1px solid var(--border-light);
-  box-shadow: 0 8px 24px -14px rgba(0, 0, 0, 0.25);
-
-  transition: box-shadow 0.2s ease;
-
-  &:focus-within {
-    box-shadow: 0 12px 32px -16px rgba(0, 0, 0, 0.35);
-  }
-
-  @media (max-width: 700px) {
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 12px;
-  }
-`;
-
-export const FilterInputWrapper = styled.div`
-  position: relative;
-  flex: 1;
-  min-width: 240px;
-
-  @media (max-width: 700px) {
-    min-width: 100%;
-  }
-`;
-
-export const FilterInput = styled.input`
-  width: 100%;
-  height: 44px;
-  padding: 0 36px 0 14px;
-
-  border-radius: 14px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-input);
-
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--text-primary);
-
-  transition: all 0.2s ease;
-
-  &:focus {
-    outline: none;
-    border-color: var(--main);
-    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
-  }
-
-  &::placeholder {
-    color: var(--text-muted);
-  }
-
-  @media (max-width: 700px) {
-    height: 40px;
-    font-size: 0.9rem;
-    border-radius: 12px;
-  }
-`;
-
-export const FilterClearButton = styled.button`
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-
-  border: none;
-  background: transparent;
-  border-radius: 50%;
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-
-  &:hover {
-    background: var(--border-light);
-    color: var(--text-primary);
-  }
-`;
-
 export const Title = styled.h1`
   text-align: center;
   line-height: 1.2em;
@@ -164,52 +68,6 @@ export const CardsGrid = styled.div`
   }
   @media (max-width: 760px) {
     grid-template-columns: 1fr;
-  }
-`;
-
-export const EmptyState = styled.div`
-  margin: 12px auto 0;
-  max-width: 520px;
-  width: 100%;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 28px 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  text-align: center;
-
-  .icon {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 12px;
-    opacity: 0.9;
-  }
-
-  h3 {
-    margin: 0 0 8px;
-    font-size: 22px;
-    color: #111827;
-  }
-
-  p {
-    margin: 0;
-    color: #6b7280;
-    font-size: 15px;
-    line-height: 1.5;
-  }
-
-  .empty-action {
-    margin-top: 16px;
-  }
-
-  @media (max-width: 700px) {
-    h3 {
-      font-size: 18px;
-    }
-
-    p {
-      font-size: 14px;
-    }
   }
 `;
 
@@ -401,13 +259,13 @@ export const ModalOverlay = styled.div`
 
 export const ModalBox = styled.form`
   background-color: var(--light);
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px -5px #1a1a1a8d;
-  max-width: 640px;
+  padding: 22px 24px;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.45);
+  max-width: 680px;
   width: calc(100% - 32px);
-  border: 1px solid #000;
-  max-height: 85dvh;
+  border: 1px solid var(--border-light);
+  max-height: 88dvh;
   overflow-y: auto;
 
   position: fixed;
@@ -417,31 +275,76 @@ export const ModalBox = styled.form`
   transform: translate(-50%, -50%);
 
   display: grid;
-  gap: 12px;
+  gap: 18px;
 
   h3 {
-    margin: 0 0 6px 0;
+    margin: 0 0 4px 0;
     text-align: center;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 800;
   }
 
   div {
     display: grid;
+    gap: 6px;
+  }
+
+  /* rótulos de todos os campos com o mesmo estilo */
+  label,
+  .playlist-mult h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: left;
+    color: var(--text-primary);
+  }
+
+  /* campos de texto ocupam a largura toda (o padrão global é 400px) */
+  input:not([type="file"]) {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    padding: 9px 12px;
+    border-radius: 8px;
+  }
+
+  /* campo de arquivo no mesmo visual dos demais */
+  input[type="file"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px;
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  input[type="file"]::file-selector-button {
+    margin-right: 12px;
+    padding: 7px 14px;
+    border: none;
+    border-radius: 6px;
+    background: var(--main);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn,
+  .modal-actions button {
+    min-height: 38px;
+    padding: 0 22px;
+    border-radius: 8px;
+    font-weight: 600;
   }
 
   .modal-actions {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: nowrap;
-  }
-
-  .playlist-mult h3 {
-    font-size: 14px;
-    font-weight: 100;
-    text-align: left;
+    padding-top: 6px;
   }
 
   /* itens acompanham a largura do modal (o padrão do MultSeletor é 400px) */

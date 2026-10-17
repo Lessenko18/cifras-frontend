@@ -3,13 +3,13 @@ const CHORD_RE =
 
 const SYMBOL_TOKENS = new Set(["-", "|", "||", "||:", ":||", "/"]);
 
-export function isChord(word) {
+function isChord(word) {
   return CHORD_RE.test(word);
 }
 
 // Acordes colados sem espaço após um baixo (ex: "E/GF#m7" = "E/G" + "F#m7").
 // Só separa logo depois de "/baixo", pra não confundir letras com acordes.
-export function splitGluedChords(word) {
+function splitGluedChords(word) {
   return word.split(/(?<=\/[A-G][b#]?)(?=[A-G])/);
 }
 
@@ -103,7 +103,7 @@ function parseChordLyricPair(chordLine, lyricLine) {
   // Monta tokens: palavra + espaços até a próxima
   const tokens = [];
   for (let wi = 0; wi < words.length; wi++) {
-    const { start, end } = words[wi];
+    const { start } = words[wi];
     const trailingEnd =
       wi + 1 < words.length ? words[wi + 1].start : lyricLine.length;
     tokens.push({

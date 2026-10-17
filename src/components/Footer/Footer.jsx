@@ -11,7 +11,7 @@ export function Footer() {
       <FooterInner>
         <div className="footer-left">
           <Link to="/home" aria-label="TLCifras">
-            <img src="/tlcifras.png" alt="Logo TLCifras" />
+            <img src="/tlcifras.webp" alt="Logo TLCifras" />
           </Link>
           <Link to="/home/ajuda" className="footer-help">
             <FiHelpCircle size={15} /> Ajuda e contato

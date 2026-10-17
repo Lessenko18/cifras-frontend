@@ -4,7 +4,7 @@ export const NavContainer = styled.nav`
   width: 100%;
   margin: 0 0 20px;
   background-color: #050810;
-  background-image: url("/navbar.png");
+  background-image: url("/navbar.webp");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center 42%;

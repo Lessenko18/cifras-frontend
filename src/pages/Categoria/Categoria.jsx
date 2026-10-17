@@ -357,7 +357,7 @@ export default function Categorias() {
                     ▼
                   </span>
                   {root.nome}
-                  <span style={{ fontSize: "0.72em", color: "#9ca3af", fontWeight: "400" }}>
+                  <span style={{ fontSize: "0.72em", color: "var(--text-muted)", fontWeight: "400" }}>
                     ({root.children.length})
                   </span>
                 </h2>

@@ -66,9 +66,9 @@ export default function Users() {
       return;
     }
     try {
-      const response = await createUserService(data);
+      await createUserService(data);
       toast.success("Usuário cadastrado com sucesso");
-    } catch (error) {
+    } catch {
       toast.error("Erro ao cadastrar usuário");
     }
     setCreateUser(false);
@@ -90,9 +90,9 @@ export default function Users() {
     }
     if (!data.password) delete data.password;
     try {
-      const response = await editUserService(chosenUser._id, data);
+      await editUserService(chosenUser._id, data);
       toast.success("Usuário editado com sucesso");
-    } catch (error) {
+    } catch {
       toast.error("Erro ao editar usuário");
     }
     setModalEdit(false);
@@ -105,7 +105,7 @@ export default function Users() {
     await deleteUserService(chosenUser._id);
     try {
       toast.success("Usuário excluído com sucesso");
-    } catch (error) {
+    } catch {
       toast.error("Erro ao excluir usuário");
     }
     setModalDelete(false);

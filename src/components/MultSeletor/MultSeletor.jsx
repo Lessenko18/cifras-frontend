@@ -178,12 +178,12 @@ export default function MultSeletor({
         >
           {item.nome}
           {tipo === "categoria" && item.parent?.nome && (
-            <span style={{ color: "#94a3b8", fontSize: "0.8em", marginLeft: "5px" }}>
+            <span style={{ color: "#4b5563", fontSize: "0.8em", marginLeft: "5px" }}>
               ({item.parent.nome})
             </span>
           )}
           {tipo === "cifra" && item.artista && (
-            <span style={{ color: "#94a3b8", fontSize: "0.8em", marginLeft: "5px" }}>
+            <span style={{ color: "#4b5563", fontSize: "0.8em", marginLeft: "5px" }}>
               — {item.artista}
             </span>
           )}

@@ -135,45 +135,6 @@ export const CifraCard = styled.section`
   }
 `;
 
-export const TextoCifra = styled.pre`
-  margin-top: 8px;
-  margin-bottom: 0;
-
-  font-family: monospace;
-  font-size: 1rem;
-  line-height: 1.4rem;
-
-  background: var(--bg-card);
-  border-radius: 8px;
-  padding: 12px 14px;
-
-  white-space: pre;
-  overflow-x: auto;
-  overflow-y: hidden;
-
-  text-align: left;
-
-  &::-webkit-scrollbar {
-    height: 5px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 4px;
-  }
-
-  @media (max-width: 675px) {
-    font-size: 0.9rem;
-    line-height: 1.3rem;
-    padding: 8px 8px;
-  }
-
-  @media (max-width: 430px) {
-    font-size: 0.82rem;
-    line-height: 1.22rem;
-    padding: 6px 6px;
-  }
-`;
-
 export const TituloMusica = styled.h3`
   margin: 0;
   font-size: 1.1rem;

@@ -7,7 +7,7 @@ export const Background = styled.section`
   justify-content: center;
   align-items: center;
 
-  background-image: url("/login.png");
+  background-image: url("/login.webp");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

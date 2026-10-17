@@ -66,7 +66,7 @@ function NavbarContent() {
       <NavContainer>
         <NavInner>
         <Link id="logo" to="/home">
-          <img src="/tlcifras.png" alt="Logo TLCifras" />
+          <img src="/tlcifras.webp" alt="Logo TLCifras" />
         </Link>
 
         <NavContent>
@@ -173,6 +173,15 @@ function NavbarContent() {
                   >
                     Perfil
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      className="perfil-btn"
+                      to="/home/auditoria"
+                      onClick={() => setOpenMenu(false)}
+                    >
+                      Histórico de ações
+                    </Link>
+                  )}
                   <button className="logout-btn" onClick={handleLogout}>
                     Sair
                   </button>

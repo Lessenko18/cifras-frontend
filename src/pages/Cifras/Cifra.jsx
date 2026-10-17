@@ -22,6 +22,9 @@ import { Input } from "../../components/Input/Input";
 import { getCategoriasService } from "../../service/categoriaService";
 import { Link } from "react-router-dom";
 import { UsersHeader } from "../Users/UsersStyled";
+import { FavBtn } from "../Home/HomeStyled";
+import EmptyState from "../../components/EmptyState/EmptyState";
+import { SkeletonRows } from "../../components/Skeleton/Skeleton";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
 import { useSearch } from "../../hooks/useSearch";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
@@ -29,6 +32,8 @@ import { useAuth } from "../../context/AuthContext";
 import { usePageSearchBox } from "../../context/PageSearchContext";
 import { useInitialUrlFilters, useResetPageOnChange, useSyncUrlFilters } from "../../hooks/useUrlFilters";
 import ImportarPdf from "../../components/ImportarPdf/ImportarPdf";
+import { useCategoriaFilter } from "../../hooks/useCategoriaFilter";
+import { useClickOutside } from "../../hooks/useClickOutside";
 
 const CATEGORY_ICONS = {
   "Igreja":    "⛪",
@@ -54,6 +59,7 @@ function getCategoryIcon(categoryName, parentName) {
 export default function Cifras() {
   const [cifras, setCifras] = useState([]);
   const [pages, setPages] = useState(0);
+  const [loaded, setLoaded] = useState(false);
   const urlFilters = useInitialUrlFilters();
   const [currentPage, setCurrentPage] = useState(() => urlFilters.getNumber("page"));
   const [categorias, setCategorias] = useState([]);
@@ -82,6 +88,7 @@ export default function Cifras() {
   const filterRef = useRef(null);
 
   const [favoritosIds, setFavoritosIds] = useState([]);
+  const [favoritosMode, setFavoritosMode] = useState(() => urlFilters.get("fav") === "1");
   const favoritosSet = useMemo(() => new Set(favoritosIds), [favoritosIds]);
 
   const requireAuth = useRequireAuth();
@@ -100,37 +107,11 @@ export default function Cifras() {
     [categorias],
   );
 
-  const relevantCategoriaIds = useMemo(() => {
-    if (!categoriaFiltro) return [];
-    const ids = [categoriaFiltro];
-    categorias.forEach((cat) => {
-      const parentId = cat.parent?._id || cat.parent;
-      if (String(parentId) === categoriaFiltro) ids.push(cat._id);
-    });
-    return ids;
-  }, [categoriaFiltro, categorias]);
+  const { relevantCategoriaIds, filterLabel } = useCategoriaFilter(categorias, categoriaFiltro, {
+    showParent: true,
+  });
 
-  const filterLabel = useMemo(() => {
-    if (!categoriaFiltro) return "Todas as categorias";
-    const cat = categorias.find((c) => c._id === categoriaFiltro);
-    if (!cat) return "Todas as categorias";
-    const hasChildren = categorias.some(
-      (c) => String(c.parent?._id || c.parent) === String(cat._id),
-    );
-    if (hasChildren) return `${cat.nome} (todas)`;
-    if (cat.parent?.nome) return `${cat.nome} · ${cat.parent.nome}`;
-    return cat.nome;
-  }, [categoriaFiltro, categorias]);
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (filterRef.current && !filterRef.current.contains(e.target)) {
-        setFilterOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(filterRef, () => setFilterOpen(false));
 
   const getCategorias = useCallback(async () => {
     try {
@@ -142,10 +123,18 @@ export default function Cifras() {
   }, []);
 
   const fetchCifras = useCallback(async () => {
+    // Modo favoritas sem nenhuma favorita: nem consulta (a lista ficaria "tudo")
+    if (favoritosMode && favoritosIds.length === 0) {
+      setCifras([]);
+      setPages(0);
+      setLoaded(true);
+      return;
+    }
     try {
       const res = await getCifrasService({
         nome: debounced || undefined,
         categorias: relevantCategoriaIds.length ? relevantCategoriaIds : undefined,
+        favoritos: favoritosMode ? favoritosIds : undefined,
         page: currentPage,
         limit: 15,
       });
@@ -154,8 +143,10 @@ export default function Cifras() {
       setPages(data.pages || 0);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoaded(true);
     }
-  }, [debounced, relevantCategoriaIds, currentPage]);
+  }, [debounced, relevantCategoriaIds, currentPage, favoritosMode, favoritosIds]);
 
   useEffect(() => {
     getCategorias();
@@ -182,8 +173,18 @@ export default function Cifras() {
     fetchCifras();
   }, [fetchCifras]);
 
-  useResetPageOnChange([debounced, categoriaFiltro], () => setCurrentPage(0));
-  useSyncUrlFilters({ q: searchNome, cat: categoriaFiltro, page: currentPage });
+  useResetPageOnChange([debounced, categoriaFiltro, favoritosMode], () => setCurrentPage(0));
+  useSyncUrlFilters({
+    q: searchNome,
+    cat: categoriaFiltro,
+    fav: favoritosMode ? "1" : "",
+    page: currentPage,
+  });
+
+  const handleToggleFavoritosMode = useCallback(() => {
+    if (!favoritosMode && !requireAuth("Você precisa fazer login para ver suas favoritas.")) return;
+    setFavoritosMode((m) => !m);
+  }, [favoritosMode, requireAuth]);
 
   const resetForm = useCallback(() => {
     setFormNome("");
@@ -338,11 +339,15 @@ export default function Cifras() {
           )}
         </FilterDropdownWrapper>
 
-        {(searchNome || categoriaFiltro) && (
+        <FavBtn type="button" $active={favoritosMode} onClick={handleToggleFavoritosMode}>
+          {favoritosMode ? "♥" : "♡"} Favoritas
+        </FavBtn>
+
+        {(searchNome || categoriaFiltro || favoritosMode) && (
           <button
             type="button"
             className="btn"
-            onClick={() => { setSearchNome(""); setCategoriaFiltro(""); }}
+            onClick={() => { setSearchNome(""); setCategoriaFiltro(""); setFavoritosMode(false); }}
           >
             Limpar filtro
           </button>
@@ -484,6 +489,22 @@ export default function Cifras() {
       )}
 
       <CifrasBody>
+        {!loaded && <SkeletonRows count={8} />}
+        {loaded && cifras.length === 0 && (
+          favoritosMode && favoritosIds.length === 0 ? (
+            <EmptyState
+              icon="favorito"
+              title="Você ainda não tem favoritas"
+              text="Toque no coração de uma música para salvá-la aqui."
+            />
+          ) : (
+            <EmptyState
+              icon="busca"
+              title="Nenhuma cifra encontrada"
+              text="Tente outro nome ou categoria, ou adicione uma nova cifra."
+            />
+          )
+        )}
         {cifras.map((cifra) => (
           <Link key={cifra._id} to={`/home/cifra/${cifra._id}`}>
             <AnCifra>

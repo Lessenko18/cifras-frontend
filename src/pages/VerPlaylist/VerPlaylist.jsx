@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { SkeletonRows } from "../../components/Skeleton/Skeleton";
 import { useNavigate, useParams } from "react-router-dom";
 import { getPlaylistViewService } from "../../service/playlistService";
 import {
@@ -26,6 +27,8 @@ import {
 } from "../../utils/transpose";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { exportPlaylistPdf, exportCifraPdf } from "../../utils/pdfExport";
+import StageMode from "../../components/StageMode/StageMode";
+import { FiMonitor } from "react-icons/fi";
 
 export default function VerPlaylist() {
   const { id } = useParams();
@@ -45,6 +48,8 @@ export default function VerPlaylist() {
   const [toms, setToms] = useState({});
   // ID da música com modal de tom aberto (null = nenhum)
   const [modalMusicaId, setModalMusicaId] = useState(null);
+  // Modo palco: null = fechado, número = índice da música em que ele abre
+  const [stageStart, setStageStart] = useState(null);
   const [fontSize, setFontSize] = useState(() => {
     const saved = localStorage.getItem("cifra_fontSize");
     return saved ? parseInt(saved, 10) : 18;
@@ -210,7 +215,7 @@ export default function VerPlaylist() {
     return () => window.removeEventListener("scroll", handler);
   }, [data?.musicas]);
 
-  if (loading) return <Page>Carregando…</Page>;
+  if (loading) return <Page><SkeletonRows count={6} /></Page>;
   if (err) return <Page>{err}</Page>;
 
   // Música com modal aberto
@@ -258,6 +263,17 @@ export default function VerPlaylist() {
       <Header>
         <h2>{data.nome}</h2>
         <span>{data.musicas?.length || 0} música(s)</span>
+        {data.musicas?.length > 0 && (
+          <button
+            type="button"
+            className="export-pdf"
+            aria-label="Abrir modo palco"
+            onClick={() => setStageStart(musicaAtiva)}
+          >
+            <FiMonitor size={18} />
+            Modo palco
+          </button>
+        )}
         {data.musicas?.length > 0 && (
           <button
             type="button"
@@ -398,6 +414,22 @@ export default function VerPlaylist() {
             </button>
           </ModalTom>
         </>
+      )}
+
+      {stageStart !== null && (
+        <StageMode
+          songs={(data.musicas || []).map((m) => ({
+            id: String(getMusicId(m)),
+            nome: m.nome,
+            artista: m.artista,
+            text: m.descricao,
+            bpm: m.bpm,
+          }))}
+          startIndex={stageStart}
+          semitones={toms}
+          onSemitonesChange={(songId, n) => updateTom(songId, n)}
+          onClose={() => setStageStart(null)}
+        />
       )}
     </Page>
   );

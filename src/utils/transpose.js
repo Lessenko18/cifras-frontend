@@ -7,9 +7,6 @@ const FLAT_TO_SHARP = {
   Ab: 'G#', Bb: 'A#', Cb: 'B',
 };
 
-// Escala exportada para o componente (lookup)
-export const NOTES = CHROMATIC;
-
 // Ordem de exibição na grade do modal (padrão CifraClub: bemóis, exceto F#)
 export const NOTES_DISPLAY = ['A', 'Bb', 'B', 'C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab'];
 

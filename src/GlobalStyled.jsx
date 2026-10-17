@@ -18,7 +18,7 @@ export const GlobalStyled = createGlobalStyle`
   --bg-input: #f1f1f1;
   --text-primary: #000000;
   --text-secondary: #222222;
-  --text-muted: #6b7280;
+  --text-muted: #4b5563;
   --border-color: #cccccc;
   --border-light: #e6e6e6;
   --divider: #dddddd;

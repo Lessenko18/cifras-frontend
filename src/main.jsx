@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { Toaster } from "react-hot-toast";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary.jsx";
+import { SkeletonPage } from "./components/Skeleton/Skeleton.jsx";
 
 // Páginas carregadas imediatamente (fluxo crítico)
 import Login from "./pages/Authentication/Login.jsx";
@@ -32,13 +33,10 @@ const Categorias  = lazy(() => import("./pages/Categoria/Categoria.jsx"));
 const Ferramentas = lazy(() => import("./pages/Ferramentas/Ferramentas.jsx"));
 const Ajuda       = lazy(() => import("./pages/Ajuda/Ajuda.jsx"));
 const Feedbacks   = lazy(() => import("./pages/Feedbacks/Feedbacks.jsx"));
+const Auditoria   = lazy(() => import("./pages/Auditoria/Auditoria.jsx"));
 
 function PageLoader() {
-  return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
-      <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Carregando...</span>
-    </div>
-  );
+  return <SkeletonPage />;
 }
 
 function AdminRoute({ children }) {
@@ -132,6 +130,15 @@ const router = createBrowserRouter([
         element: (
           <AdminRoute>
             <Suspense fallback={<PageLoader />}><Feedbacks /></Suspense>
+          </AdminRoute>
+        ),
+      },
+      {
+        // Só o ADM vê o histórico de ações (quem criou/editou/excluiu o quê).
+        path: "/home/auditoria",
+        element: (
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}><Auditoria /></Suspense>
           </AdminRoute>
         ),
       },

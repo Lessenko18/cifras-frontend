@@ -1,8 +1,8 @@
 /* Imagens de fundo temáticas para playlists sem capa própria */
 const PLAYLIST_BG_IMAGES = {
-  casamento: "/fundoCasamento.png",
-  adoracao: "/fundoAdoracao.png",
-  guitarra: "/fundoGuitarra.png",
+  casamento: "/fundoCasamento.webp",
+  adoracao: "/fundoAdoracao.webp",
+  guitarra: "/fundoGuitarra.webp",
 };
 
 const PLAYLIST_BG_KEYWORDS = [

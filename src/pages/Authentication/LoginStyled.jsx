@@ -10,7 +10,7 @@ export const Background = styled.section`
   align-items: center;
   background-color: #0f0f0f;
 
-  background-image: url("/login.png");
+  background-image: url("/login.webp");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
