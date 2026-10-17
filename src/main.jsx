@@ -30,6 +30,8 @@ const Profile     = lazy(() => import("./pages/Users/Profile.jsx"));
 const Users       = lazy(() => import("./pages/Users/Users.jsx"));
 const Categorias  = lazy(() => import("./pages/Categoria/Categoria.jsx"));
 const Ferramentas = lazy(() => import("./pages/Ferramentas/Ferramentas.jsx"));
+const Ajuda       = lazy(() => import("./pages/Ajuda/Ajuda.jsx"));
+const Feedbacks   = lazy(() => import("./pages/Feedbacks/Feedbacks.jsx"));
 
 function PageLoader() {
   return (
@@ -118,6 +120,20 @@ const router = createBrowserRouter([
         // Pública: afinador e notas de referência não exigem login.
         path: "/home/ferramentas",
         element: <Suspense fallback={<PageLoader />}><Ferramentas /></Suspense>,
+      },
+      {
+        // Pública: FAQ e formulário de relato (qualquer um pode enviar).
+        path: "/home/ajuda",
+        element: <Suspense fallback={<PageLoader />}><Ajuda /></Suspense>,
+      },
+      {
+        // Só o ADM lê os relatos enviados.
+        path: "/home/feedbacks",
+        element: (
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}><Feedbacks /></Suspense>
+          </AdminRoute>
+        ),
       },
       {
         path: "/home/playlists",

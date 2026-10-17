@@ -4,7 +4,9 @@ import { NavContainer, NavInner, NavContent, RightArea, UserArea, SearchBox } fr
 import { logout } from "../../service/auth.service";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { FiSun, FiMoon, FiHome, FiMusic, FiList, FiUsers, FiTag, FiSearch, FiTool } from "react-icons/fi";
+import { FiSun, FiMoon, FiHome, FiMusic, FiList, FiUsers, FiTag, FiSearch, FiTool, FiInbox } from "react-icons/fi";
+import { PageShell, PageContent } from "../Footer/FooterStyled";
+import { Footer } from "../Footer/Footer";
 import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
 import { PageSearchProvider, usePageSearchConfig } from "../../context/PageSearchContext";
 
@@ -60,7 +62,7 @@ function NavbarContent() {
   };
 
   return (
-    <>
+    <PageShell>
       <NavContainer>
         <NavInner>
         <Link id="logo" to="/home">
@@ -88,6 +90,9 @@ function NavbarContent() {
               </NavLink>
               <NavLink to="/home/categorias" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
                 <FiTag size={17} /> Categorias
+              </NavLink>
+              <NavLink to="/home/feedbacks" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+                <FiInbox size={17} /> Relatos
               </NavLink>
             </>
           )}
@@ -179,7 +184,10 @@ function NavbarContent() {
         </NavInner>
       </NavContainer>
 
-      <Outlet />
-    </>
+      <PageContent>
+        <Outlet />
+      </PageContent>
+      <Footer />
+    </PageShell>
   );
 }
