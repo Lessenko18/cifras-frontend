@@ -1,3 +1,5 @@
+import { cleanCifraText } from './cleanCifraText';
+
 // Escala cromática completa com sustenidos
 const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -60,7 +62,8 @@ const TOM_LINE_REGEX = /^(Tom:\s*)([A-G][#b]?)(.*)/i;
  * Transpõe todas as linhas de acorde de um texto, preservando letras intactas.
  * Sempre usa sustenidos (#) na saída.
  */
-export function transposeText(text, semitones) {
+export function transposeText(rawText, semitones) {
+  const text = cleanCifraText(rawText);
   if (!text || semitones === 0) return text;
   return text
     .split('\n')
@@ -80,7 +83,8 @@ export function transposeText(text, semitones) {
  * Prioriza a linha "Tom: X" escrita no texto (padrão CifraClub).
  * Retorna sempre em sustenido.
  */
-export function detectOriginalKey(text) {
+export function detectOriginalKey(rawText) {
+  const text = cleanCifraText(rawText);
   if (!text) return null;
   for (const line of text.split('\n')) {
     const tomMatch = line.trim().match(TOM_LINE_REGEX);

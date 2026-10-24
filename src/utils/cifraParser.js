@@ -1,3 +1,5 @@
+import { cleanCifraText } from "./cleanCifraText";
+
 const CHORD_RE =
   /^\(?[A-G][b#]?(maj|min|m|dim|aug|sus[24]?|add)?[0-9]*M?(\([0-9]+\))?(b[0-9]+|#[0-9]+)?(\/[A-G][b#]?)?[+°]?\)?$/;
 
@@ -17,7 +19,8 @@ function isChordToken(word) {
   return splitGluedChords(word).every(isChord);
 }
 
-export function isChordLine(line) {
+export function isChordLine(rawLine) {
+  const line = cleanCifraText(rawLine) || "";
   if (!line.trim()) return false;
   if (/^Tom:/i.test(line.trim())) return false;
   const words = line.trim().split(/\s+/).filter(Boolean);
@@ -116,7 +119,7 @@ function parseChordLyricPair(chordLine, lyricLine) {
 }
 
 export function parseCifraText(text) {
-  const lines = (text || "").split("\n");
+  const lines = (cleanCifraText(text) || "").split("\n");
   const segments = [];
   let i = 0;
 
