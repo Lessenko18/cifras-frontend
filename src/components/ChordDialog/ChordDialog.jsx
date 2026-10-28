@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { chordNotes, findChord } from "../../utils/chordLookup";
 import { getAccidental } from "../../utils/transpose";
+import { storage } from "../../lib/storage";
 
 const INSTRUMENTS = { guitar: "Violão", piano: "Teclado/Piano" };
 
@@ -174,7 +175,7 @@ function Diagram({ position, strings = 6, frets = 4 }) {
 export default function ChordDialog({ chord, onClose }) {
   const [instrument, setInstrument] = useState(() => {
     try {
-      return localStorage.getItem("instrumento") === "piano" ? "piano" : "guitar";
+      return storage.get("instrumento") === "piano" ? "piano" : "guitar";
     } catch {
       return "guitar";
     }
@@ -217,7 +218,7 @@ export default function ChordDialog({ chord, onClose }) {
     setState((s) => ({ ...s, loading: true }));
     setInstrument(next);
     try {
-      localStorage.setItem("instrumento", next);
+      storage.set("instrumento", next);
     } catch {
       // sem storage: vale só nesta sessão
     }

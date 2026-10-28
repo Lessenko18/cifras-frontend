@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { storage } from "../lib/storage";
 
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
   // Sem escolha salva, segue o tema do sistema (prefers-color-scheme)
   const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem("theme");
+    const saved = storage.get("theme");
     if (saved) return saved === "dark";
     return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
   });
@@ -23,7 +24,7 @@ export function ThemeProvider({ children }) {
         // só grava no toggle manual: enquanto não escolher, acompanha o sistema
         toggle: () =>
           setDark((d) => {
-            localStorage.setItem("theme", d ? "light" : "dark");
+            storage.set("theme", d ? "light" : "dark");
             return !d;
           }),
       }}>

@@ -14,6 +14,8 @@ import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { Toaster } from "react-hot-toast";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient.js";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary.jsx";
 import { SkeletonPage } from "./components/Skeleton/Skeleton.jsx";
 
@@ -169,6 +171,7 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
         <GlobalStyled />
@@ -179,5 +182,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <SpeedInsights />
       </AuthProvider>
     </ThemeProvider>
+    </QueryClientProvider>
   </React.StrictMode>,
 );

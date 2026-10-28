@@ -1,7 +1,9 @@
 import { clearOfflinePlaylists } from "../utils/offlinePlaylist";
+import { queryClient } from "../lib/queryClient";
 import api from "./api";
 import { normalizeAvatarUrl } from "../utils/normalizeAvatarUrl";
 import { getPublicAppUrl } from "../utils/getPublicAppUrl";
+import { storage } from "../lib/storage";
 
 function normalizeUser(user) {
   if (!user) return user;
@@ -20,13 +22,14 @@ export async function loginRequest(email, password, remember = false) {
 
     // Salva o token para ambientes cross-origin onde cookies são bloqueados (iOS Safari / ITP)
     if (loginResponse.data?.token) {
-      localStorage.setItem("access_token", loginResponse.data.token);
+      storage.set("access_token", loginResponse.data.token);
     }
 
     const meResponse = await api.get("/auth/me");
     const user = normalizeUser(meResponse.data?.user || meResponse.data);
 
-    localStorage.setItem("user", JSON.stringify(user));
+    storage.set("user", JSON.stringify(user));
+    queryClient.clear(); // nada da sessão anterior pode aparecer na nova
 
     return user;
   } catch (err) {
@@ -92,8 +95,9 @@ export async function logout() {
   } catch {
     // ignora erros (ex: token já expirado)
   } finally {
-    localStorage.removeItem("user");
-    localStorage.removeItem("access_token");
+    storage.remove("user");
+    storage.remove("access_token");
     clearOfflinePlaylists();
+    queryClient.clear();
   }
 }

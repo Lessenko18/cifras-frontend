@@ -24,6 +24,8 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // só afeta o hot-reload em dev (Provider + hook no mesmo arquivo), não é bug
+      'react-refresh/only-export-components': 'warn',
     },
   },
 ])

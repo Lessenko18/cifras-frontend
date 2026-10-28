@@ -1,47 +1,16 @@
+import { storage } from "../lib/storage";
+
 // Cópia local de playlists para uso sem sinal (igreja, salão de festa).
 // Fica só neste aparelho e é apagada no logout.
 const PREFIX = "offline_playlist_";
 
-export function hasOfflinePlaylist(id) {
-  try {
-    return localStorage.getItem(PREFIX + id) !== null;
-  } catch {
-    return false;
-  }
-}
+export const hasOfflinePlaylist = (id) => storage.get(PREFIX + id) !== null;
 
-export function saveOfflinePlaylist(id, viewData) {
-  try {
-    localStorage.setItem(PREFIX + id, JSON.stringify(viewData));
-    return true;
-  } catch {
-    return false; // cota cheia ou storage bloqueado
-  }
-}
+// false se a cota do navegador estiver cheia ou o storage bloqueado
+export const saveOfflinePlaylist = (id, viewData) => storage.setJSON(PREFIX + id, viewData);
 
-export function loadOfflinePlaylist(id) {
-  try {
-    const raw = localStorage.getItem(PREFIX + id);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
+export const loadOfflinePlaylist = (id) => storage.getJSON(PREFIX + id, null);
 
-export function removeOfflinePlaylist(id) {
-  try {
-    localStorage.removeItem(PREFIX + id);
-  } catch {
-    // nada a fazer
-  }
-}
+export const removeOfflinePlaylist = (id) => storage.remove(PREFIX + id);
 
-export function clearOfflinePlaylists() {
-  try {
-    Object.keys(localStorage)
-      .filter((k) => k.startsWith(PREFIX))
-      .forEach((k) => localStorage.removeItem(k));
-  } catch {
-    // nada a fazer
-  }
-}
+export const clearOfflinePlaylists = () => storage.removeWithPrefix(PREFIX);

@@ -18,15 +18,14 @@ import {
   UpdateCifra,
   VerCifraContainer,
 } from "./VerCifraStyled";
+import { detectKey, renderCifra } from "../../utils/cifraDoc";
 import {
-  detectOriginalKey,
   getKeyAtOffset,
   useAccidental,
   setAccidental,
   useSimplify,
   getSemitonesTo,
   NOTES_DISPLAY,
-  transposeText,
 } from "../../utils/transpose";
 import { Title } from "../Playlist/PlaylistStyled";
 import { Input } from "../../components/Input/Input";
@@ -51,6 +50,7 @@ import CifraNota from "../../components/CifraNota/CifraNota";
 import TomExtras from "../../components/TomExtras/TomExtras";
 import StageMode from "../../components/StageMode/StageMode";
 import { FiMonitor, FiSave, FiTrash2 } from "react-icons/fi";
+import { storage } from "../../lib/storage";
 export default function VerCifra() {
   const { id } = useParams();
   const { user: authenticatedUser, isAdmin } = useAuth();
@@ -60,8 +60,6 @@ export default function VerCifra() {
   const [escolhidos, setEscolhidos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [categoriaQuery, setCategoriaQuery] = useState("");
-  const [part1, setPart1] = useState("");
-  const [part2, setPart2] = useState("");
   const [scrolling, setScrolling] = useState(false);
   const [velocity, setVelocity] = useState(5);
   const [velocimetroVisivel, setVelocimetroVisivel] = useState(true);
@@ -76,7 +74,7 @@ export default function VerCifra() {
   const accessRegisteredRef = useRef(null);
   const navigate = useNavigate();
   const [fontSize, setFontSize] = useState(() => {
-    const saved = localStorage.getItem("cifra_fontSize");
+    const saved = storage.get("cifra_fontSize");
     return saved ? parseInt(saved, 10) : 18;
   });
 
@@ -102,7 +100,7 @@ export default function VerCifra() {
   const changeFontSize = useCallback((delta) => {
     setFontSize((prev) => {
       const next = Math.min(30, Math.max(12, prev + delta));
-      localStorage.setItem("cifra_fontSize", next);
+      storage.set("cifra_fontSize", next);
       return next;
     });
   }, []);
@@ -127,7 +125,10 @@ export default function VerCifra() {
   }, [cifra]);
 
   // Tonalidade original detectada a partir do primeiro acorde da cifra
-  const originalKey = useMemo(() => detectOriginalKey(cifra.observacao), [cifra.observacao]);
+  const originalKey = useMemo(
+    () => detectKey({ text: cifra.observacao, chordpro: cifra.chordpro }),
+    [cifra.observacao, cifra.chordpro],
+  );
 
   // Tonalidade atual com grafia correta (sustenido ou bemol conforme a tonalidade)
   const currentKey = useMemo(
@@ -135,11 +136,13 @@ export default function VerCifra() {
     [originalKey, semitones, acc, simple]
   );
 
-  // Texto da cifra já transposto (calculado na renderização, sem alterar o banco)
-  const observacaoTransposta = useMemo(
-    () => transposeText(cifra.observacao, semitones),
-    [cifra.observacao, semitones, acc, simple]
+  // A cifra pronta para a tela e já transposta (calculada na renderização, sem alterar o banco).
+  // Usa o ChordPro quando a cifra tem; senão o texto antigo, como sempre foi.
+  const doc = useMemo(
+    () => renderCifra({ text: cifra.observacao, chordpro: cifra.chordpro }, semitones),
+    [cifra.observacao, cifra.chordpro, semitones, acc, simple]
   );
+  const twoColumns = doc.columns.length === 2; // um único "!!!" no texto = duas colunas
 
   const canManageCifra = useMemo(() => {
     if (isAdmin) return true;
@@ -182,9 +185,9 @@ export default function VerCifra() {
   useEffect(() => {
     if (!id) return;
     if (semitones === 0) {
-      localStorage.removeItem(`tom_${id}`);
+      storage.remove(`tom_${id}`);
     } else {
-      localStorage.setItem(`tom_${id}`, semitones);
+      storage.set(`tom_${id}`, semitones);
     }
   }, [semitones, id]);
 
@@ -192,16 +195,8 @@ export default function VerCifra() {
     const response = await getCifraById(id);
     let listaCategorias = [];
     setCifra(response.data);
-    const partes = response.data.observacao.split("!!!");
-    if (partes.length === 2) {
-      setPart1(partes[0] || "");
-      setPart2(partes[1] || "");
-    } else {
-      setPart1("");
-      setPart2("");
-    }
     // Restaura o tom salvo para esta cifra
-    const saved = localStorage.getItem(`tom_${id}`);
+    const saved = storage.get(`tom_${id}`);
     setSemitones(saved ? parseInt(saved, 10) : 0);
 
     for (const categoria of response.data.categorias) {
@@ -248,10 +243,7 @@ export default function VerCifra() {
   }
 
   function handleExportPdf() {
-    const text =
-      part1 !== "" || part2 !== ""
-        ? observacaoTransposta.split("!!!").filter(Boolean).join("\n\n")
-        : observacaoTransposta;
+    const text = doc.text;
 
     exportCifraPdf({
       nome: cifra.nome,
@@ -332,7 +324,7 @@ export default function VerCifra() {
   }, [id, cifra?._id, cifra?.nome, cifra?.artista]);
 
   return (
-    <VerCifraContainer className={part1 !== "" && "partes"}>
+    <VerCifraContainer className={twoColumns && "partes"}>
       <UsersHeader>
         <div className="ver-cifra-left">
           <button
@@ -499,7 +491,7 @@ export default function VerCifra() {
       {/* UPDATE */}
       <CifraBody>
         {!update || !canManageCifra ? (
-          <CifraContent className={part1 !== "" && "partes"}>
+          <CifraContent className={twoColumns && "partes"}>
             <div className="cifra-topo">
               {originalKey && (
                 <TomButton
@@ -535,14 +527,14 @@ export default function VerCifra() {
               </button>
             </div>
             <CifraNota cifraId={String(cifra._id || id)} />
-            {part1 === "" && part2 === "" ? (
-              <CifraRenderer text={observacaoTransposta} style={{ fontSize: `${fontSize}px` }} />
-            ) : (
+            {twoColumns ? (
               <div className="cifra-partes">
-                {part1 !== "" && <CifraRenderer text={observacaoTransposta.split("!!!")[0]} style={{ fontSize: `${fontSize}px` }} />}
+                <CifraRenderer segments={doc.columns[0]} style={{ fontSize: `${fontSize}px` }} />
                 <span></span>
-                {part2 !== "" && <CifraRenderer text={observacaoTransposta.split("!!!")[1]} style={{ fontSize: `${fontSize}px` }} />}
+                <CifraRenderer segments={doc.columns[1]} style={{ fontSize: `${fontSize}px` }} />
               </div>
+            ) : (
+              <CifraRenderer segments={doc.segments} style={{ fontSize: `${fontSize}px` }} />
             )}
           </CifraContent>
         ) : (
@@ -749,6 +741,7 @@ export default function VerCifra() {
               nome: cifra.nome,
               artista: cifra.artista,
               text: cifra.observacao,
+              chordpro: cifra.chordpro,
               bpm: cifra.bpm,
             },
           ]}

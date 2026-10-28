@@ -5,13 +5,8 @@ import { FiMonitor } from "react-icons/fi";
 import { getPublicPlaylistService } from "../../service/playlistService";
 import { CifraRenderer } from "../../components/CifraRenderer/CifraRenderer";
 import StageMode from "../../components/StageMode/StageMode";
-import {
-  detectOriginalKey,
-  getKeyAtOffset,
-  transposeText,
-  useAccidental,
-  useSimplify,
-} from "../../utils/transpose";
+import { detectKey, renderCifra } from "../../utils/cifraDoc";
+import { getKeyAtOffset, useAccidental, useSimplify } from "../../utils/transpose";
 
 const Page = styled.main`
   width: 100%;
@@ -92,15 +87,15 @@ export default function PublicPlaylist() {
     () =>
       (data?.musicas || []).map((m) => {
         const st = data.toms?.[String(m.id)] || 0;
-        const origKey = detectOriginalKey(m.descricao);
+        const origKey = detectKey({ text: m.descricao, chordpro: m.chordpro });
         return {
           ...m,
           st,
           tom: origKey ? getKeyAtOffset(origKey, st) : null,
-          texto: transposeText(m.descricao || "", st),
+          doc: renderCifra({ text: m.descricao, chordpro: m.chordpro }, st),
         };
       }),
-    // acc/simple mudam a saída de transposeText/getKeyAtOffset
+    // acc/simple mudam a saída de renderCifra/getKeyAtOffset
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, acc, simple],
   );
@@ -127,7 +122,7 @@ export default function PublicPlaylist() {
             {m.tom && <span className="tom">Tom {m.tom}</span>}
           </h2>
           {m.artista && <p className="artista">{m.artista}</p>}
-          <CifraRenderer text={m.texto} />
+          <CifraRenderer segments={m.doc.segments} />
         </article>
       ))}
       {stageOpen && (
@@ -137,6 +132,7 @@ export default function PublicPlaylist() {
             nome: m.nome,
             artista: m.artista,
             text: m.descricao,
+            chordpro: m.chordpro,
             bpm: m.bpm,
           }))}
           semitones={Object.fromEntries(musicas.map((m) => [String(m.id), m.st]))}

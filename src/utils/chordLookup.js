@@ -19,7 +19,7 @@ function normalizeSuffix(raw) {
 }
 
 export function parseChord(name) {
-  const m = String(name).trim().match(/^\(?([A-G][#b]?)([^/]*)(?:\/([A-G][#b]?))?\)?$/);
+  const m = String(name).trim().match(/^\(?([A-G][#b]?)([^/\s]*)(?:\/([A-G][#b]?))?\)?$/);
   if (!m) return null;
   return { root: m[1], suffix: normalizeSuffix(m[2]), bass: m[3] || null };
 }

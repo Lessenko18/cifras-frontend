@@ -9,7 +9,9 @@ export function useWakeLock() {
     const acquire = async () => {
       try {
         lock = await navigator.wakeLock.request("screen");
-      } catch {}
+      } catch {
+        // sem permissão/suporte: a tela só pode apagar sozinha
+      }
     };
 
     const onVisibilityChange = () => {

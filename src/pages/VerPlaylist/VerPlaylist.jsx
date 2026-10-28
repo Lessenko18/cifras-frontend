@@ -24,12 +24,11 @@ import {
   Overlay,
   TomButton,
 } from "../VerCifra/VerCifraStyled";
+import { detectKey, renderCifra } from "../../utils/cifraDoc";
 import {
-  detectOriginalKey,
   getKeyAtOffset,
   getSemitonesTo,
   NOTES_DISPLAY,
-  transposeText,
   useAccidental,
   setAccidental,
   useSimplify,
@@ -45,6 +44,7 @@ import {
 import TomExtras from "../../components/TomExtras/TomExtras";
 import StageMode from "../../components/StageMode/StageMode";
 import { FiDownloadCloud, FiLink, FiMonitor } from "react-icons/fi";
+import { storage } from "../../lib/storage";
 
 export default function VerPlaylist() {
   const { id } = useParams();
@@ -73,7 +73,7 @@ export default function VerPlaylist() {
   // Modo palco: null = fechado, número = índice da música em que ele abre
   const [stageStart, setStageStart] = useState(null);
   const [fontSize, setFontSize] = useState(() => {
-    const saved = localStorage.getItem("cifra_fontSize");
+    const saved = storage.get("cifra_fontSize");
     return saved ? parseInt(saved, 10) : 18;
   });
   const [velocimetroVisivel, setVelocimetroVisivel] = useState(true);
@@ -83,7 +83,7 @@ export default function VerPlaylist() {
   const changeFontSize = useCallback((delta) => {
     setFontSize((prev) => {
       const next = Math.min(30, Math.max(12, prev + delta));
-      localStorage.setItem("cifra_fontSize", next);
+      storage.set("cifra_fontSize", next);
       return next;
     });
   }, []);
@@ -130,9 +130,9 @@ export default function VerPlaylist() {
   function updateTom(songId, newSemitones) {
     setToms((prev) => ({ ...prev, [songId]: newSemitones }));
     if (newSemitones === 0) {
-      localStorage.removeItem(`tom_${songId}`);
+      storage.remove(`tom_${songId}`);
     } else {
-      localStorage.setItem(`tom_${songId}`, newSemitones);
+      storage.set(`tom_${songId}`, newSemitones);
     }
     setPlaylistTomService(id, String(songId), newSemitones).catch(() => {
       toast.error("Não foi possível salvar o tom na playlist.");
@@ -193,7 +193,7 @@ export default function VerPlaylist() {
             savedToms[sid] = remote;
             return;
           }
-          const saved = localStorage.getItem(`tom_${sid}`);
+          const saved = storage.get(`tom_${sid}`);
           if (saved) savedToms[sid] = parseInt(saved, 10);
         });
         setToms(savedToms);
@@ -211,14 +211,14 @@ export default function VerPlaylist() {
     const musicas = data.musicas.map((m) => {
       const songId = getMusicId(m);
       const semitones = toms[songId] || 0;
-      const origKey = detectOriginalKey(m.descricao);
+      const origKey = detectKey({ text: m.descricao, chordpro: m.chordpro });
       const tom = origKey ? getKeyAtOffset(origKey, semitones) : null;
 
       return {
         nome: m.nome,
         tom,
         bpm: m.bpm,
-        text: transposeText(m.descricao || "", semitones),
+        text: renderCifra({ text: m.descricao, chordpro: m.chordpro }, semitones).text,
       };
     });
 
@@ -228,14 +228,14 @@ export default function VerPlaylist() {
   function handleExportMusicaPdf(m) {
     const songId = getMusicId(m);
     const semitones = toms[songId] || 0;
-    const origKey = detectOriginalKey(m.descricao);
+    const origKey = detectKey({ text: m.descricao, chordpro: m.chordpro });
     const tom = origKey ? getKeyAtOffset(origKey, semitones) : null;
 
     exportCifraPdf({
       nome: m.nome,
       tom,
       bpm: m.bpm,
-      text: transposeText(m.descricao || "", semitones),
+      text: renderCifra({ text: m.descricao, chordpro: m.chordpro }, semitones).text,
     });
   }
 
@@ -273,7 +273,7 @@ export default function VerPlaylist() {
     ? data.musicas?.find((m) => String(getMusicId(m)) === String(modalMusicaId))
     : null;
   const modalOriginalKey = modalMusica
-    ? detectOriginalKey(modalMusica.descricao)
+    ? detectKey({ text: modalMusica.descricao, chordpro: modalMusica.chordpro })
     : null;
   const modalSemitones = modalMusicaId ? (toms[modalMusicaId] || 0) : 0;
   const modalCurrentKey = getKeyAtOffset(modalOriginalKey, modalSemitones);
@@ -428,9 +428,9 @@ export default function VerPlaylist() {
           {data.musicas?.map((m, i) => {
             const songId = getMusicId(m);
             const semitones = toms[songId] || 0;
-            const origKey = detectOriginalKey(m.descricao);
+            const origKey = detectKey({ text: m.descricao, chordpro: m.chordpro });
             const currentKey = getKeyAtOffset(origKey, semitones);
-            const conteudo = transposeText(m.descricao || "", semitones);
+            const conteudo = renderCifra({ text: m.descricao, chordpro: m.chordpro }, semitones);
 
             return (
               <CifraCard key={`${songId}-${i}`} id={`musica-${i}`}>
@@ -469,7 +469,7 @@ export default function VerPlaylist() {
                     )}
                   </div>
                 </div>
-                <CifraRenderer text={conteudo} style={{ fontSize: `${fontSize}px` }} />
+                <CifraRenderer segments={conteudo.segments} style={{ fontSize: `${fontSize}px` }} />
               </CifraCard>
             );
           })}
@@ -558,6 +558,7 @@ export default function VerPlaylist() {
             nome: m.nome,
             artista: m.artista,
             text: m.descricao,
+            chordpro: m.chordpro,
             bpm: m.bpm,
           }))}
           startIndex={stageStart}

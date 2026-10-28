@@ -3,11 +3,9 @@ import { createPortal } from "react-dom";
 import styled from "styled-components";
 import toast from "react-hot-toast";
 import { FiCheck, FiPlus } from "react-icons/fi";
-import {
-  createPlaylistService,
-  editPlaylistService,
-  getPlaylistsService,
-} from "../../service/playlistService";
+import { useQueryClient } from "@tanstack/react-query";
+import { createPlaylistService, editPlaylistService } from "../../service/playlistService";
+import { playlistsKey, usePlaylists } from "../../hooks/queries/usePlaylists";
 import { useAuth } from "../../context/AuthContext";
 
 const Trigger = styled.button`
@@ -120,24 +118,23 @@ const idOf = (c) => (typeof c === "string" ? c : c?._id);
 export default function AddToPlaylist({ cifraId, cifraNome, className }) {
   const { isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
-  const [playlists, setPlaylists] = useState(null);
+  const queryClient = useQueryClient();
+  // só busca quando o seletor abre; reaproveita o cache da Home/Playlists
+  const playlistsQuery = usePlaylists({ enabled: isAuthenticated && open });
+  const playlists = playlistsQuery.data ?? null;
   const [busy, setBusy] = useState(false);
   const [novoNome, setNovoNome] = useState("");
 
   if (!isAuthenticated) return null;
 
-  async function openSheet(e) {
+  function openSheet(e) {
     e.preventDefault();
     e.stopPropagation();
     setOpen(true);
-    try {
-      const res = await getPlaylistsService();
-      setPlaylists(res.data || []);
-    } catch {
-      toast.error("Falha ao carregar suas playlists.");
-      setOpen(false);
-    }
   }
+
+  // atualiza o cache na hora (check/uncheck instantâneo) e depois confirma no servidor
+  const patchPlaylists = (fn) => queryClient.setQueryData(playlistsKey, (list) => fn(list || []));
 
   async function toggle(pl) {
     if (busy) return;
@@ -147,7 +144,7 @@ export default function AddToPlaylist({ cifraId, cifraNome, className }) {
     setBusy(true);
     try {
       await editPlaylistService(pl._id, { cifras: next });
-      setPlaylists((list) => list.map((p) => (p._id === pl._id ? { ...p, cifras: next } : p)));
+      patchPlaylists((list) => list.map((p) => (p._id === pl._id ? { ...p, cifras: next } : p)));
       toast.success(has ? `Removida de “${pl.nome}”` : `Adicionada a “${pl.nome}”`);
     } catch {
       toast.error("Não foi possível atualizar a playlist.");
@@ -163,7 +160,7 @@ export default function AddToPlaylist({ cifraId, cifraNome, className }) {
     setBusy(true);
     try {
       const res = await createPlaylistService({ nome, cifras: [cifraId] });
-      setPlaylists((list) => [res.data, ...(list || [])]);
+      patchPlaylists((list) => [res.data, ...list]);
       setNovoNome("");
       toast.success(`Playlist “${nome}” criada com a cifra.`);
     } catch {
@@ -194,7 +191,7 @@ export default function AddToPlaylist({ cifraId, cifraNome, className }) {
             <h3>Adicionar à playlist</h3>
             {cifraNome && <p className="sub">{cifraNome}</p>}
             {playlists === null ? (
-              <p className="sub">Carregando…</p>
+              <p className="sub">{playlistsQuery.isError ? "Não foi possível carregar suas playlists." : "Carregando…"}</p>
             ) : (
               <ul>
                 {playlists.map((pl) => {

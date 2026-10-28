@@ -97,8 +97,9 @@ const Blank = styled.div`
 `;
 
 // interactiveChords: toque no acorde abre o diagrama (desligado no modo palco)
-export function CifraRenderer({ text, style, interactiveChords = true }) {
-  const segments = parseCifraText(text);
+// `segments`: trechos já prontos (vindos do ChordPro); sem eles, interpreta `text` (cifras antigas)
+export function CifraRenderer({ text, segments: ready, style, interactiveChords = true }) {
+  const segments = ready ?? parseCifraText(text);
   // Toque/clique num acorde abre o diagrama (N1)
   const [chordOpen, setChordOpen] = useState(null);
 

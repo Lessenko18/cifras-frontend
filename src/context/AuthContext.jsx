@@ -1,12 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getMeRequest } from "../service/auth.service";
 import { normalizeAvatarUrl } from "../utils/normalizeAvatarUrl";
+import { storage } from "../lib/storage";
 
 const AuthContext = createContext(null);
 
 function readStoredUser() {
   try {
-    const stored = JSON.parse(localStorage.getItem("user"));
+    const stored = JSON.parse(storage.get("user"));
     if (!stored) return null;
     return {
       ...stored,
@@ -24,7 +25,7 @@ export function AuthProvider({ children }) {
 
   const refresh = useCallback(async () => {
     // Sem token local, nem tenta — evita 401 desnecessário para visitantes
-    if (!localStorage.getItem("access_token")) {
+    if (!storage.get("access_token")) {
       setUser(null);
       setIsLoading(false);
       return null;

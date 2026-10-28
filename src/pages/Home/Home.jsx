@@ -1,11 +1,8 @@
-import RoteiroModelo from "../../components/RoteiroModelo/RoteiroModelo";
+import { usePlaylistManager } from "../../components/PlaylistManager/PlaylistManager";
 import NextEventCard from "../../components/NextEventCard/NextEventCard";
-import AddToPlaylist from "../../components/AddToPlaylist/AddToPlaylist";
-import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useInitialUrlFilters, useResetPageOnChange, useSyncUrlFilters } from "../../hooks/useUrlFilters";
-
-// Cifras
 import { getCifrasService, getCifraHomeInsightsService } from "../../service/cifraService";
 import { getCategoriasService } from "../../service/categoriaService";
 import { getFavoritosService, toggleFavoritoService } from "../../service/favoritosService";
@@ -15,34 +12,11 @@ import { useCategoriaFilter } from "../../hooks/useCategoriaFilter";
 import EmptyState from "../../components/EmptyState/EmptyState";
 import { SkeletonCards, SkeletonRows } from "../../components/Skeleton/Skeleton";
 import { useClickOutside } from "../../hooks/useClickOutside";
-
-// Playlists
-import {
-  getPlaylistsService,
-  deletePlaylistService,
-  getPlaylistViewService,
-  getPlaylistByIdService,
-  sharePlaylistService,
-  unsharePlaylistService,
-} from "../../service/playlistService";
-import { readPlaylistForm, submitCreatePlaylist, submitEditPlaylist } from "../../utils/playlistForm";
+import { usePlaylists, useInvalidatePlaylists } from "../../hooks/queries/usePlaylists";
 import { useAuth } from "../../context/AuthContext";
-import { searchUsersService } from "../../service/userService";
-import { getPublicAppUrl } from "../../utils/getPublicAppUrl";
-import MultSeletor from "../../components/MultSeletor/MultSeletor";
-import { Input } from "../../components/Input/Input";
-import {
-  ModalBox,
-  ModalDelete as PlaylistModalDelete,
-  ShareInputRow,
-  ShareList,
-  SuggestList,
-} from "../Playlist/PlaylistStyled";
+import { getPlaylistPermissions } from "../../utils/playlistAccess";
 import toast from "react-hot-toast";
-
-import { FiShare2, FiEdit2, FiTrash2, FiMusic, FiMoreVertical, FiTrendingUp, FiUsers, FiStar } from "react-icons/fi";
-import { getPlaylistBgImage } from "../../utils/playlistVisual";
-import { getArtistImage } from "../../utils/artistVisual";
+import { FiMusic, FiTrendingUp, FiUsers, FiStar } from "react-icons/fi";
 import {
   HomeWrapper,
   Panel,
@@ -50,7 +24,6 @@ import {
   PanelTitle,
   CreatePlaylistBtn,
   PlaylistCardsGrid,
-  PlaylistCard,
   PlaylistEmpty,
   FiltersContainer,
   FilterInput,
@@ -60,7 +33,6 @@ import {
   FilterDropdownItem,
   FavBtn,
   CifraList,
-  CifraItem,
   PaginationContainer,
   PaginationButton,
   PaginationInfo,
@@ -77,8 +49,6 @@ import {
   RankedRow,
   RankIndex,
   RankIconSquare,
-  RankAvatar,
-  RankAvatarImg,
   RankInfo,
   RankName,
   RankSub,
@@ -86,147 +56,9 @@ import {
   InsightEmpty,
   ActiveFilterChip,
 } from "./HomeStyled";
-
-/* ── helpers ─────────────────────────────────────── */
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
-
-const sortByNome = (a, b) =>
-  (a?.nome || "").localeCompare(b?.nome || "", "pt-BR", { sensitivity: "base" });
-
-const AVATAR_PALETTE = ["#7c3aed", "#0ea5e9", "#f59e0b", "#14b8a6", "#6366f1", "#ec4899"];
-
-const formatCount = (n) => {
-  if (!n) return null;
-  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
-  return String(n);
-};
-
-const formatRelativeDate = (dateStr) => {
-  if (!dateStr) return null;
-  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const diffDays = Math.round((startOfDay(new Date()) - startOfDay(new Date(dateStr))) / 86400000);
-  if (diffDays <= 0) return "Hoje";
-  if (diffDays === 1) return "Ontem";
-  return `${diffDays} dias`;
-};
-
-const getInitials = (name) =>
-  (name || "?")
-    .trim()
-    .split(/\s+/)
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
-/* ── Componentes memoizados ── evitam re-render quando o estado pai muda */
-const PlaylistCardItem = memo(function PlaylistCardItem({ pl, onView, onShare, onEdit, onDelete, canShare, canEdit, canDelete, stripEmoji }) {
-  const bannerUrl = pl.bannerUrl || getPlaylistBgImage(pl.nome);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
-  useClickOutside(menuRef, () => setMenuOpen(false));
-  return (
-    <PlaylistCard
-      $bannerUrl={bannerUrl}
-      className="clicavel"
-      tabIndex={0}
-      aria-label={`Abrir playlist ${stripEmoji(pl.nome)}`}
-      onClick={() => onView(pl._id)}
-      onKeyDown={(e) => {
-        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
-          e.preventDefault();
-          onView(pl._id);
-        }
-      }}
-    >
-      <div className="card-head">
-        <FiMusic size={14} aria-hidden="true" />
-        <span>{stripEmoji(pl.nome)}</span>
-      </div>
-      <div className="card-body">
-        <span className="card-count">{pl.cifras?.length || 0} música(s)</span>
-        <button className="ver-btn" onClick={(e) => { e.stopPropagation(); onView(pl._id); }}>
-          <FiMusic size={13} aria-hidden="true" />
-          Ver Músicas
-        </button>
-      </div>
-      {(canShare || canEdit || canDelete) && (
-        <div className="card-actions-corner" ref={menuRef} onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            className="card-icon-btn"
-            aria-label="Mais ações"
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((o) => !o)}
-          >
-            <FiMoreVertical size={16} />
-          </button>
-          {menuOpen && (
-            <div className="card-menu" role="menu">
-              {canShare && (
-                <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onShare(pl); }}>
-                  <FiShare2 size={14} /> Compartilhar
-                </button>
-              )}
-              {canEdit && (
-                <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onEdit(pl); }}>
-                  <FiEdit2 size={14} /> Editar
-                </button>
-              )}
-              {canDelete && (
-                <button type="button" role="menuitem" className="perigo" onClick={() => { setMenuOpen(false); onDelete(pl); }}>
-                  <FiTrash2 size={14} /> Excluir
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </PlaylistCard>
-  );
-});
-
-const ArtistAvatar = memo(function ArtistAvatar({ artista, bg }) {
-  const [imgError, setImgError] = useState(false);
-  const imgSrc = getArtistImage(artista);
-  if (imgSrc && !imgError) {
-    return <RankAvatarImg src={imgSrc} alt={artista} onError={() => setImgError(true)} />;
-  }
-  return <RankAvatar $bg={bg}>{getInitials(artista)}</RankAvatar>;
-});
-
-const CifraListItem = memo(function CifraListItem({ cifra, isFav, onToggleFav, getCatLabel }) {
-  return (
-    <Link to={`/home/cifra/${cifra._id}`}>
-      <CifraItem>
-        <div className="cifra-head">
-          <h2>{cifra.nome}</h2>
-          <AddToPlaylist cifraId={cifra._id} cifraNome={cifra.nome} />
-          <button
-            type="button"
-            className="heart-btn"
-            aria-label={isFav ? "Remover favorito" : "Adicionar favorito"}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFav(cifra._id); }}
-          >
-            {isFav ? "♥" : "♡"}
-          </button>
-        </div>
-        <div className="cifra-body">
-          {cifra.artista && <span className="cifra-artista">{cifra.artista}</span>}
-          <span className="cifra-cats">
-            {cifra.categorias?.map((cat, i) => (
-              <span key={typeof cat === "string" ? cat : cat?._id}>
-                {i > 0 && " · "}{getCatLabel(cat)}
-              </span>
-            ))}
-          </span>
-        </div>
-      </CifraItem>
-    </Link>
-  );
-});
+import { PlaylistCardItem, ArtistAvatar, CifraListItem } from "./HomeParts";
+import { sortByNome, AVATAR_PALETTE, formatCount, formatRelativeDate } from "./homeHelpers";
+const NO_PLAYLISTS = [];
 
 export default function Home() {
   const navigate = useNavigate();
@@ -236,7 +68,6 @@ export default function Home() {
   /* ── Estado: cifras ─────────────────────────────── */
   const [cifras, setCifras] = useState([]);
   const [cifrasLoaded, setCifrasLoaded] = useState(false);
-  const [playlistsLoading, setPlaylistsLoading] = useState(true);
   const [pages, setPages] = useState(0);
   const urlFilters = useInitialUrlFilters();
   const [currentPage, setCurrentPage] = useState(() => urlFilters.getNumber("page"));
@@ -255,28 +86,13 @@ export default function Home() {
   const favoritosSet = useMemo(() => new Set(favoritosIds), [favoritosIds]);
 
   /* ── Estado: playlists ──────────────────────────── */
-  const [playlists, setPlaylists] = useState([]);
+  // Playlists vêm do cache compartilhado (react-query); só busca logado
+  const playlistsQuery = usePlaylists({ enabled: isAuthenticated });
+  const playlists = playlistsQuery.data ?? NO_PLAYLISTS;
+  const playlistsLoading = playlistsQuery.isLoading;
+  const invalidatePlaylists = useInvalidatePlaylists();
   const [playlistPage, setPlaylistPage] = useState(0);
   const PLAYLISTS_PER_PAGE = 6;
-  const [isCreating, setIsCreating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [modalEdit, setModalEdit] = useState(false);
-  const [modalDelete, setModalDelete] = useState(false);
-  const [chosen, setChosen] = useState(null);
-  const [chosenCifras, setChosenCifras] = useState([]);
-  const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [shareTarget, setShareTarget] = useState(null);
-  const [sharedExistingEmails, setSharedExistingEmails] = useState([]);
-  const [shareEmails, setShareEmails] = useState([]);
-  const [shareInput, setShareInput] = useState("");
-  const [shareSuggestions, setShareSuggestions] = useState([]);
-  const [createShareEmails, setCreateShareEmails] = useState([]);
-  const [createShareInput, setCreateShareInput] = useState("");
-  const [createShareSuggestions, setCreateShareSuggestions] = useState([]);
-  const shareSearchTimer = useRef(null);
-  const createSearchTimer = useRef(null);
-  const currentUserId = authenticatedUser?._id || authenticatedUser?.id || null;
-  const currentUserEmail = authenticatedUser?.email?.toLowerCase() || "";
 
   /* ── Computed: playlists paginadas (mais recentes primeiro) ─────────────── */
   const sortedPlaylists = useMemo(
@@ -308,10 +124,13 @@ export default function Home() {
   useEffect(() => {
     getCategoriasService().then((r) => setCategorias(r.data || [])).catch(() => {});
     getCifraHomeInsightsService(10).then((r) => setInsights(r.data || {})).catch(() => {});
-    if (!isAuthenticated) { setFavoritosIds([]); setPlaylists([]); return; }
+    if (!isAuthenticated) { setFavoritosIds([]); return; }
     getFavoritosService().then(setFavoritosIds).catch(() => {});
-    fetchPlaylists();
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (playlistsQuery.isError) toast.error("Falha ao carregar playlists.");
+  }, [playlistsQuery.isError]);
 
   useClickOutside(filterRef, () => setFilterOpen(false));
 
@@ -337,8 +156,11 @@ export default function Home() {
       });
       setCifras(res.data.cifras || []);
       setPages(res.data.pages || 0);
-    } catch {}
-    finally { if (!ctrl.signal.aborted) setCifrasLoaded(true); }
+    } catch {
+      // busca cancelada ou falha de rede: mantém a lista atual
+    } finally {
+      if (!ctrl.signal.aborted) setCifrasLoaded(true);
+    }
   }, [debounced, artistaFiltro, relevantCategoriaIds, currentPage, favoritosMode, favoritosIds]);
 
   useEffect(() => { fetchCifras(); }, [fetchCifras]);
@@ -351,206 +173,12 @@ export default function Home() {
     try {
       const updated = await toggleFavoritoService(cifraId);
       setFavoritosIds(updated);
-    } catch {}
+    } catch {
+      // falha ao favoritar: o coração só não muda
+    }
   }, [requireAuth]);
 
-  /* ── Fetch playlists ────────────────────────────── */
-  const fetchPlaylists = useCallback(async () => {
-    try {
-      const res = await getPlaylistsService();
-      setPlaylists(res.data || []);
-    } catch { toast.error("Falha ao carregar playlists."); }
-    finally { setPlaylistsLoading(false); }
-  }, []);
-
-  /* ── Helpers de playlist ────────────────────────── */
-  const getOwnerId = useCallback((pl) =>
-    pl?.criador?._id || pl?.criador || pl?.ownerId || pl?.userId || pl?.owner?._id || pl?.createdBy?._id || pl?.createdBy || null,
-  []);
-
-  const getSharedList = useCallback((pl) =>
-    pl?.sharedWithEmails || pl?.sharedWith || pl?.sharedWithUsers || pl?.compartilhadoCom || [],
-  []);
-
-  const isSharedWithUser = useCallback((pl) => {
-    const list = getSharedList(pl);
-    if (!Array.isArray(list) || !list.length) return false;
-    return list.some((item) => {
-      if (!item) return false;
-      if (typeof item === "string") return currentUserEmail && item.toLowerCase() === currentUserEmail;
-      const itemId = item._id || item.id;
-      const itemEmail = item.email || item.mail;
-      if (currentUserId && itemId && itemId === currentUserId) return true;
-      if (currentUserEmail && itemEmail) return itemEmail.toLowerCase() === currentUserEmail;
-      return false;
-    });
-  }, [currentUserEmail, currentUserId, getSharedList]);
-
-  const parseEmails = useCallback((raw) =>
-    raw.split(/[\s,;]+/).map((v) => v.trim().toLowerCase()).filter(Boolean), []);
-
-  const addEmailsToList = useCallback((raw, current, setCurrent, blocked = []) => {
-    const emails = parseEmails(raw);
-    if (!emails.length) return;
-    const selfEmail = currentUserEmail;
-    const hasSelf = selfEmail && emails.includes(selfEmail);
-    const filtered = hasSelf ? emails.filter((e) => e !== selfEmail) : emails;
-    if (hasSelf) toast.error("Você não pode compartilhar consigo mesmo.");
-    const invalid = filtered.filter((e) => !EMAIL_PATTERN.test(e));
-    if (invalid.length) { toast.error(`Email(s) inválido(s): ${invalid.join(", ")}`); return; }
-    const next = [...current];
-    filtered.forEach((e) => { if (!blocked.includes(e) && !next.includes(e)) next.push(e); });
-    setCurrent(next);
-  }, [currentUserEmail, parseEmails]);
-
-  const removeEmail = useCallback((email, setter) => {
-    setter((prev) => prev.filter((e) => e !== email));
-  }, []);
-
-  const buildSuggestions = useCallback((data, blocked) =>
-    (Array.isArray(data) ? data : [])
-      .map((i) => i?.email?.toLowerCase()).filter(Boolean)
-      .filter((e) => e !== currentUserEmail && !blocked.includes(e) && EMAIL_PATTERN.test(e)),
-  [currentUserEmail]);
-
-  const fetchSuggestions = useCallback(async (query, blocked, setSuggestions) => {
-    if (!isAdmin) return; // GET /user/search requires admin
-    try {
-      const res = await searchUsersService(query);
-      setSuggestions(buildSuggestions(res?.data, blocked).slice(0, 6));
-    } catch { setSuggestions([]); }
-  }, [buildSuggestions, isAdmin]);
-
-  const stripEmoji = useCallback((v) =>
-    typeof v === "string" ? v.replace(/^[\s]*(?:🎵|🎶|♪|♫)\s*/u, "") : v || "", []);
-
-  const closeAllModals = useCallback(() => {
-    setIsCreating(false); setModalEdit(false);
-    setModalDelete(false); setShareModalOpen(false);
-  }, []);
-
-  /* ── Share suggestions debounce ─────────────────── */
-  useEffect(() => {
-    if (!shareModalOpen) return;
-    const q = shareInput.trim();
-    clearTimeout(shareSearchTimer.current);
-    if (q.length < 2) { setShareSuggestions([]); return; }
-    shareSearchTimer.current = setTimeout(() => {
-      fetchSuggestions(q, [...sharedExistingEmails, ...shareEmails], setShareSuggestions);
-    }, 250);
-    return () => clearTimeout(shareSearchTimer.current);
-  }, [shareInput, shareModalOpen, shareEmails, sharedExistingEmails, fetchSuggestions]);
-
-  useEffect(() => {
-    if (!isCreating) return;
-    const q = createShareInput.trim();
-    clearTimeout(createSearchTimer.current);
-    if (q.length < 2) { setCreateShareSuggestions([]); return; }
-    createSearchTimer.current = setTimeout(() => {
-      fetchSuggestions(q, createShareEmails, setCreateShareSuggestions);
-    }, 250);
-    return () => clearTimeout(createSearchTimer.current);
-  }, [createShareInput, createShareEmails, isCreating, fetchSuggestions]);
-
-  /* ── Handlers de playlist ───────────────────────── */
-  const handleOpenCreate = useCallback(() => {
-    closeAllModals(); setChosen(null); setChosenCifras([]);
-    setCreateShareEmails([]); setCreateShareInput(""); setCreateShareSuggestions([]);
-    setIsCreating(true);
-  }, [closeAllModals]);
-
-  async function handleClickEdit(pl) {
-    closeAllModals();
-    const res = await getPlaylistViewService(pl._id);
-    setChosen(pl); setChosenCifras(res.musicas || []); setModalEdit(true);
-  }
-
-  const handleCreate = useCallback(async (e) => {
-    e.preventDefault();
-    const { error, data, bannerFile } = readPlaylistForm(
-      e.target,
-      chosenCifras.map((c) => c._id),
-    );
-    if (error) { toast.error(error); return; }
-    const appUrl = getPublicAppUrl();
-    if (appUrl) { data.appUrl = appUrl; data.frontendUrl = appUrl; }
-    if (createShareEmails.length) data.sharedWithEmails = createShareEmails;
-    try {
-      await submitCreatePlaylist(data, bannerFile);
-      toast.success("Playlist criada!");
-      e.target.reset(); setChosenCifras([]); setCreateShareEmails([]);
-      setCreateShareInput(""); setIsCreating(false);
-      fetchPlaylists();
-    } catch { toast.error("Falha ao criar playlist."); }
-  }, [chosenCifras, createShareEmails, fetchPlaylists]);
-
-  const handleEdit = useCallback(async (e) => {
-    e.preventDefault();
-    if (!chosen?._id) return;
-    const { error, data, bannerFile } = readPlaylistForm(
-      e.target,
-      chosenCifras.map((c) => c._id || c.id),
-    );
-    if (error) { toast.error(error); return; }
-    try {
-      await submitEditPlaylist(chosen._id, data, bannerFile);
-      toast.success("Playlist editada!");
-      setModalEdit(false); setChosen(null); setChosenCifras([]); fetchPlaylists();
-    } catch { toast.error("Falha ao editar playlist."); }
-  }, [chosen, chosenCifras, fetchPlaylists]);
-
-  const handleDelete = useCallback(async () => {
-    if (!chosen?._id || isDeleting) return;
-    setIsDeleting(true);
-    try {
-      await deletePlaylistService(chosen._id);
-      toast.success("Playlist excluída!");
-      setModalDelete(false); setChosen(null); fetchPlaylists();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Erro ao excluir playlist.");
-    } finally { setIsDeleting(false); }
-  }, [chosen, fetchPlaylists, isDeleting]);
-
-  const handleOpenShare = useCallback(async (pl) => {
-    closeAllModals(); setShareTarget(pl); setShareEmails([]);
-    setShareInput(""); setShareSuggestions([]); setSharedExistingEmails([]);
-    setShareModalOpen(true);
-    try {
-      const detail = await getPlaylistByIdService(pl._id);
-      setSharedExistingEmails(detail.sharedEmails || []);
-    } catch {
-      setSharedExistingEmails([]);
-    }
-  }, [closeAllModals]);
-
-  const handleShareSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    if (!shareTarget?._id) return;
-    if (!shareEmails.length) { toast.error("Adicione ao menos um email."); return; }
-    try {
-      const appUrl = getPublicAppUrl();
-      const viewUrl = appUrl ? `${appUrl}/home/playlists/${shareTarget._id}/ver` : undefined;
-      await sharePlaylistService(shareTarget._id, {
-        emails: shareEmails, appUrl, frontendUrl: appUrl,
-        playlistUrl: viewUrl, playlistViewUrl: viewUrl,
-      });
-      toast.success("Playlist compartilhada!");
-      setShareModalOpen(false); setShareTarget(null);
-      setSharedExistingEmails([]); setShareEmails([]); setShareInput("");
-      fetchPlaylists();
-    } catch (err) { toast.error(err.response?.data?.message || "Falha ao compartilhar."); }
-  }, [fetchPlaylists, shareEmails, shareTarget]);
-
-  const handleUnshare = useCallback(async (email) => {
-    if (!shareTarget?._id) return;
-    try {
-      await unsharePlaylistService(shareTarget._id, { emails: [email] });
-      setSharedExistingEmails((prev) => prev.filter((e) => e !== email));
-      toast.success("Compartilhamento removido.");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Falha ao remover compartilhamento.");
-    }
-  }, [shareTarget]);
+  const manager = usePlaylistManager({ onChanged: invalidatePlaylists });
 
   /* ── Categorias helper ──────────────────────────── */
   const findCategoria = (cat) => {
@@ -593,7 +221,7 @@ export default function Home() {
           <>
             <PanelHeader>
               <PanelTitle>Minhas Playlists</PanelTitle>
-              <CreatePlaylistBtn type="button" onClick={handleOpenCreate}>
+              <CreatePlaylistBtn type="button" onClick={manager.openCreate}>
                 + Criar Nova Playlist
               </CreatePlaylistBtn>
             </PanelHeader>
@@ -608,7 +236,7 @@ export default function Home() {
                 title="Você ainda não tem playlists"
                 text="Monte seu repertório juntando as músicas que você mais toca."
                 action={
-                  <CreatePlaylistBtn type="button" onClick={handleOpenCreate}>
+                  <CreatePlaylistBtn type="button" onClick={manager.openCreate}>
                     Criar primeira playlist
                   </CreatePlaylistBtn>
                 }
@@ -616,21 +244,18 @@ export default function Home() {
             ) : (
               <PlaylistCardsGrid>
                 {visiblePlaylists.map((pl) => {
-                  const ownerId = getOwnerId(pl);
-                  const shared = isSharedWithUser(pl);
-                  const isOwner = ownerId ? ownerId === currentUserId : !shared;
+                  const { canShare, canEdit, canDelete } = getPlaylistPermissions(pl, authenticatedUser, isAdmin);
                   return (
                     <PlaylistCardItem
                       key={pl._id}
                       pl={pl}
-                      canShare={isOwner || isAdmin}
-                      canEdit={isOwner || isAdmin || shared}
-                      canDelete={isOwner || isAdmin}
-                      stripEmoji={stripEmoji}
+                      canShare={canShare}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
                       onView={(id) => navigate(`/home/playlists/${id}/ver`)}
-                      onShare={handleOpenShare}
-                      onEdit={handleClickEdit}
-                      onDelete={(p) => { closeAllModals(); setChosen(p); setModalDelete(true); }}
+                      onShare={manager.openShare}
+                      onEdit={manager.openEdit}
+                      onDelete={manager.openDelete}
                     />
                   );
                 })}
@@ -909,195 +534,8 @@ export default function Home() {
       </InsightsGrid>
     </InsightsWrapper>
 
-      {/* ══ MODAIS DE PLAYLIST ══ */}
-
-      {/* Criar */}
-      {isCreating && (
-        <ModalBox onSubmit={handleCreate}>
-          <h3>Criar Playlist</h3>
-          <div>
-            <label htmlFor="create-nome">Nome da Playlist</label>
-            <Input id="create-nome" name="nome" required placeholder="Nome da Playlist" />
-          </div>
-          <div>
-            <label htmlFor="create-data">Data do evento (opcional)</label>
-            <Input id="create-data" name="dataEvento" type="date" />
-          </div>
-          <div>
-            <label htmlFor="create-banner">Capa da playlist (opcional)</label>
-            <input id="create-banner" name="banner" type="file" accept="image/*" />
-          </div>
-          <RoteiroModelo escolhidos={chosenCifras} addItem={setChosenCifras} nomeInputId="create-nome" />
-          <div>
-            <MultSeletor className="playlist-mult" tipo="cifra"
-              escolhidos={chosenCifras} addItem={setChosenCifras} allowReorder />
-          </div>
-          <div>
-            <label>Compartilhar com (emails)</label>
-            <ShareInputRow>
-              <Input type="text" placeholder="email@exemplo.com"
-                value={createShareInput} onChange={(e) => setCreateShareInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault();
-                  addEmailsToList(createShareInput, createShareEmails, setCreateShareEmails);
-                  setCreateShareInput(""); setCreateShareSuggestions([]); }}} />
-              <button type="button" className="btn"
-                onClick={() => { addEmailsToList(createShareInput, createShareEmails, setCreateShareEmails);
-                  setCreateShareInput(""); setCreateShareSuggestions([]); }}>
-                Adicionar
-              </button>
-            </ShareInputRow>
-            {createShareSuggestions.length > 0 && (
-              <SuggestList>
-                {createShareSuggestions.map((email) => (
-                  <button key={email} type="button"
-                    onClick={() => { addEmailsToList(email, createShareEmails, setCreateShareEmails);
-                      setCreateShareInput(""); setCreateShareSuggestions([]); }}>
-                    {email}
-                  </button>
-                ))}
-              </SuggestList>
-            )}
-            {createShareEmails.length > 0 && (
-              <ShareList>
-                {createShareEmails.map((email) => (
-                  <div key={email} className="chip">
-                    <span>{email}</span>
-                    <button type="button" aria-label={`Remover ${email}`}
-                      onClick={() => removeEmail(email, setCreateShareEmails)}>×</button>
-                  </div>
-                ))}
-              </ShareList>
-            )}
-          </div>
-          <div className="modal-actions">
-            <button type="button" className="btn btn-danger"
-              onClick={() => { setIsCreating(false); setChosenCifras([]); setCreateShareEmails([]); }}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn">Salvar</button>
-          </div>
-        </ModalBox>
-      )}
-
-      {/* Editar */}
-      {modalEdit && chosen && (
-        <ModalBox onSubmit={handleEdit}>
-          <h3>Editar Playlist</h3>
-          <div>
-            <label htmlFor="edit-nome">Nome da Playlist</label>
-            <Input id="edit-nome" name="nome" defaultValue={chosen.nome} required />
-          </div>
-          <div>
-            <label htmlFor="edit-data">Data do evento (opcional)</label>
-            <Input id="edit-data" name="dataEvento" type="date" defaultValue={chosen.dataEvento ? String(chosen.dataEvento).slice(0, 10) : ""} />
-          </div>
-          <div>
-            <label htmlFor="edit-banner">Capa da playlist (opcional)</label>
-            <input id="edit-banner" name="banner" type="file" accept="image/*" />
-          </div>
-          <div>
-            <label>Músicas</label>
-            <MultSeletor className="playlist-mult" tipo="cifra"
-              escolhidos={chosenCifras} addItem={setChosenCifras} allowReorder />
-          </div>
-          <div className="modal-actions">
-            <button type="button" className="btn btn-danger"
-              onClick={() => { setModalEdit(false); setChosenCifras([]); }}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn">Salvar</button>
-          </div>
-        </ModalBox>
-      )}
-
-      {/* Compartilhar */}
-      {shareModalOpen && shareTarget && (
-        <ModalBox onSubmit={handleShareSubmit}>
-          <h3>Compartilhar "{shareTarget.nome}"</h3>
-          <div>
-            <label>Emails</label>
-            <ShareInputRow>
-              <Input type="text" placeholder="email@exemplo.com"
-                value={shareInput} onChange={(e) => setShareInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault();
-                  addEmailsToList(shareInput, shareEmails, setShareEmails);
-                  setShareInput(""); setShareSuggestions([]); }}} />
-              <button type="button" className="btn"
-                onClick={() => { addEmailsToList(shareInput, shareEmails, setShareEmails, sharedExistingEmails);
-                  setShareInput(""); setShareSuggestions([]); }}>
-                Adicionar
-              </button>
-            </ShareInputRow>
-            {shareSuggestions.length > 0 && (
-              <SuggestList>
-                {shareSuggestions.map((email) => (
-                  <button key={email} type="button"
-                    onClick={() => { addEmailsToList(email, shareEmails, setShareEmails, sharedExistingEmails);
-                      setShareInput(""); setShareSuggestions([]); }}>
-                    {email}
-                  </button>
-                ))}
-              </SuggestList>
-            )}
-            {sharedExistingEmails.length > 0 && (
-              <ShareList>
-                {sharedExistingEmails.map((value) => {
-                  const isDeletedUser = OBJECT_ID_PATTERN.test(value);
-                  const ownerId = getOwnerId(shareTarget);
-                  const canRemove = (ownerId && ownerId === currentUserId) || isAdmin;
-                  // Non-admins/non-owners can't remove anyone, hide deleted user entries for them
-                  if (isDeletedUser && !canRemove) return null;
-                  return (
-                    <div key={value} className={`chip${isDeletedUser ? " chip-deleted" : ""}`}>
-                      <span>{isDeletedUser ? "Usuário excluído" : value}</span>
-                      {canRemove && (
-                        <button type="button" aria-label={`Remover ${isDeletedUser ? "usuário excluído" : value}`}
-                          onClick={() => handleUnshare(value)}>×</button>
-                      )}
-                    </div>
-                  );
-                })}
-              </ShareList>
-            )}
-            {shareEmails.length > 0 && (
-              <ShareList>
-                {shareEmails.map((email) => (
-                  <div key={email} className="chip">
-                    <span>{email}</span>
-                    <button type="button" aria-label={`Remover ${email}`}
-                      onClick={() => removeEmail(email, setShareEmails)}>×</button>
-                  </div>
-                ))}
-              </ShareList>
-            )}
-          </div>
-          <div className="modal-actions">
-            <button type="button" className="btn btn-danger"
-              onClick={() => { setShareModalOpen(false); setShareTarget(null);
-                setSharedExistingEmails([]); setShareEmails([]); setShareInput(""); }}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn">Compartilhar</button>
-          </div>
-        </ModalBox>
-      )}
-
-      {/* Excluir */}
-      {modalDelete && chosen && (
-        <PlaylistModalDelete>
-          <h3>Excluir "{chosen.nome}"?</h3>
-          <p>Essa ação é irreversível e removerá a playlist permanentemente.</p>
-          <div className="modal-actions">
-            <button type="button" className="btn" onClick={() => setModalDelete(false)}>
-              Cancelar
-            </button>
-            <button type="button" className="btn btn-danger"
-              onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? "Excluindo..." : "Excluir"}
-            </button>
-          </div>
-        </PlaylistModalDelete>
-      )}
+      {/* modais de criar/editar/compartilhar/excluir playlist */}
+      {manager.modals}
     </>
   );
 }

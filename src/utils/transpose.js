@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { cleanCifraText } from './cleanCifraText';
+import { storage } from "../lib/storage";
 
 // Escala cromática completa com sustenidos
 const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -13,7 +14,7 @@ const listeners = new Set();
 
 export function getAccidental() {
   try {
-    return localStorage.getItem(ACCIDENTAL_KEY) === 'flat' ? 'flat' : 'sharp';
+    return storage.get(ACCIDENTAL_KEY) === 'flat' ? 'flat' : 'sharp';
   } catch {
     return 'sharp';
   }
@@ -21,7 +22,7 @@ export function getAccidental() {
 
 export function setAccidental(value) {
   try {
-    localStorage.setItem(ACCIDENTAL_KEY, value === 'flat' ? 'flat' : 'sharp');
+    storage.set(ACCIDENTAL_KEY, value === 'flat' ? 'flat' : 'sharp');
   } catch {
     // sem storage: a preferência só vale até recarregar
   }
@@ -45,7 +46,7 @@ const SIMPLIFY_KEY = 'cifraSimples';
 
 export function getSimplify() {
   try {
-    return localStorage.getItem(SIMPLIFY_KEY) === '1';
+    return storage.get(SIMPLIFY_KEY) === '1';
   } catch {
     return false;
   }
@@ -53,7 +54,7 @@ export function getSimplify() {
 
 export function setSimplify(value) {
   try {
-    localStorage.setItem(SIMPLIFY_KEY, value ? '1' : '0');
+    storage.set(SIMPLIFY_KEY, value ? '1' : '0');
   } catch {
     // sem storage: vale só até recarregar
   }
@@ -81,7 +82,7 @@ const FLAT_TO_SHARP = {
 // Ordem de exibição na grade do modal (padrão CifraClub: bemóis, exceto F#)
 export const NOTES_DISPLAY = ['A', 'Bb', 'B', 'C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab'];
 
-function toSharp(note) {
+export function toSharp(note) {
   return FLAT_TO_SHARP[note] ?? note;
 }
 
@@ -89,7 +90,7 @@ function getNoteIndex(note) {
   return CHROMATIC.indexOf(toSharp(note));
 }
 
-function transposeNote(note, semitones) {
+export function transposeNote(note, semitones) {
   const idx = getNoteIndex(note);
   if (idx === -1) return note;
   return scale()[((idx + semitones) % 12 + 12) % 12];
@@ -114,7 +115,7 @@ function isChordLine(line) {
 const CHORD_TOKEN_REGEX =
   /([A-G][#b]?)(m(?:aj\d*)?|min\d*|dim\d*|aug\d*|sus\d*|add\d*)?\d*M?(sus\d*)?(\/([A-G][#b]?))?/g;
 
-function transposeLine(line, semitones) {
+export function transposeLine(line, semitones) {
   return line.replace(CHORD_TOKEN_REGEX, (match, root, _q, _n, _, bass) => {
     const newRoot = transposeNote(root, semitones);
     const newBass = bass ? '/' + transposeNote(bass, semitones) : '';
@@ -125,15 +126,18 @@ function transposeLine(line, semitones) {
 }
 
 // Linha "Tom: X" escrita no texto (padrão CifraClub)
-const TOM_LINE_REGEX = /^(Tom:\s*)([A-G][#b]?)(.*)/i;
+export const TOM_LINE_REGEX = /^(Tom:\s*)([A-G][#b]?)(.*)/i;
 
 // C7M → C, F/G → F, Am7 → Am, Dsus4 → D, Bdim → Bm
-function simplifyLine(line) {
+export function simplifyLine(line) {
   return line.replace(CHORD_TOKEN_REGEX, (match, root, quality) => {
     const minor = quality && /^(m(?!aj)|min|dim)/.test(quality);
     return root + (minor ? 'm' : '');
   });
 }
+
+// "[Intro] Bm  D  Bm  A": rótulo de seção + acordes na mesma linha (estilo Cifra Club)
+const LABELED_CHORDS_RE = /^(\s*\[[^\]]{1,40}\]\s+)(\S.*)$/;
 
 /**
  * Transpõe todas as linhas de acorde de um texto, preservando letras intactas.
@@ -150,9 +154,12 @@ export function transposeText(rawText, semitones) {
       if (tomMatch) {
         return tomMatch[1] + transposeNote(tomMatch[2], semitones) + tomMatch[3];
       }
-      if (!isChordLine(line)) return line;
-      const moved = semitones === 0 ? line : transposeLine(line, semitones);
-      return simplify ? simplifyLine(moved) : moved;
+      // com rótulo na frente, só a parte dos acordes é transposta
+      const labeled = line.match(LABELED_CHORDS_RE);
+      const [prefix, body] = labeled && isChordLine(labeled[2]) ? [labeled[1], labeled[2]] : ['', line];
+      if (!isChordLine(body)) return line;
+      const moved = semitones === 0 ? body : transposeLine(body, semitones);
+      return prefix + (simplify ? simplifyLine(moved) : moved);
     })
     .join('\n');
 }

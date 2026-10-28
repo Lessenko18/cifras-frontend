@@ -17,10 +17,11 @@ import {
 } from "../../service/s3Service";
 import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
 import toast from "react-hot-toast";
+import { storage } from "../../lib/storage";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const storedUser = JSON.parse(storage.get("user")) || {};
   const normalizedStoredUser = {
     ...storedUser,
     avatar: normalizeAvatarUrl(storedUser.avatar),
@@ -178,7 +179,7 @@ export default function Profile() {
         ),
       };
 
-      localStorage.setItem("user", JSON.stringify(finalUser));
+      storage.set("user", JSON.stringify(finalUser));
       window.dispatchEvent(new Event("userUpdated"));
       setUser(finalUser);
 

@@ -14,8 +14,10 @@ import {
 import { CifraRenderer } from "../CifraRenderer/CifraRenderer";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { useMetronome } from "../../hooks/useMetronome";
-import { detectOriginalKey, getKeyAtOffset, transposeText, useAccidental, useSimplify } from "../../utils/transpose";
+import { detectKey, renderCifra } from "../../utils/cifraDoc";
+import { getKeyAtOffset, useAccidental, useSimplify } from "../../utils/transpose";
 import { Root, TopBar, BottomBar, Scroller, Page, BeatDot, Group, Hint } from "./StageModeStyled";
+import { storage } from "../../lib/storage";
 
 const MIN_FONT = 16;
 const MAX_FONT = 64;
@@ -24,14 +26,14 @@ const SWIPE_MIN_PX = 80;
 
 const readStored = (key, fallback) => {
   try {
-    return localStorage.getItem(key) ?? fallback;
+    return storage.get(key) ?? fallback;
   } catch {
     return fallback;
   }
 };
 const store = (key, value) => {
   try {
-    localStorage.setItem(key, value);
+    storage.set(key, value);
   } catch {
     // modo privado etc.: só não lembra da preferência
   }
@@ -46,7 +48,7 @@ const wrapSemitones = (n) => {
 /**
  * Modo palco: tela cheia, letra grande, sem distrações, pra tocar ao vivo.
  *
- * songs: [{ id, nome, artista?, text, bpm? }]
+ * songs: [{ id, nome, artista?, text, chordpro?, bpm? }]
  * semitones: { [id]: n }  tom atual de cada música (controlado por quem usa)
  * onSemitonesChange(id, n)
  */
@@ -87,12 +89,15 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
 
   const acc = useAccidental();
   const simple = useSimplify();
-  // Texto transposto + tom exibido
-  const text = useMemo(
-    () => transposeText((song?.text || "").split("!!!").filter(Boolean).join("\n\n"), st),
-    [song?.text, st, acc, simple],
+  // Cifra transposta (do ChordPro, se tiver) + tom exibido
+  const doc = useMemo(
+    () => renderCifra({ text: song?.text, chordpro: song?.chordpro }, st),
+    [song?.text, song?.chordpro, st, acc, simple],
   );
-  const originalKey = useMemo(() => detectOriginalKey(song?.text), [song?.text]);
+  const originalKey = useMemo(
+    () => detectKey({ text: song?.text, chordpro: song?.chordpro }),
+    [song?.text, song?.chordpro],
+  );
   const currentKey = originalKey ? getKeyAtOffset(originalKey, st) : null; // recalcula a cada render, acompanha `acc`
 
   /* ---------- controles que somem sozinhos ---------- */
@@ -333,7 +338,7 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
 
       <Scroller ref={scrollerRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <Page>
-          <CifraRenderer text={text} style={{ fontSize: `${fontSize}px` }} interactiveChords={false} />
+          <CifraRenderer segments={doc.segments} style={{ fontSize: `${fontSize}px` }} interactiveChords={false} />
         </Page>
       </Scroller>
 

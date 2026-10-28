@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { FiEdit3 } from "react-icons/fi";
+import { storage } from "../../lib/storage";
 
 const Box = styled.div`
   width: 100%;
@@ -43,7 +44,7 @@ const key = (id) => `nota_${id}`;
 
 function read(id) {
   try {
-    return localStorage.getItem(key(id)) || "";
+    return storage.get(key(id)) || "";
   } catch {
     return "";
   }
@@ -65,8 +66,8 @@ export default function CifraNota({ cifraId }) {
     const next = value.slice(0, 1000);
     setText(next);
     try {
-      if (next.trim()) localStorage.setItem(key(cifraId), next);
-      else localStorage.removeItem(key(cifraId));
+      if (next.trim()) storage.set(key(cifraId), next);
+      else storage.remove(key(cifraId));
     } catch {
       // sem storage: a nota vale só até sair da página
     }

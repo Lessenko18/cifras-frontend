@@ -241,7 +241,9 @@ export default function Cifras() {
       } catch (err) {
         console.error(err);
         toast.error(
-          err?.response?.status === 409 ? err.response.data : "Falha ao cadastrar a cifra.",
+          err?.response?.status === 409
+            ? err.response.data?.message || "Essa cifra já existe."
+            : "Falha ao cadastrar a cifra.",
         );
       } finally {
         setSending(false);

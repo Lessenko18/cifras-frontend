@@ -2,6 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import { useTheme } from "../../context/ThemeContext";
 import { getAccidental, setAccidental } from "../../utils/transpose";
+import { storage } from "../../lib/storage";
 
 const KEY = "onboarding_v1";
 
@@ -81,7 +82,7 @@ const Box = styled.div`
 
 function alreadyDone() {
   try {
-    return localStorage.getItem(KEY) === "1";
+    return storage.get(KEY) === "1";
   } catch {
     return true; // sem storage não dá para lembrar: melhor não importunar
   }
@@ -100,14 +101,14 @@ export default function Onboarding() {
   function finish(save) {
     if (save) {
       try {
-        localStorage.setItem("instrumento", instrumento);
+        storage.set("instrumento", instrumento);
       } catch {
         // sem storage: vale só nesta sessão
       }
       setAccidental(acc);
     }
     try {
-      localStorage.setItem(KEY, "1");
+      storage.set(KEY, "1");
     } catch {
       // sem storage: pode aparecer de novo na próxima visita
     }

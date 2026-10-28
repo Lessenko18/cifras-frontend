@@ -72,7 +72,12 @@ function extractWords(lyricLine) {
 // O acorde é atribuído à palavra dentro da qual ele cai (ou à mais próxima).
 // Assim flex-wrap quebra entre palavras, nunca no meio delas.
 function parseChordLyricPair(chordLine, lyricLine) {
-  const chords = extractChords(chordLine);
+  return buildTokens(extractChords(chordLine), lyricLine);
+}
+
+// Núcleo do emparelhamento: recebe os acordes com a posição (coluna) na letra.
+// Também é usado pelo ChordPro, que já traz a posição de cada acorde.
+export function buildTokens(chords, lyricLine) {
   const words = extractWords(lyricLine);
 
   if (words.length === 0) {
@@ -118,13 +123,23 @@ function parseChordLyricPair(chordLine, lyricLine) {
   return tokens;
 }
 
+// "[Intro] Bm  D  Bm  A": rótulo de seção seguido de acordes na mesma linha (estilo
+// Cifra Club). Vira o rótulo ("[Intro]") e uma linha de acordes de verdade.
+const LABELED_CHORDS_RE = /^\s*(\[[^\]]{1,40}\])\s+(\S.*)$/;
+
 export function parseCifraText(text) {
   const lines = (cleanCifraText(text) || "").split("\n");
   const segments = [];
   let i = 0;
 
   while (i < lines.length) {
-    const line = lines[i];
+    let line = lines[i];
+
+    const labeled = line.match(LABELED_CHORDS_RE);
+    if (labeled && isChordLine(labeled[2])) {
+      segments.push({ type: "plain", line: labeled[1] });
+      line = labeled[2];
+    }
 
     if (!line.trim()) {
       segments.push({ type: "blank" });
