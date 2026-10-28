@@ -52,4 +52,15 @@ export const FAQ_ITEMS = [
       "Toque a corda e acompanhe o ponteiro até ficar no centro.",
     ],
   },
+  {
+    pergunta: "Quais são os atalhos e recursos de toque?",
+    passos: [
+      "Pressione “/” (ou Ctrl+K) em qualquer tela para ir à busca de músicas.",
+      "Toque em um acorde da cifra para ver o diagrama (violão ou teclado/piano).",
+      "No modal de tom, escolha entre sustenido ♯ e bemol ♭, simplifique a cifra e veja sugestões de capotraste.",
+      "No modo palco: PgUp/PgDn rolam a página, Espaço pausa a rolagem, Esc sai; setas e deslizar trocam de música.",
+      "Em uma playlist, “Salvar offline” guarda as cifras neste aparelho para usar sem internet.",
+    ],
+    nota: "Pedais Bluetooth que enviam PgUp/PgDn funcionam no modo palco.",
+  },
 ];

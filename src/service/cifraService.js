@@ -1,6 +1,6 @@
 import api from "./api";
 
-export async function getCifrasService({ nome, artista, categorias, favoritos, page = 0, limit = 15 } = {}) {
+export async function getCifrasService({ nome, artista, categorias, favoritos, page = 0, limit = 15, signal } = {}) {
   const params = new URLSearchParams();
   if (nome) params.set("nome", nome);
   if (artista) params.set("artista", artista);
@@ -9,7 +9,7 @@ export async function getCifrasService({ nome, artista, categorias, favoritos, p
   params.set("page", String(page));
   params.set("limit", String(limit));
 
-  const response = await api.get(`/cifra/?${params.toString()}`);
+  const response = await api.get(`/cifra/?${params.toString()}`, { signal });
   return response;
 }
 

@@ -1,3 +1,6 @@
+import RoteiroModelo from "../../components/RoteiroModelo/RoteiroModelo";
+import NextEventCard from "../../components/NextEventCard/NextEventCard";
+import AddToPlaylist from "../../components/AddToPlaylist/AddToPlaylist";
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useInitialUrlFilters, useResetPageOnChange, useSyncUrlFilters } from "../../hooks/useUrlFilters";
@@ -37,7 +40,7 @@ import {
 } from "../Playlist/PlaylistStyled";
 import toast from "react-hot-toast";
 
-import { FiShare2, FiEdit2, FiTrash2, FiMusic } from "react-icons/fi";
+import { FiShare2, FiEdit2, FiTrash2, FiMusic, FiMoreVertical, FiTrendingUp, FiUsers, FiStar } from "react-icons/fi";
 import { getPlaylistBgImage } from "../../utils/playlistVisual";
 import { getArtistImage } from "../../utils/artistVisual";
 import {
@@ -120,35 +123,64 @@ const getInitials = (name) =>
 /* ── Componentes memoizados ── evitam re-render quando o estado pai muda */
 const PlaylistCardItem = memo(function PlaylistCardItem({ pl, onView, onShare, onEdit, onDelete, canShare, canEdit, canDelete, stripEmoji }) {
   const bannerUrl = pl.bannerUrl || getPlaylistBgImage(pl.nome);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  useClickOutside(menuRef, () => setMenuOpen(false));
   return (
-    <PlaylistCard $bannerUrl={bannerUrl}>
+    <PlaylistCard
+      $bannerUrl={bannerUrl}
+      className="clicavel"
+      tabIndex={0}
+      aria-label={`Abrir playlist ${stripEmoji(pl.nome)}`}
+      onClick={() => onView(pl._id)}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onView(pl._id);
+        }
+      }}
+    >
       <div className="card-head">
         <FiMusic size={14} aria-hidden="true" />
         <span>{stripEmoji(pl.nome)}</span>
       </div>
       <div className="card-body">
         <span className="card-count">{pl.cifras?.length || 0} música(s)</span>
-        <button className="ver-btn" onClick={() => onView(pl._id)}>
+        <button className="ver-btn" onClick={(e) => { e.stopPropagation(); onView(pl._id); }}>
           <FiMusic size={13} aria-hidden="true" />
           Ver Músicas
         </button>
       </div>
       {(canShare || canEdit || canDelete) && (
-        <div className="card-actions-corner">
-          {canShare && (
-            <button className="card-icon-btn" aria-label="Compartilhar" onClick={() => onShare(pl)}>
-              <FiShare2 size={14} />
-            </button>
-          )}
-          {canEdit && (
-            <button className="card-icon-btn" aria-label="Editar" onClick={() => onEdit(pl)}>
-              <FiEdit2 size={14} />
-            </button>
-          )}
-          {canDelete && (
-            <button className="card-icon-btn" aria-label="Excluir" onClick={() => onDelete(pl)}>
-              <FiTrash2 size={14} />
-            </button>
+        <div className="card-actions-corner" ref={menuRef} onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            className="card-icon-btn"
+            aria-label="Mais ações"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <FiMoreVertical size={16} />
+          </button>
+          {menuOpen && (
+            <div className="card-menu" role="menu">
+              {canShare && (
+                <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onShare(pl); }}>
+                  <FiShare2 size={14} /> Compartilhar
+                </button>
+              )}
+              {canEdit && (
+                <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onEdit(pl); }}>
+                  <FiEdit2 size={14} /> Editar
+                </button>
+              )}
+              {canDelete && (
+                <button type="button" role="menuitem" className="perigo" onClick={() => { setMenuOpen(false); onDelete(pl); }}>
+                  <FiTrash2 size={14} /> Excluir
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -171,6 +203,7 @@ const CifraListItem = memo(function CifraListItem({ cifra, isFav, onToggleFav, g
       <CifraItem>
         <div className="cifra-head">
           <h2>{cifra.nome}</h2>
+          <AddToPlaylist cifraId={cifra._id} cifraNome={cifra.nome} />
           <button
             type="button"
             className="heart-btn"
@@ -260,7 +293,7 @@ export default function Home() {
   );
   const totalPlaylistPages = Math.ceil(sortedPlaylists.length / PLAYLISTS_PER_PAGE);
   const visiblePlaylists = useMemo(
-    () => sortedPlaylists.slice(playlistPage * PLAYLISTS_PER_PAGE, (playlistPage + 1) * PLAYLISTS_PER_PAGE),
+    () => sortedPlaylists.slice(0, (playlistPage + 1) * PLAYLISTS_PER_PAGE),
     [sortedPlaylists, playlistPage]
   );
 
@@ -283,7 +316,12 @@ export default function Home() {
   useClickOutside(filterRef, () => setFilterOpen(false));
 
   /* ── Fetch cifras ───────────────────────────────── */
+  const fetchCifrasCtrl = useRef(null);
   const fetchCifras = useCallback(async () => {
+    // cancela a busca anterior: só a resposta da última digitação vale
+    fetchCifrasCtrl.current?.abort();
+    const ctrl = new AbortController();
+    fetchCifrasCtrl.current = ctrl;
     if (favoritosMode && favoritosIds.length === 0) {
       setCifras([]); setPages(0); setCifrasLoaded(true); return;
     }
@@ -295,11 +333,12 @@ export default function Home() {
         favoritos: favoritosMode ? favoritosIds : undefined,
         page: currentPage,
         limit: 6,
+        signal: ctrl.signal,
       });
       setCifras(res.data.cifras || []);
       setPages(res.data.pages || 0);
     } catch {}
-    finally { setCifrasLoaded(true); }
+    finally { if (!ctrl.signal.aborted) setCifrasLoaded(true); }
   }, [debounced, artistaFiltro, relevantCategoriaIds, currentPage, favoritosMode, favoritosIds]);
 
   useEffect(() => { fetchCifras(); }, [fetchCifras]);
@@ -559,6 +598,8 @@ export default function Home() {
               </CreatePlaylistBtn>
             </PanelHeader>
 
+            {!playlistsLoading && <NextEventCard playlists={playlists} />}
+
             {playlistsLoading ? (
               <SkeletonCards count={4} columns={2} height={150} />
             ) : playlists.length === 0 ? (
@@ -596,18 +637,10 @@ export default function Home() {
               </PlaylistCardsGrid>
             )}
 
-            {totalPlaylistPages > 1 && (
+            {playlistPage + 1 < totalPlaylistPages && (
               <PaginationContainer>
-                <PaginationButton disabled={playlistPage === 0}
-                  onClick={() => setPlaylistPage((p) => p - 1)}>
-                  Anterior
-                </PaginationButton>
-                <PaginationInfo>
-                  {playlistPage + 1} / {totalPlaylistPages}
-                </PaginationInfo>
-                <PaginationButton disabled={playlistPage + 1 >= totalPlaylistPages}
-                  onClick={() => setPlaylistPage((p) => p + 1)}>
-                  Próxima
+                <PaginationButton onClick={() => setPlaylistPage((p) => p + 1)}>
+                  Ver mais ({sortedPlaylists.length - visiblePlaylists.length} restantes)
                 </PaginationButton>
               </PaginationContainer>
             )}
@@ -620,7 +653,8 @@ export default function Home() {
         <FiltersContainer>
           <FilterInput
             type="text"
-            placeholder="Pesquisar música"
+            placeholder="Pesquisar música ( / )"
+            data-global-search
             value={searchNome}
             aria-label="Pesquisar música"
             onChange={(e) => setSearchNome(e.target.value)}
@@ -764,7 +798,7 @@ export default function Home() {
         <InsightPanel $bgImage="/fundoGuitarra.webp">
           <InsightPanelHeader>
             <InsightPanelTitleGroup>
-              <InsightIconBadge $gradient="linear-gradient(135deg, #8b5cf6, #6d28d9)">🎵</InsightIconBadge>
+              <InsightIconBadge $gradient="linear-gradient(135deg, #8b5cf6, #6d28d9)"><FiTrendingUp size={20} aria-hidden="true" /></InsightIconBadge>
               <div>
                 <InsightPanelTitle>Músicas mais acessadas</InsightPanelTitle>
                 <InsightPanelSubtitle>As cifras que estão em alta por aqui</InsightPanelSubtitle>
@@ -802,7 +836,7 @@ export default function Home() {
         <InsightPanel $bgImage="/MaisAcessados.webp">
           <InsightPanelHeader>
             <InsightPanelTitleGroup>
-              <InsightIconBadge $gradient="linear-gradient(135deg, #38bdf8, #0369a1)">👥</InsightIconBadge>
+              <InsightIconBadge $gradient="linear-gradient(135deg, #38bdf8, #0369a1)"><FiUsers size={20} aria-hidden="true" /></InsightIconBadge>
               <div>
                 <InsightPanelTitle>Artistas mais acessados</InsightPanelTitle>
                 <InsightPanelSubtitle>Os artistas que você mais ouve</InsightPanelSubtitle>
@@ -839,7 +873,7 @@ export default function Home() {
         <InsightPanel $bgImage="/NovasMusicas.webp">
           <InsightPanelHeader>
             <InsightPanelTitleGroup>
-              <InsightIconBadge $gradient="linear-gradient(135deg, #a78bfa, #7c3aed)">🆕</InsightIconBadge>
+              <InsightIconBadge $gradient="linear-gradient(135deg, #a78bfa, #7c3aed)"><FiStar size={20} aria-hidden="true" /></InsightIconBadge>
               <div>
                 <InsightPanelTitle>Novas músicas</InsightPanelTitle>
                 <InsightPanelSubtitle>As últimas cifras adicionadas</InsightPanelSubtitle>
@@ -886,9 +920,14 @@ export default function Home() {
             <Input id="create-nome" name="nome" required placeholder="Nome da Playlist" />
           </div>
           <div>
+            <label htmlFor="create-data">Data do evento (opcional)</label>
+            <Input id="create-data" name="dataEvento" type="date" />
+          </div>
+          <div>
             <label htmlFor="create-banner">Capa da playlist (opcional)</label>
             <input id="create-banner" name="banner" type="file" accept="image/*" />
           </div>
+          <RoteiroModelo escolhidos={chosenCifras} addItem={setChosenCifras} nomeInputId="create-nome" />
           <div>
             <MultSeletor className="playlist-mult" tipo="cifra"
               escolhidos={chosenCifras} addItem={setChosenCifras} allowReorder />
@@ -947,6 +986,10 @@ export default function Home() {
           <div>
             <label htmlFor="edit-nome">Nome da Playlist</label>
             <Input id="edit-nome" name="nome" defaultValue={chosen.nome} required />
+          </div>
+          <div>
+            <label htmlFor="edit-data">Data do evento (opcional)</label>
+            <Input id="edit-data" name="dataEvento" type="date" defaultValue={chosen.dataEvento ? String(chosen.dataEvento).slice(0, 10) : ""} />
           </div>
           <div>
             <label htmlFor="edit-banner">Capa da playlist (opcional)</label>

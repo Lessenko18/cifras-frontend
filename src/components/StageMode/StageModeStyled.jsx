@@ -65,6 +65,17 @@ export const Page = styled.div`
   @media (max-width: 700px) {
     padding: 140px 10px 120px;
   }
+
+  /* Tablet/celular deitado: a cifra em 2 colunas, sem cortar linhas no meio */
+  @media (orientation: landscape) and (min-width: 900px) {
+    > div {
+      column-count: 2;
+      column-gap: 48px;
+    }
+    > div > * {
+      break-inside: avoid;
+    }
+  }
 `;
 
 const barBase = `

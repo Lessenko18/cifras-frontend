@@ -32,6 +32,7 @@ import { readPlaylistForm, submitCreatePlaylist, submitEditPlaylist } from "../.
 import { useNavigate } from "react-router-dom";
 import { UsersHeader } from "../Users/UsersStyled";
 import toast from "react-hot-toast";
+import RoteiroModelo from "../../components/RoteiroModelo/RoteiroModelo";
 import MultSeletor from "../../components/MultSeletor/MultSeletor";
 import { searchUsersService } from "../../service/userService";
 import { getPublicAppUrl } from "../../utils/getPublicAppUrl";
@@ -676,9 +677,16 @@ export default function Playlists() {
           </div>
 
           <div>
+            <label htmlFor="create-playlist-data">Data do evento (opcional)</label>
+            <Input id="create-playlist-data" name="dataEvento" type="date" />
+          </div>
+
+          <div>
             <label htmlFor="create-playlist-banner">Capa da playlist (opcional)</label>
             <input id="create-playlist-banner" name="banner" type="file" accept="image/*" />
           </div>
+
+          <RoteiroModelo escolhidos={chosenCifras} addItem={updateCifra} nomeInputId="create-playlist-nome" />
 
           <div>
             <MultSeletor
@@ -809,6 +817,16 @@ export default function Playlists() {
               name="nome"
               defaultValue={chosen.nome}
               required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="edit-playlist-data">Data do evento (opcional)</label>
+            <Input
+              id="edit-playlist-data"
+              name="dataEvento"
+              type="date"
+              defaultValue={chosen.dataEvento ? String(chosen.dataEvento).slice(0, 10) : ""}
             />
           </div>
 

@@ -1,3 +1,4 @@
+import { clearOfflinePlaylists } from "../utils/offlinePlaylist";
 import api from "./api";
 import { normalizeAvatarUrl } from "../utils/normalizeAvatarUrl";
 import { getPublicAppUrl } from "../utils/getPublicAppUrl";
@@ -93,5 +94,6 @@ export async function logout() {
   } finally {
     localStorage.removeItem("user");
     localStorage.removeItem("access_token");
+    clearOfflinePlaylists();
   }
 }

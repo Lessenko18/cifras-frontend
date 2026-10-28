@@ -5,6 +5,15 @@ export const GlobalStyled = createGlobalStyle`
 /* 17a1f1 */
 :root {
   --main: #4f46e5;
+  --chord: #4f46e5;
+
+  /* design tokens (V1): marca e ações */
+  --brand: #6d5dfc;
+  --brand-hover: #5b4be8;
+  --brand-gradient: linear-gradient(135deg, #7c6bff, #5b4be8);
+  --brand-shadow: rgba(109, 93, 252, 0.35);
+  --danger: #dc2626;
+  --section: #8b5cf6;
   --nav: #17a1f1;
   --light: #fff;
   --gray: #eeeeee;
@@ -33,6 +42,8 @@ export const GlobalStyled = createGlobalStyle`
 }
 
 [data-theme="dark"] {
+  --chord: #fbbf24;
+  --section: #a78bfa;
   --light: #1e1e1e;
   --gray: #2a2a2a;
   --dark: #e8e8e8;
@@ -281,12 +292,12 @@ select:focus-visible {
   padding: 10px 18px;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(135deg, #0ea5e9, #7c3aed);
+  background: var(--brand-gradient);
   color: #fff;
   font-size: 14px;
   line-height: 1.2;
   font-weight: 700;
-  box-shadow: 0 6px 14px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 6px 14px var(--brand-shadow);
   cursor: pointer;
   transition:
     transform 0.15s ease,
@@ -294,7 +305,7 @@ select:focus-visible {
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(124, 58, 237, 0.4);
+    box-shadow: 0 8px 18px var(--brand-shadow);
     color: #fff;
   }
 }
@@ -317,11 +328,23 @@ select:focus-visible {
     border-radius: 5px;
   }
 }
+/* variante secundária: contorno */
+.btn.btn-secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  &:hover {
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+  }
+}
+/* variante destrutiva: só dentro de confirmações / área de edição */
 .btn-danger {
-  background-color: red;
-  border: 1px solid red;&:hover {
+  background-color: var(--danger);
+  border: 1px solid var(--danger);
+  &:hover {
     background-color: transparent;
-    color: red;
+    color: var(--danger);
   }
 }
 .img-hover {

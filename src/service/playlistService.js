@@ -13,6 +13,7 @@ export async function createPlaylistService(data) {
 function buildPlaylistFormData(data) {
   const formData = new FormData();
   if (data.nome !== undefined) formData.append("nome", data.nome);
+  if (data.dataEvento !== undefined) formData.append("dataEvento", data.dataEvento);
   (data.cifras || []).forEach((id) => formData.append("cifras", id));
   (data.sharedWithEmails || []).forEach((email) => formData.append("sharedWithEmails", email));
   if (data.appUrl) formData.append("appUrl", data.appUrl);
@@ -63,4 +64,21 @@ export async function sharePlaylistService(id, payload) {
 export async function unsharePlaylistService(id, payload) {
   const response = await api.delete(`/playlist/${id}/share`, { data: payload });
   return response;
+}
+
+// Salva o tom de uma cifra dentro da playlist (semitones 0 = volta ao original)
+export async function setPlaylistTomService(id, cifraId, semitones) {
+  const response = await api.patch(`/playlist/${id}/tom`, { cifraId, semitones });
+  return response;
+}
+
+// Link público somente leitura (/p/:slug)
+export async function setPlaylistPublicLinkService(id, enable) {
+  const response = enable ? await api.post(`/playlist/${id}/public`) : await api.delete(`/playlist/${id}/public`);
+  return response.data;
+}
+
+export async function getPublicPlaylistService(slug) {
+  const { data } = await api.get(`/playlist/public/${encodeURIComponent(slug)}`);
+  return data;
 }

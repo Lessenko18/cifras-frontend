@@ -2,6 +2,8 @@ import styled from "styled-components";
 
 export const Wrap = styled.div`
   width: 100%;
+  grid-column: 1 / -1; /* centraliza quando o pai é um grid */
+  justify-self: center;
   display: flex;
   flex-direction: column;
   align-items: center;

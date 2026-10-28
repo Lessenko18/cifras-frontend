@@ -33,7 +33,8 @@ export const CifraContent = styled.div`
   padding: 20px;
   gap: 40px;
   max-width: 850px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 20px rgba(0, 0, 0, 0.1);
 
   &.partes {
     max-width: 1300px;
@@ -44,7 +45,8 @@ export const CifraContent = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 8px 12px;
 
     a {
       color: #0070f3;
@@ -207,6 +209,12 @@ export const ModalTom = styled.div`
 
       &:hover {
         background: var(--velocimetro-hover);
+      }
+
+      &.ativo {
+        background: var(--tom-active-bg);
+        color: var(--tom-active-text);
+        border-color: var(--tom-active-bg);
       }
     }
   }

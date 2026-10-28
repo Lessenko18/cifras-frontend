@@ -7,6 +7,8 @@ import {
   useLocation,
 } from "react-router-dom";
 import { Navbar } from "./components/Navbar/Navbar.jsx";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/700.css";
 import { GlobalStyled } from "./GlobalStyled.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
@@ -31,6 +33,7 @@ const Profile     = lazy(() => import("./pages/Users/Profile.jsx"));
 const Users       = lazy(() => import("./pages/Users/Users.jsx"));
 const Categorias  = lazy(() => import("./pages/Categoria/Categoria.jsx"));
 const Ferramentas = lazy(() => import("./pages/Ferramentas/Ferramentas.jsx"));
+const PublicPlaylist = lazy(() => import("./pages/PublicPlaylist/PublicPlaylist.jsx"));
 const Ajuda       = lazy(() => import("./pages/Ajuda/Ajuda.jsx"));
 const Feedbacks   = lazy(() => import("./pages/Feedbacks/Feedbacks.jsx"));
 const Auditoria   = lazy(() => import("./pages/Auditoria/Auditoria.jsx"));
@@ -70,6 +73,8 @@ const router = createBrowserRouter([
   { path: "/signup",         element: <Signup /> },
   { path: "/forgot-password", element: <ForgotPassword /> },
   { path: "/reset-password", element: <ResetPassword /> },
+  // Link público de playlist (somente leitura, sem login)
+  { path: "/p/:slug", element: <Suspense fallback={<PageLoader />}><PublicPlaylist /></Suspense> },
   {
     path: "/home",
     element: <Navbar />,

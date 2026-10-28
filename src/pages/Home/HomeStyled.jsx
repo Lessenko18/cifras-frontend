@@ -83,6 +83,7 @@ export const InsightIconBadge = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 1.05rem;
+  color: #fff;
   background: ${({ $gradient }) => $gradient || "linear-gradient(135deg, #8b5cf6, #6d28d9)"};
   box-shadow: 0 6px 16px -4px rgba(124, 58, 237, 0.6);
 `;
@@ -317,13 +318,13 @@ export const CreatePlaylistBtn = styled.button`
   padding: 9px 18px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, #0ea5e9, #7c3aed);
+  background: var(--brand-gradient);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 4px 14px var(--brand-shadow);
   transition: transform 0.15s, box-shadow 0.15s;
 
   &:hover {
@@ -417,6 +418,46 @@ export const PlaylistCard = styled.article`
     flex-direction: column;
     gap: 4px;
     align-items: center;
+  }
+
+  &.clicavel {
+    cursor: pointer;
+  }
+
+  .card-menu {
+    position: absolute;
+    top: 34px;
+    right: 0;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+  }
+
+  .card-menu button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.9rem;
+  }
+
+  .card-menu button:hover {
+    background: var(--bg-input);
+  }
+
+  .card-menu button.perigo {
+    color: var(--danger);
   }
 
   .card-icon-btn {
@@ -617,6 +658,11 @@ export const CifraItem = styled.article`
   .cifra-head {
     display: flex;
     align-items: flex-start;
+  }
+
+  /* o coração fica absoluto no canto: deixa espaço para o "+" ao lado dele */
+  .cifra-head > button[aria-label^="Adicionar"][aria-label$="à playlist"] {
+    margin-right: 30px;
   }
 
   h2 {

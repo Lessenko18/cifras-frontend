@@ -21,6 +21,9 @@ import {
 import {
   detectOriginalKey,
   getKeyAtOffset,
+  useAccidental,
+  setAccidental,
+  useSimplify,
   getSemitonesTo,
   NOTES_DISPLAY,
   transposeText,
@@ -42,8 +45,12 @@ import { CifraRenderer } from "../../components/CifraRenderer/CifraRenderer";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { useMetronome } from "../../hooks/useMetronome";
 import { exportCifraPdf } from "../../utils/pdfExport";
+import AddToPlaylist from "../../components/AddToPlaylist/AddToPlaylist";
+import { pushRecentCifra } from "../../utils/recentCifras";
+import CifraNota from "../../components/CifraNota/CifraNota";
+import TomExtras from "../../components/TomExtras/TomExtras";
 import StageMode from "../../components/StageMode/StageMode";
-import { FiMonitor } from "react-icons/fi";
+import { FiMonitor, FiSave, FiTrash2 } from "react-icons/fi";
 export default function VerCifra() {
   const { id } = useParams();
   const { user: authenticatedUser, isAdmin } = useAuth();
@@ -60,6 +67,8 @@ export default function VerCifra() {
   const [velocimetroVisivel, setVelocimetroVisivel] = useState(true);
   const [semitones, setSemitones] = useState(0);
   const [modalTom, setModalTom] = useState(false);
+  const acc = useAccidental();
+  const simple = useSimplify();
   const [stageOpen, setStageOpen] = useState(false);
   const [editingBpm, setEditingBpm] = useState(false);
   const [bpmInput, setBpmInput] = useState("90");
@@ -123,13 +132,13 @@ export default function VerCifra() {
   // Tonalidade atual com grafia correta (sustenido ou bemol conforme a tonalidade)
   const currentKey = useMemo(
     () => getKeyAtOffset(originalKey, semitones),
-    [originalKey, semitones]
+    [originalKey, semitones, acc, simple]
   );
 
   // Texto da cifra já transposto (calculado na renderização, sem alterar o banco)
   const observacaoTransposta = useMemo(
     () => transposeText(cifra.observacao, semitones),
-    [cifra.observacao, semitones]
+    [cifra.observacao, semitones, acc, simple]
   );
 
   const canManageCifra = useMemo(() => {
@@ -317,6 +326,11 @@ export default function VerCifra() {
     registerCifraAccessService(id).catch(() => {});
   }, [id]);
 
+  // Lembra as últimas cifras abertas (Recentes na Home)
+  useEffect(() => {
+    if (cifra?.nome) pushRecentCifra({ id: cifra._id || id, nome: cifra.nome, artista: cifra.artista });
+  }, [id, cifra?._id, cifra?.nome, cifra?.artista]);
+
   return (
     <VerCifraContainer className={part1 !== "" && "partes"}>
       <UsersHeader>
@@ -346,6 +360,7 @@ export default function VerCifra() {
           >
             <FiMonitor size={24} />
           </button>
+          <AddToPlaylist cifraId={String(cifra._id || id)} cifraNome={cifra.nome} />
           <button
             type="button"
             aria-label="Exportar cifra em PDF"
@@ -361,13 +376,6 @@ export default function VerCifra() {
                 onClick={() => setUpdate(!update)}
               >
                 <img src="/update.svg" alt="Update" title="editar" />
-              </button>
-              <button
-                type="button"
-                aria-label="Excluir cifra"
-                onClick={() => setModalDelete(!modalDelete)}
-              >
-                <img src="/delete.svg" alt="Delete" title="Excluir" />
               </button>
             </>
           )}
@@ -471,7 +479,7 @@ export default function VerCifra() {
                 title="Salvar BPM na cifra"
                 onClick={handleSaveBpm}
               >
-                💾
+                <FiSave size={16} />
               </button>
             )}
           </div>
@@ -526,6 +534,7 @@ export default function VerCifra() {
                 />
               </button>
             </div>
+            <CifraNota cifraId={String(cifra._id || id)} />
             {part1 === "" && part2 === "" ? (
               <CifraRenderer text={observacaoTransposta} style={{ fontSize: `${fontSize}px` }} />
             ) : (
@@ -617,6 +626,14 @@ export default function VerCifra() {
                 ))}
             </MultSeletorContainer>
             <button className="btn">Salvar Cifra</button>
+            <button
+              type="button"
+              className="btn btn-danger"
+              aria-label="Excluir cifra"
+              onClick={() => setModalDelete(true)}
+            >
+              <FiTrash2 size={16} /> Excluir cifra
+            </button>
             <p>Utilize "!!!" para separar a cifra em duas colunas</p>
             <TextareaAutosize
               name="observacao"
@@ -634,6 +651,25 @@ export default function VerCifra() {
             <div className="tom-titulo">
               Tom: <span>{currentKey}</span>
             </div>
+            <div className="tom-semitom" role="group" aria-label="Grafia das notas">
+              <button
+                type="button"
+                className={acc === "sharp" ? "ativo" : ""}
+                aria-pressed={acc === "sharp"}
+                onClick={() => setAccidental("sharp")}
+              >
+                Sustenido ♯
+              </button>
+              <button
+                type="button"
+                className={acc === "flat" ? "ativo" : ""}
+                aria-pressed={acc === "flat"}
+                onClick={() => setAccidental("flat")}
+              >
+                Bemol ♭
+              </button>
+            </div>
+            <TomExtras currentKey={currentKey} />
             <div className="tom-semitom">
               <button
                 type="button"

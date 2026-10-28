@@ -14,7 +14,7 @@ import {
 import { CifraRenderer } from "../CifraRenderer/CifraRenderer";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { useMetronome } from "../../hooks/useMetronome";
-import { detectOriginalKey, getKeyAtOffset, transposeText } from "../../utils/transpose";
+import { detectOriginalKey, getKeyAtOffset, transposeText, useAccidental, useSimplify } from "../../utils/transpose";
 import { Root, TopBar, BottomBar, Scroller, Page, BeatDot, Group, Hint } from "./StageModeStyled";
 
 const MIN_FONT = 16;
@@ -85,13 +85,15 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
     if (song?.bpm) setBpm(song.bpm);
   }, [song?.bpm, song?.id, setBpm]);
 
+  const acc = useAccidental();
+  const simple = useSimplify();
   // Texto transposto + tom exibido
   const text = useMemo(
     () => transposeText((song?.text || "").split("!!!").filter(Boolean).join("\n\n"), st),
-    [song?.text, st],
+    [song?.text, st, acc, simple],
   );
   const originalKey = useMemo(() => detectOriginalKey(song?.text), [song?.text]);
-  const currentKey = originalKey ? getKeyAtOffset(originalKey, st) : null;
+  const currentKey = originalKey ? getKeyAtOffset(originalKey, st) : null; // recalcula a cada render, acompanha `acc`
 
   /* ---------- controles que somem sozinhos ---------- */
   const showControls = useCallback(() => {
@@ -331,7 +333,7 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
 
       <Scroller ref={scrollerRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <Page>
-          <CifraRenderer text={text} style={{ fontSize: `${fontSize}px` }} />
+          <CifraRenderer text={text} style={{ fontSize: `${fontSize}px` }} interactiveChords={false} />
         </Page>
       </Scroller>
 

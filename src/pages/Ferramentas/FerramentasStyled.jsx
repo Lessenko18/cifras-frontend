@@ -62,7 +62,7 @@ export const TunerToggle = styled.button`
   padding: 10px 18px;
   border-radius: 8px;
   border: none;
-  background: ${({ $active }) => ($active ? "#ef4444" : "linear-gradient(135deg, #0ea5e9, #7c3aed)")};
+  background: ${({ $active }) => ($active ? "var(--danger)" : "var(--brand-gradient)")};
   color: #fff;
   font-weight: 700;
   font-size: 14px;

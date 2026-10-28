@@ -18,6 +18,7 @@ import {
   FilterDropdownPanel,
   FilterDropdownItem,
 } from "./CifraStyled";
+import AddToPlaylist from "../../components/AddToPlaylist/AddToPlaylist";
 import { Input } from "../../components/Input/Input";
 import { getCategoriasService } from "../../service/categoriaService";
 import { Link } from "react-router-dom";
@@ -521,6 +522,9 @@ export default function Cifras() {
                 {favoritosSet.has(cifra._id) ? "♥" : "♡"}
               </button>
               <h2>{cifra.nome}</h2>
+              <span className="add-playlist">
+                <AddToPlaylist cifraId={cifra._id} cifraNome={cifra.nome} />
+              </span>
               {cifra.artista && <p className="artista">{cifra.artista}</p>}
               <div>
                 {cifra.categorias?.map((cat) => {

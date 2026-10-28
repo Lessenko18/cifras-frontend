@@ -1,10 +1,11 @@
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { NavContainer, NavInner, NavContent, RightArea, UserArea, SearchBox } from "./NavbarStyled";
 import { logout } from "../../service/auth.service";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { FiSun, FiMoon, FiHome, FiMusic, FiList, FiUsers, FiTag, FiSearch, FiTool, FiInbox } from "react-icons/fi";
+import Onboarding from "../Onboarding/Onboarding";
 import { PageShell, PageContent } from "../Footer/FooterStyled";
 import { Footer } from "../Footer/Footer";
 import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
@@ -23,10 +24,32 @@ function NavbarContent() {
   const pageSearch = usePageSearchConfig();
 
   const navigate = useNavigate();
+  const location = useLocation();
   const [openMenu, setOpenMenu] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const menuRef = useRef(null);
   const { dark, toggle } = useTheme();
+
+  // Atalho de busca: "/" ou Ctrl+K foca o campo de busca da página; fora das
+  // telas com busca, leva para a lista de cifras já com o campo focado.
+  useEffect(() => {
+    const onKey = (e) => {
+      const t = e.target;
+      const typing = t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+      const isCtrlK = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k";
+      if (!isCtrlK && (e.key !== "/" || typing || e.ctrlKey || e.metaKey || e.altKey)) return;
+      e.preventDefault();
+      const field = document.querySelector("[data-global-search]");
+      if (field) field.focus();
+      else navigate("/home/cifras", { state: { focusSearch: true } });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (location.state?.focusSearch) document.querySelector("[data-global-search]")?.focus();
+  }, [location.state, pageSearch]);
 
   const avatarUrl = normalizeAvatarUrl(user?.avatar || user?.photo || "");
   const showAvatar = Boolean(avatarUrl) && !avatarError;
@@ -63,6 +86,7 @@ function NavbarContent() {
 
   return (
     <PageShell>
+      <Onboarding />
       <NavContainer>
         <NavInner>
         <Link id="logo" to="/home">
@@ -110,7 +134,8 @@ function NavbarContent() {
               <FiSearch size={16} />
               <input
                 type="text"
-                placeholder={pageSearch.placeholder}
+                data-global-search
+                placeholder={`${pageSearch.placeholder} ( / )`}
                 value={pageSearch.value}
                 onChange={(e) => pageSearch.onChange(e.target.value)}
                 aria-label={pageSearch.placeholder}

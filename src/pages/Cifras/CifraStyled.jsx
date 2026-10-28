@@ -130,19 +130,24 @@ export const AnCifra = styled.article`
   min-height: 120px;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: 0.3s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s, box-shadow 0.15s;
   justify-content: flex-start;
 
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
   h2 {
-    min-height: 56px;
-    padding: 14px 20px;
-    margin: -10px -20px 0;
-    background: var(--card-head-bg);
-    color: var(--card-head-text);
-    font-size: 18px;
-    font-weight: 400;
-    line-height: 1.2;
+    min-height: 44px;
+    padding: 4px 28px 0 0;
+    margin: 0;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.25;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -173,6 +178,17 @@ export const AnCifra = styled.article`
       border-radius: 999px;
       padding: 3px 10px;
     }
+  }
+
+  .add-playlist {
+    position: absolute;
+    top: 8px;
+    right: 44px;
+    z-index: 2;
+    display: block;
+    background: none;
+    border: none;
+    padding: 0;
   }
 
   .heart-btn {

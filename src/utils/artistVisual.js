@@ -4,6 +4,7 @@
  * estiver no mapa continua mostrando o círculo com as iniciais. */
 const ARTIST_IMAGES = {
   "colo de deus": "/colo_de_deus.jpg",
+  "frei gilson": "/freigilson.jpg",
   shalom: "/shallom.png",
   shallom: "/shallom.png",
 };

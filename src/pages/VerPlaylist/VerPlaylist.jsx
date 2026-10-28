@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { SkeletonRows } from "../../components/Skeleton/Skeleton";
-import { useNavigate, useParams } from "react-router-dom";
-import { getPlaylistViewService } from "../../service/playlistService";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
+import { getPublicAppUrl } from "../../utils/getPublicAppUrl";
+import {
+  getPlaylistViewService,
+  setPlaylistPublicLinkService,
+  setPlaylistTomService,
+} from "../../service/playlistService";
 import {
   Page,
   Header,
@@ -24,16 +30,32 @@ import {
   getSemitonesTo,
   NOTES_DISPLAY,
   transposeText,
+  useAccidental,
+  setAccidental,
+  useSimplify,
 } from "../../utils/transpose";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { exportPlaylistPdf, exportCifraPdf } from "../../utils/pdfExport";
+import {
+  hasOfflinePlaylist,
+  loadOfflinePlaylist,
+  removeOfflinePlaylist,
+  saveOfflinePlaylist,
+} from "../../utils/offlinePlaylist";
+import TomExtras from "../../components/TomExtras/TomExtras";
 import StageMode from "../../components/StageMode/StageMode";
-import { FiMonitor } from "react-icons/fi";
+import { FiDownloadCloud, FiLink, FiMonitor } from "react-icons/fi";
 
 export default function VerPlaylist() {
   const { id } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [offlineSaved, setOfflineSaved] = useState(() => hasOfflinePlaylist(id));
+  const [fromCache, setFromCache] = useState(false);
+  const [publicSlug, setPublicSlug] = useState(null);
+  const acc = useAccidental(); // re-renderiza a lista ao trocar ♯/♭
+  useSimplify(); // idem ao simplificar a cifra
   const [err, setErr] = useState("");
   const [scrolling, setScrolling] = useState(false);
   const [velocity, setVelocity] = useState(5);
@@ -103,6 +125,8 @@ export default function VerPlaylist() {
   }
 
   // Atualiza o tom de uma música e persiste no localStorage
+  // Atualiza o tom: salva na playlist (vale para todos) e mantém cópia local
+  // como fallback caso a gravação falhe (ex.: offline).
   function updateTom(songId, newSemitones) {
     setToms((prev) => ({ ...prev, [songId]: newSemitones }));
     if (newSemitones === 0) {
@@ -110,6 +134,9 @@ export default function VerPlaylist() {
     } else {
       localStorage.setItem(`tom_${songId}`, newSemitones);
     }
+    setPlaylistTomService(id, String(songId), newSemitones).catch(() => {
+      toast.error("Não foi possível salvar o tom na playlist.");
+    });
   }
 
   function interruptor() {
@@ -135,14 +162,37 @@ export default function VerPlaylist() {
   useEffect(() => {
     (async () => {
       try {
-        const viewData = await getPlaylistViewService(id);
+        let viewData;
+        try {
+          viewData = await getPlaylistViewService(id);
+          // mantém a cópia offline atualizada quando há sinal
+          if (hasOfflinePlaylist(id)) saveOfflinePlaylist(id, viewData);
+        } catch (e) {
+          // sem rede: usa a cópia salva neste aparelho, se existir
+          const cached = !e.response && loadOfflinePlaylist(id);
+          if (!cached) throw e;
+          viewData = cached;
+          setFromCache(true);
+        }
         const ordenado = applySavedOrder(viewData, null);
+        setPublicSlug(viewData.publicSlug || null);
+        // "Tocar agora" da Home abre direto no modo palco
+        if (searchParams.get("palco") === "1" && ordenado.musicas?.length) {
+          setStageStart(0);
+          setSearchParams({}, { replace: true });
+        }
         setData(ordenado);
 
-        // Carrega os tons salvos no localStorage para cada música
+        // Tom da playlist (servidor) tem prioridade; o localStorage só cobre
+        // playlists antigas que ainda não têm tom salvo.
         const savedToms = {};
         (ordenado.musicas || []).forEach((m) => {
           const sid = getMusicId(m);
+          const remote = viewData.toms?.[String(sid)];
+          if (typeof remote === "number") {
+            savedToms[sid] = remote;
+            return;
+          }
           const saved = localStorage.getItem(`tom_${sid}`);
           if (saved) savedToms[sid] = parseInt(saved, 10);
         });
@@ -263,6 +313,72 @@ export default function VerPlaylist() {
       <Header>
         <h2>{data.nome}</h2>
         <span>{data.musicas?.length || 0} música(s)</span>
+        {data.podeCompartilharLink && (
+          <button
+            type="button"
+            className="export-pdf"
+            aria-pressed={Boolean(publicSlug)}
+            title="Gera um link somente leitura para enviar aos músicos (WhatsApp)"
+            onClick={async () => {
+              try {
+                const { publicSlug: slug } = await setPlaylistPublicLinkService(id, !publicSlug);
+                setPublicSlug(slug);
+                if (slug) {
+                  const url = `${getPublicAppUrl()}/p/${slug}`;
+                  try {
+                    await navigator.clipboard.writeText(url);
+                    toast.success("Link público copiado!");
+                  } catch {
+                    toast.success(`Link público: ${url}`, { duration: 8000 });
+                  }
+                } else {
+                  toast.success("Link público desativado.");
+                }
+              } catch {
+                toast.error("Não foi possível alterar o link público.");
+              }
+            }}
+          >
+            <FiLink size={18} />
+            {publicSlug ? "Desativar link" : "Link público"}
+          </button>
+        )}
+        {publicSlug && (
+          <button
+            type="button"
+            className="export-pdf"
+            onClick={() =>
+              navigator.clipboard
+                ?.writeText(`${getPublicAppUrl()}/p/${publicSlug}`)
+                .then(() => toast.success("Link copiado!"))
+                .catch(() => toast.error("Não foi possível copiar."))
+            }
+          >
+            Copiar link
+          </button>
+        )}
+        {fromCache && <span role="status">Modo offline: dados salvos neste aparelho</span>}
+        <button
+          type="button"
+          className="export-pdf"
+          aria-pressed={offlineSaved}
+          title="Guarda as cifras e o tom desta playlist neste aparelho para usar sem internet"
+          onClick={() => {
+            if (offlineSaved) {
+              removeOfflinePlaylist(id);
+              setOfflineSaved(false);
+              toast.success("Cópia offline removida.");
+            } else if (saveOfflinePlaylist(id, data)) {
+              setOfflineSaved(true);
+              toast.success("Playlist disponível offline neste aparelho.");
+            } else {
+              toast.error("Não foi possível salvar offline (armazenamento cheio).");
+            }
+          }}
+        >
+          <FiDownloadCloud size={18} />
+          {offlineSaved ? "Offline ✓" : "Salvar offline"}
+        </button>
         {data.musicas?.length > 0 && (
           <button
             type="button"
@@ -371,6 +487,25 @@ export default function VerPlaylist() {
             <div className="tom-titulo">
               Tom: <span>{modalCurrentKey}</span>
             </div>
+            <div className="tom-semitom" role="group" aria-label="Grafia das notas">
+              <button
+                type="button"
+                className={acc === "sharp" ? "ativo" : ""}
+                aria-pressed={acc === "sharp"}
+                onClick={() => setAccidental("sharp")}
+              >
+                Sustenido ♯
+              </button>
+              <button
+                type="button"
+                className={acc === "flat" ? "ativo" : ""}
+                aria-pressed={acc === "flat"}
+                onClick={() => setAccidental("flat")}
+              >
+                Bemol ♭
+              </button>
+            </div>
+            <TomExtras currentKey={modalCurrentKey} />
             <div className="tom-semitom">
               <button
                 type="button"
