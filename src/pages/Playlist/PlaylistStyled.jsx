@@ -163,50 +163,6 @@ export const Card = styled.article`
     transform: translateY(-1px);
     box-shadow: 0 8px 18px rgba(107, 92, 255, 0.35);
   }
-
-  .share-actions {
-    position: absolute;
-    top: 10px;
-    right: 8px;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .icon-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-`;
-
-export const IconButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.28);
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    transform 0.15s ease;
-
-  img {
-    width: 14px;
-    height: 14px;
-    filter: brightness(0) invert(1);
-  }
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.5);
-    transform: translateY(-1px);
-  }
 `;
 
 export const CifrasGrid = styled.div`

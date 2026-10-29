@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { Page, CardsGrid, Card, CifrasGrid, IconButton } from "./PlaylistStyled";
+import { Page, CardsGrid, Card, CifrasGrid } from "./PlaylistStyled";
 import { useSearch } from "../../hooks/useSearch";
 import { usePageSearchBox } from "../../context/PageSearchContext";
 import { useInitialUrlFilters, useSyncUrlFilters } from "../../hooks/useUrlFilters";
@@ -10,6 +10,7 @@ import { usePlaylists, useInvalidatePlaylists } from "../../hooks/queries/usePla
 import { useNavigate } from "react-router-dom";
 import { UsersHeader } from "../Users/UsersStyled";
 import toast from "react-hot-toast";
+import PlaylistActionsMenu from "../../components/PlaylistActionsMenu/PlaylistActionsMenu";
 import { usePlaylistManager } from "../../components/PlaylistManager/PlaylistManager";
 import { useAuth } from "../../context/AuthContext";
 import { getPlaylistPermissions } from "../../utils/playlistAccess";
@@ -96,7 +97,6 @@ export default function Playlists() {
           {filteredPlaylists
             .map((pl) => {
               const { canShare, canEdit, canDelete } = getPlaylistPermissions(pl, authenticatedUser, isAdmin);
-              const showCornerActions = canShare || canEdit || canDelete;
               const displayName = stripMusicEmoji(pl.nome);
 
               const bannerUrl = pl.bannerUrl || getPlaylistBgImage(pl.nome);
@@ -110,44 +110,15 @@ export default function Playlists() {
                   <div className="playlist-count">
                     <span>{pl.cifras?.length || 0} música(s)</span>
                   </div>
-                  {showCornerActions && (
-                    <div className="share-actions">
-                      {canShare && (
-                        <IconButton
-                          type="button"
-                          onClick={() => manager.openShare(pl)}
-                          aria-label="Compartilhar"
-                          title="Compartilhar"
-                        >
-                          <img src="/share.svg" alt="Compartilhar" />
-                        </IconButton>
-                      )}
-                      {(canEdit || canDelete) && (
-                        <div className="icon-actions">
-                          {canEdit && (
-                            <IconButton
-                              type="button"
-                              onClick={() => manager.openEdit(pl)}
-                              aria-label="Editar"
-                              title="Editar"
-                            >
-                              <img src="/update.svg" alt="Editar" />
-                            </IconButton>
-                          )}
-                          {canDelete && (
-                            <IconButton
-                              type="button"
-                              onClick={() => manager.openDelete(pl)}
-                              aria-label="Excluir"
-                              title="Excluir"
-                            >
-                              <img src="/delete.svg" alt="Excluir" />
-                            </IconButton>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <PlaylistActionsMenu
+                    playlist={pl}
+                    canShare={canShare}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    onShare={manager.openShare}
+                    onEdit={manager.openEdit}
+                    onDelete={manager.openDelete}
+                  />
                   <div className="actions">
                     <button
                       className="playlist-action"

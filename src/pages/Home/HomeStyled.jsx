@@ -409,79 +409,8 @@ export const PlaylistCard = styled.article`
     font-weight: 500;
   }
 
-  .card-actions-corner {
-    position: absolute;
-    top: 10px;
-    right: 8px;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    align-items: center;
-  }
-
   &.clicavel {
     cursor: pointer;
-  }
-
-  .card-menu {
-    position: absolute;
-    top: 34px;
-    right: 0;
-    min-width: 150px;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
-  }
-
-  .card-menu button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 40px;
-    padding: 0 12px;
-    border: none;
-    background: transparent;
-    color: var(--text-primary);
-    cursor: pointer;
-    text-align: left;
-    font-size: 0.9rem;
-  }
-
-  .card-menu button:hover {
-    background: var(--bg-input);
-  }
-
-  .card-menu button.perigo {
-    color: var(--danger);
-  }
-
-  .card-icon-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border: none;
-    background: rgba(0, 0, 0, 0.28);
-    color: #fff;
-    cursor: pointer;
-    border-radius: 50%;
-    transition: background 0.2s;
-
-    img {
-      width: 14px;
-      height: 14px;
-      filter: brightness(0) invert(1);
-    }
-
-    &:hover {
-      background: rgba(0, 0, 0, 0.5);
-    }
   }
 
   .ver-btn {
