@@ -4,6 +4,7 @@ import api from "./api";
 import { normalizeAvatarUrl } from "../utils/normalizeAvatarUrl";
 import { getPublicAppUrl } from "../utils/getPublicAppUrl";
 import { storage } from "../lib/storage";
+import { meKey } from "../lib/authKeys";
 
 function normalizeUser(user) {
   if (!user) return user;
@@ -28,8 +29,8 @@ export async function loginRequest(email, password, remember = false) {
     const meResponse = await api.get("/auth/me");
     const user = normalizeUser(meResponse.data?.user || meResponse.data);
 
-    storage.set("user", JSON.stringify(user));
     queryClient.clear(); // nada da sessão anterior pode aparecer na nova
+    queryClient.setQueryData(meKey, user); // o AuthContext lê o usuário daqui
 
     return user;
   } catch (err) {

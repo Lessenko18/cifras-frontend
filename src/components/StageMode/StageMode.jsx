@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import { CifraRenderer } from "../CifraRenderer/CifraRenderer";
 import { useWakeLock } from "../../hooks/useWakeLock";
+import { useAutoScroll } from "../../hooks/useAutoScroll";
 import { useMetronome } from "../../hooks/useMetronome";
 import { detectKey, renderCifra } from "../../utils/cifraDoc";
 import { getKeyAtOffset, useAccidental, useSimplify } from "../../utils/transpose";
@@ -59,11 +60,13 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
     return Number.isFinite(n) ? Math.min(MAX_FONT, Math.max(MIN_FONT, n)) : 28;
   });
   const [theme, setTheme] = useState(() => (readStored("stage_theme", "dark") === "light" ? "light" : "dark"));
-  const [scrolling, setScrolling] = useState(false);
-  const [speed, setSpeed] = useState(5); // 1 (lento) .. 9 (rápido)
   const [controlsVisible, setControlsVisible] = useState(true);
 
   const scrollerRef = useRef(null);
+  const { scrolling, setScrolling, toggle: toggleScroll, slower, faster } = useAutoScroll({
+    getScroller: () => scrollerRef.current,
+    pauseOnKeys: false, // as teclas são tratadas abaixo
+  });
   const hideTimerRef = useRef(null);
   const touchRef = useRef(null);
   const enteredFullscreenRef = useRef(false);
@@ -150,23 +153,8 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
       scrollerRef.current?.scrollTo({ top: 0 });
       showControls();
     },
-    [total, showControls],
+    [total, showControls, setScrolling],
   );
-
-  /* ---------- rolagem automática ---------- */
-  useEffect(() => {
-    if (!scrolling) return undefined;
-    const el = scrollerRef.current;
-    const id = setInterval(() => {
-      if (!el) return;
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) {
-        setScrolling(false);
-        return;
-      }
-      el.scrollTop += 1;
-    }, (10 - speed) * 15);
-    return () => clearInterval(id);
-  }, [scrolling, speed]);
 
   const scrollByPage = useCallback((direction) => {
     const el = scrollerRef.current;
@@ -180,11 +168,11 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
       const handlers = {
         ArrowRight: () => multi && goTo(index + 1),
         ArrowLeft: () => multi && goTo(index - 1),
-        PageDown: () => scrollByPage(1),
-        PageUp: () => scrollByPage(-1),
-        ArrowDown: () => scrollerRef.current?.scrollBy({ top: 140, behavior: "smooth" }),
-        ArrowUp: () => scrollerRef.current?.scrollBy({ top: -140, behavior: "smooth" }),
-        " ": () => setScrolling((s) => !s),
+        PageDown: () => (setScrolling(false), scrollByPage(1)),
+        PageUp: () => (setScrolling(false), scrollByPage(-1)),
+        ArrowDown: () => (setScrolling(false), scrollerRef.current?.scrollBy({ top: 140, behavior: "smooth" })),
+        ArrowUp: () => (setScrolling(false), scrollerRef.current?.scrollBy({ top: -140, behavior: "smooth" })),
+        " ": toggleScroll,
         Escape: () => close(),
       };
       const handler = handlers[e.key];
@@ -195,7 +183,7 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [index, multi, goTo, scrollByPage, close, showControls]);
+  }, [index, multi, goTo, scrollByPage, close, showControls, setScrolling, toggleScroll]);
 
   /* ---------- deslizar o dedo pra trocar de música ---------- */
   function onTouchStart(e) {
@@ -293,18 +281,19 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
         </Group>
 
         <Group aria-label="Rolagem automática">
-          <button type="button" onClick={() => setSpeed((s) => Math.max(1, s - 1))} aria-label="Rolagem mais lenta">
+          <button type="button" onClick={slower} aria-label="Rolagem mais lenta">
             <FiMinus size={16} />
           </button>
           <button
             type="button"
             className={scrolling ? "on" : ""}
-            onClick={() => setScrolling((s) => !s)}
+            aria-pressed={scrolling}
+            onClick={toggleScroll}
             aria-label={scrolling ? "Pausar rolagem" : "Iniciar rolagem"}
           >
             {scrolling ? <FiPause size={16} /> : <FiPlay size={16} />}
           </button>
-          <button type="button" onClick={() => setSpeed((s) => Math.min(9, s + 1))} aria-label="Rolagem mais rápida">
+          <button type="button" onClick={faster} aria-label="Rolagem mais rápida">
             <FiPlus size={16} />
           </button>
         </Group>

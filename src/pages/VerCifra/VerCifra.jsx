@@ -1,82 +1,45 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  deleteCifraService,
-  editCifraService,
-  getCifraById,
-  registerCifraAccessService,
-} from "../../service/cifraService";
-import { useAuth } from "../../context/AuthContext";
-import { UsersHeader } from "../Users/UsersStyled";
-import {
-  CifraBody,
-  CifraContent,
-  ModalDelete,
-  ModalTom,
-  Overlay,
-  TomButton,
-  UpdateCifra,
-  VerCifraContainer,
-} from "./VerCifraStyled";
-import { detectKey, renderCifra } from "../../utils/cifraDoc";
-import {
-  getKeyAtOffset,
-  useAccidental,
-  setAccidental,
-  useSimplify,
-  getSemitonesTo,
-  NOTES_DISPLAY,
-} from "../../utils/transpose";
-import { Title } from "../Playlist/PlaylistStyled";
-import { Input } from "../../components/Input/Input";
-import TextareaAutosize from "react-textarea-autosize";
 import toast from "react-hot-toast";
-import {
-  GuardaEscolhidos,
-  MultSeletorContainer,
-} from "../../components/MultSeletor/MultSeletorStyled";
-import {
-  getCategoriaById,
-  searchCategoria,
-} from "../../service/categoriaService";
-import { Velocimetro } from "../VerPlaylist/VerPlaylistStyled";
-import { CifraRenderer } from "../../components/CifraRenderer/CifraRenderer";
+import { FiMonitor } from "react-icons/fi";
+import { deleteCifraService, editCifraService } from "../../service/cifraService";
+import { UsersHeader } from "../Users/UsersStyled";
+import { CifraBody, VerCifraContainer } from "./VerCifraStyled";
+import { Title } from "../Playlist/PlaylistStyled";
+import { detectKey, renderCifra } from "../../utils/cifraDoc";
+import { getKeyAtOffset, useAccidental, useSimplify } from "../../utils/transpose";
+import { exportCifraPdf } from "../../utils/pdfExport";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { useMetronome } from "../../hooks/useMetronome";
-import { exportCifraPdf } from "../../utils/pdfExport";
+import { useAutoScroll } from "../../hooks/useAutoScroll";
+import { useFontSize } from "../../hooks/useFontSize";
 import AddToPlaylist from "../../components/AddToPlaylist/AddToPlaylist";
-import { pushRecentCifra } from "../../utils/recentCifras";
-import CifraNota from "../../components/CifraNota/CifraNota";
-import TomExtras from "../../components/TomExtras/TomExtras";
 import StageMode from "../../components/StageMode/StageMode";
-import { FiMonitor, FiSave, FiTrash2 } from "react-icons/fi";
-import { storage } from "../../lib/storage";
+import { useCifraDetalhe } from "./hooks/useCifraDetalhe";
+import { useCanManageCifra } from "./hooks/useCanManageCifra";
+import ControlesLeitura from "./components/ControlesLeitura";
+import LeituraCifra from "./components/LeituraCifra";
+import EditarCifraForm from "./components/EditarCifraForm";
+import TomModal from "../../components/TomModal/TomModal";
+import ConfirmarExclusao from "./components/ConfirmarExclusao";
+
 export default function VerCifra() {
   const { id } = useParams();
-  const { user: authenticatedUser, isAdmin } = useAuth();
-  const [cifra, setCifra] = useState({});
+  const navigate = useNavigate();
+
+  const { cifra, setCifra, escolhidos, setEscolhidos, semitones, setSemitones, reload } = useCifraDetalhe(id);
+  const canManageCifra = useCanManageCifra(cifra);
+
   const [update, setUpdate] = useState(false);
   const [modalDelete, setModalDelete] = useState(false);
-  const [escolhidos, setEscolhidos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
-  const [categoriaQuery, setCategoriaQuery] = useState("");
-  const [scrolling, setScrolling] = useState(false);
-  const [velocity, setVelocity] = useState(5);
-  const [velocimetroVisivel, setVelocimetroVisivel] = useState(true);
-  const [semitones, setSemitones] = useState(0);
   const [modalTom, setModalTom] = useState(false);
+  const [stageOpen, setStageOpen] = useState(false);
+  const [controlesVisiveis, setControlesVisiveis] = useState(true);
+
+  const { scrolling, toggle: toggleScroll, slower, faster } = useAutoScroll();
+  const [fontSize, changeFontSize] = useFontSize();
   const acc = useAccidental();
   const simple = useSimplify();
-  const [stageOpen, setStageOpen] = useState(false);
-  const [editingBpm, setEditingBpm] = useState(false);
-  const [bpmInput, setBpmInput] = useState("90");
-  const intervalRef = useRef(null);
-  const accessRegisteredRef = useRef(null);
-  const navigate = useNavigate();
-  const [fontSize, setFontSize] = useState(() => {
-    const saved = storage.get("cifra_fontSize");
-    return saved ? parseInt(saved, 10) : 18;
-  });
 
   useWakeLock();
   const metronome = useMetronome(90);
@@ -85,44 +48,6 @@ export default function VerCifra() {
   useEffect(() => {
     if (cifra?.bpm) metronome.setBpm(cifra.bpm);
   }, [cifra?.bpm]);
-
-  // Mantém o campo de digitação do BPM sincronizado enquanto não está em edição
-  useEffect(() => {
-    if (!editingBpm) setBpmInput(String(metronome.bpm));
-  }, [metronome.bpm, editingBpm]);
-
-  function commitBpmInput() {
-    const n = parseInt(bpmInput, 10);
-    if (!Number.isNaN(n)) metronome.setBpm(n);
-    setEditingBpm(false);
-  }
-
-  const changeFontSize = useCallback((delta) => {
-    setFontSize((prev) => {
-      const next = Math.min(30, Math.max(12, prev + delta));
-      storage.set("cifra_fontSize", next);
-      return next;
-    });
-  }, []);
-
-  const ownerId = useMemo(() => {
-    return (
-      cifra?.criador?._id ||
-      cifra?.criador ||
-      cifra?.ownerId ||
-      cifra?.userId ||
-      cifra?.usuarioId ||
-      cifra?.criadoPorId ||
-      cifra?.createdById ||
-      cifra?.owner?._id ||
-      cifra?.user?._id ||
-      cifra?.usuario?._id ||
-      cifra?.criadoPor?._id ||
-      cifra?.createdBy?._id ||
-      cifra?.createdBy ||
-      null
-    );
-  }, [cifra]);
 
   // Tonalidade original detectada a partir do primeiro acorde da cifra
   const originalKey = useMemo(
@@ -133,29 +58,17 @@ export default function VerCifra() {
   // Tonalidade atual com grafia correta (sustenido ou bemol conforme a tonalidade)
   const currentKey = useMemo(
     () => getKeyAtOffset(originalKey, semitones),
-    [originalKey, semitones, acc, simple]
+    [originalKey, semitones, acc, simple],
   );
 
   // A cifra pronta para a tela e já transposta (calculada na renderização, sem alterar o banco).
   // Usa o ChordPro quando a cifra tem; senão o texto antigo, como sempre foi.
   const doc = useMemo(
     () => renderCifra({ text: cifra.observacao, chordpro: cifra.chordpro }, semitones),
-    [cifra.observacao, cifra.chordpro, semitones, acc, simple]
+    [cifra.observacao, cifra.chordpro, semitones, acc, simple],
   );
   const twoColumns = doc.columns.length === 2; // um único "!!!" no texto = duas colunas
-
-  const canManageCifra = useMemo(() => {
-    if (isAdmin) return true;
-
-    const userId = authenticatedUser?._id || authenticatedUser?.id;
-    if (!userId || !ownerId) return false;
-
-    return String(userId) === String(ownerId);
-  }, [authenticatedUser, isAdmin, ownerId]);
-
-  function interruptor() {
-    setScrolling((s) => !s);
-  }
+  const cifraId = String(cifra._id || id);
 
   useEffect(() => {
     if (!canManageCifra) {
@@ -163,48 +76,6 @@ export default function VerCifra() {
       setModalDelete(false);
     }
   }, [canManageCifra]);
-
-  useEffect(() => {
-    clearInterval(intervalRef.current);
-    intervalRef.current = null;
-
-    if (scrolling) {
-      const id = setInterval(() => {
-        scrollBy(0, 1);
-      }, velocity * 15);
-
-      intervalRef.current = id;
-    }
-
-    return () => {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    };
-  }, [scrolling, velocity]);
-  // Persiste o tom escolhido por música no localStorage
-  useEffect(() => {
-    if (!id) return;
-    if (semitones === 0) {
-      storage.remove(`tom_${id}`);
-    } else {
-      storage.set(`tom_${id}`, semitones);
-    }
-  }, [semitones, id]);
-
-  async function getCifra() {
-    const response = await getCifraById(id);
-    let listaCategorias = [];
-    setCifra(response.data);
-    // Restaura o tom salvo para esta cifra
-    const saved = storage.get(`tom_${id}`);
-    setSemitones(saved ? parseInt(saved, 10) : 0);
-
-    for (const categoria of response.data.categorias) {
-      const responseCat = await getCategoriaById(categoria);
-      listaCategorias.push(responseCat.data);
-    }
-    setEscolhidos(listaCategorias);
-  }
 
   async function handleUpdateCifra(event) {
     event.preventDefault();
@@ -215,8 +86,7 @@ export default function VerCifra() {
       return;
     }
 
-    const formdata = new FormData(event.target);
-    const data = Object.fromEntries(formdata.entries());
+    const data = Object.fromEntries(new FormData(event.target).entries());
     data.categorias = escolhidos.map((c) => c._id);
     if (data.bpm === "") delete data.bpm;
     else data.bpm = Number(data.bpm);
@@ -229,8 +99,9 @@ export default function VerCifra() {
       toast.error("Falha ao atualizar a cifra.");
     }
     setUpdate(false);
-    getCifra();
+    reload();
   }
+
   async function handleSaveBpm() {
     if (!canManageCifra) return;
     try {
@@ -241,52 +112,6 @@ export default function VerCifra() {
       toast.error("Falha ao salvar o BPM.");
     }
   }
-
-  function handleExportPdf() {
-    const text = doc.text;
-
-    exportCifraPdf({
-      nome: cifra.nome,
-      artista: cifra.artista,
-      tom: originalKey ? currentKey : null,
-      bpm: cifra.bpm,
-      text,
-    });
-  }
-
-  function handleSelect(item) {
-    let lista = [...escolhidos];
-    if (lista.find((i) => i._id === item._id)) {
-      return;
-    }
-    lista.push(item);
-    setEscolhidos(lista);
-  }
-  function removeSelect(item) {
-    let lista = [...escolhidos];
-    lista = lista.filter((i) => i._id !== item._id);
-    setEscolhidos(lista);
-  }
-  useEffect(() => {
-    const query = categoriaQuery.trim();
-
-    if (!query) {
-      setCategorias([]);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      try {
-        const response = await searchCategoria(query);
-        setCategorias(response.data || []);
-      } catch (err) {
-        console.error(err);
-        setCategorias([]);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [categoriaQuery]);
 
   async function handleDeleteCifra() {
     if (!canManageCifra) {
@@ -300,45 +125,26 @@ export default function VerCifra() {
       toast.success("Cifra excluída com sucesso!");
       navigate("/home/cifras");
     } catch (err) {
-      const message = err.response?.data?.message || "Erro ao excluir a cifra";
-
-      toast.error(message);
-      toast.error("Falha ao excluir a cifra.");
+      toast.error(err.response?.data?.message || "Erro ao excluir a cifra");
     }
   }
 
-  useEffect(() => {
-    getCifra();
-  }, []);
-
-  // Registra o acesso uma única vez por música, mesmo com o double-invoke de efeitos do StrictMode
-  useEffect(() => {
-    if (!id || accessRegisteredRef.current === id) return;
-    accessRegisteredRef.current = id;
-    registerCifraAccessService(id).catch(() => {});
-  }, [id]);
-
-  // Lembra as últimas cifras abertas (Recentes na Home)
-  useEffect(() => {
-    if (cifra?.nome) pushRecentCifra({ id: cifra._id || id, nome: cifra.nome, artista: cifra.artista });
-  }, [id, cifra?._id, cifra?.nome, cifra?.artista]);
+  function handleExportPdf() {
+    exportCifraPdf({
+      nome: cifra.nome,
+      artista: cifra.artista,
+      tom: originalKey ? currentKey : null,
+      bpm: cifra.bpm,
+      text: doc.text,
+    });
+  }
 
   return (
     <VerCifraContainer className={twoColumns && "partes"}>
       <UsersHeader>
         <div className="ver-cifra-left">
-          <button
-            type="button"
-            aria-label="Voltar"
-            className="ver-cifra-back"
-            onClick={() => navigate(-1)}
-          >
-            <img
-              src="/back.svg"
-              alt="Voltar"
-              title="Voltar"
-              className="img-hover"
-            />
+          <button type="button" aria-label="Voltar" className="ver-cifra-back" onClick={() => navigate(-1)}>
+            <img src="/back.svg" alt="Voltar" title="Voltar" className="img-hover" />
           </button>
         </div>
         <Title>{cifra.nome}</Title>
@@ -352,392 +158,76 @@ export default function VerCifra() {
           >
             <FiMonitor size={24} />
           </button>
-          <AddToPlaylist cifraId={String(cifra._id || id)} cifraNome={cifra.nome} />
-          <button
-            type="button"
-            aria-label="Exportar cifra em PDF"
-            onClick={handleExportPdf}
-          >
+          <AddToPlaylist cifraId={cifraId} cifraNome={cifra.nome} />
+          <button type="button" aria-label="Exportar cifra em PDF" onClick={handleExportPdf}>
             <img src="/pdf.svg" alt="Exportar PDF" title="Exportar PDF" />
           </button>
           {canManageCifra && (
-            <>
-              <button
-                type="button"
-                aria-label="Editar cifra"
-                onClick={() => setUpdate(!update)}
-              >
-                <img src="/update.svg" alt="Update" title="editar" />
-              </button>
-            </>
+            <button type="button" aria-label="Editar cifra" onClick={() => setUpdate(!update)}>
+              <img src="/update.svg" alt="Update" title="editar" />
+            </button>
           )}
         </div>
       </UsersHeader>
 
-      {velocimetroVisivel && (
-        <Velocimetro>
-          <button
-            type="button"
-            aria-label="Diminuir velocidade da rolagem"
-            onClick={() => setVelocity((v) => Math.min(9, v + 2))}
-          >
-            -
-          </button>
-          <button
-            type="button"
-            aria-label="Iniciar ou pausar rolagem"
-            onClick={interruptor}
-          >
-            <img src="/pause.svg" alt={scrolling ? "pause" : "play"} />
-          </button>
-          <button
-            type="button"
-            aria-label="Aumentar velocidade da rolagem"
-            onClick={() => setVelocity((v) => Math.max(1, v - 2))}
-          >
-            +
-          </button>
-          <span className="velocimetro-sep" />
-          <button
-            type="button"
-            aria-label="Diminuir tamanho do texto"
-            onClick={() => changeFontSize(-2)}
-          >
-            A-
-          </button>
-          <button
-            type="button"
-            aria-label="Aumentar tamanho do texto"
-            onClick={() => changeFontSize(2)}
-          >
-            A+
-          </button>
-          <span className="velocimetro-sep" />
-
-          <div className="metronomo">
-            <button
-              type="button"
-              aria-label="Diminuir BPM"
-              onClick={() => metronome.setBpm((b) => b - 1)}
-            >
-              -
-            </button>
-            {editingBpm ? (
-              <input
-                type="number"
-                className="bpm-input"
-                autoFocus
-                min={30}
-                max={300}
-                value={bpmInput}
-                aria-label="Digitar BPM"
-                onChange={(e) => setBpmInput(e.target.value)}
-                onBlur={commitBpmInput}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") { e.preventDefault(); commitBpmInput(); }
-                  if (e.key === "Escape") { setBpmInput(String(metronome.bpm)); setEditingBpm(false); }
-                }}
-              />
-            ) : (
-              <span
-                className="bpm-value"
-                title="Batidas por minuto (duplo clique para digitar)"
-                onDoubleClick={() => setEditingBpm(true)}
-              >
-                {metronome.bpm}
-              </span>
-            )}
-            <button
-              type="button"
-              aria-label="Aumentar BPM"
-              onClick={() => metronome.setBpm((b) => b + 1)}
-            >
-              +
-            </button>
-            <button
-              type="button"
-              className={`metronomo-play${metronome.isPlaying ? " playing" : ""}`}
-              aria-label={metronome.isPlaying ? "Parar metrônomo" : "Iniciar metrônomo"}
-              aria-pressed={metronome.isPlaying}
-              onClick={metronome.toggle}
-            >
-              {metronome.isPlaying ? (metronome.beatPulse ? "●" : "○") : "♩"}
-            </button>
-            {canManageCifra && (
-              <button
-                type="button"
-                className="metronomo-save"
-                aria-label="Salvar este BPM na cifra"
-                title="Salvar BPM na cifra"
-                onClick={handleSaveBpm}
-              >
-                <FiSave size={16} />
-              </button>
-            )}
-          </div>
-
-          <span className="velocimetro-sep" />
-          <button
-            type="button"
-            className="eye-toggle"
-            aria-label="Ocultar controles"
-            onClick={() => setVelocimetroVisivel(false)}
-          >
-            <img src="/closeeye.svg" alt="ocultar controles" />
-          </button>
-        </Velocimetro>
+      {controlesVisiveis && (
+        <ControlesLeitura
+          scrolling={scrolling}
+          onToggleScroll={toggleScroll}
+          onSlower={slower}
+          onFaster={faster}
+          onFontSize={changeFontSize}
+          metronome={metronome}
+          canSaveBpm={canManageCifra}
+          onSaveBpm={handleSaveBpm}
+          onHide={() => setControlesVisiveis(false)}
+        />
       )}
 
-      {/* UPDATE */}
       <CifraBody>
         {!update || !canManageCifra ? (
-          <CifraContent className={twoColumns && "partes"}>
-            <div className="cifra-topo">
-              {originalKey && (
-                <TomButton
-                  type="button"
-                  aria-label="Abrir seletor de tom"
-                  onClick={() => setModalTom(true)}
-                >
-                  <span className="tom-label">Tom:</span>
-                  <span className="tom-value">{currentKey}</span>
-                </TomButton>
-              )}
-              {cifra.artista && (
-                <p style={{ margin: 0, flex: 1, minWidth: 0, color: "var(--text-muted)", fontSize: "0.95rem", fontStyle: "italic" }}>
-                  {cifra.artista}
-                </p>
-              )}
-              {/* Só http(s): links antigos com "javascript:" etc. não viram <a> */}
-              {/^https?:\/\//i.test(cifra.link || "") && (
-                <a target="_blank" rel="noopener noreferrer" href={cifra.link}>
-                  Acesse a cifra original
-                </a>
-              )}
-              <button
-                type="button"
-                className="eye-toggle"
-                aria-label="Mostrar/ocultar controles"
-                onClick={() => setVelocimetroVisivel((v) => !v)}
-              >
-                <img
-                  src={velocimetroVisivel ? "/closeeye.svg" : "/openeye.svg"}
-                  alt="toggle controles"
-                />
-              </button>
-            </div>
-            <CifraNota cifraId={String(cifra._id || id)} />
-            {twoColumns ? (
-              <div className="cifra-partes">
-                <CifraRenderer segments={doc.columns[0]} style={{ fontSize: `${fontSize}px` }} />
-                <span></span>
-                <CifraRenderer segments={doc.columns[1]} style={{ fontSize: `${fontSize}px` }} />
-              </div>
-            ) : (
-              <CifraRenderer segments={doc.segments} style={{ fontSize: `${fontSize}px` }} />
-            )}
-          </CifraContent>
+          <LeituraCifra
+            cifra={cifra}
+            cifraId={cifraId}
+            doc={doc}
+            twoColumns={twoColumns}
+            originalKey={originalKey}
+            currentKey={currentKey}
+            fontSize={fontSize}
+            controlesVisiveis={controlesVisiveis}
+            onOpenTom={() => setModalTom(true)}
+            onToggleControles={() => setControlesVisiveis((v) => !v)}
+          />
         ) : (
-          <UpdateCifra onSubmit={handleUpdateCifra}>
-            <div>
-              <label htmlFor="nome">Nome da Música</label>
-              <Input type="text" name="nome" defaultValue={cifra.nome} />
-            </div>
-            <div>
-              <label htmlFor="artista">Artista</label>
-              <Input type="text" name="artista" defaultValue={cifra.artista || ""} placeholder="Nome do artista (opcional)" />
-            </div>
-            <div>
-              <label htmlFor="link">Link da cifra</label>
-              <Input type="text" name="link" defaultValue={cifra.link} />
-            </div>
-            <div>
-              <label htmlFor="bpm">BPM (batidas por minuto)</label>
-              <Input
-                type="number"
-                name="bpm"
-                min={30}
-                max={300}
-                defaultValue={cifra.bpm || ""}
-                placeholder="Ex: 90 (opcional)"
-              />
-            </div>
-            <MultSeletorContainer>
-              <GuardaEscolhidos>
-                {escolhidos.length > 0 &&
-                  escolhidos.map((item) => (
-                    <p key={item._id}>
-                      {item.nome}
-                      <button
-                        type="button"
-                        className="remove"
-                        aria-label={`Remover categoria ${item.nome}`}
-                        onClick={() => removeSelect(item)}
-                      >
-                        X
-                      </button>
-                    </p>
-                  ))}
-              </GuardaEscolhidos>
-              <h3>Adicionar categoria</h3>
-              <Input
-                type="text"
-                placeholder="Pesquisar a categoria"
-                value={categoriaQuery}
-                aria-label="Pesquisar categoria"
-                onChange={(e) => setCategoriaQuery(e.target.value)}
-              />
-              {categoriaQuery && (
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => {
-                    setCategoriaQuery("");
-                    setCategorias([]);
-                  }}
-                >
-                  Limpar filtro
-                </button>
-              )}
-              {categorias.length > 0 &&
-                categorias.map((item) => (
-                  <p
-                    key={item._id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleSelect(item)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleSelect(item);
-                      }
-                    }}
-                  >
-                    {item.nome}
-                  </p>
-                ))}
-            </MultSeletorContainer>
-            <button className="btn">Salvar Cifra</button>
-            <button
-              type="button"
-              className="btn btn-danger"
-              aria-label="Excluir cifra"
-              onClick={() => setModalDelete(true)}
-            >
-              <FiTrash2 size={16} /> Excluir cifra
-            </button>
-            <p>Utilize "!!!" para separar a cifra em duas colunas</p>
-            <TextareaAutosize
-              name="observacao"
-              defaultValue={cifra.observacao}
-              minRows={2}
-            />
-          </UpdateCifra>
+          <EditarCifraForm
+            cifra={cifra}
+            escolhidos={escolhidos}
+            onChangeEscolhidos={setEscolhidos}
+            onSubmit={handleUpdateCifra}
+            onRequestDelete={() => setModalDelete(true)}
+          />
         )}
       </CifraBody>
-      {/* MODAL TOM */}
-      {modalTom && (
-        <>
-          <Overlay onClick={() => setModalTom(false)} />
-          <ModalTom>
-            <div className="tom-titulo">
-              Tom: <span>{currentKey}</span>
-            </div>
-            <div className="tom-semitom" role="group" aria-label="Grafia das notas">
-              <button
-                type="button"
-                className={acc === "sharp" ? "ativo" : ""}
-                aria-pressed={acc === "sharp"}
-                onClick={() => setAccidental("sharp")}
-              >
-                Sustenido ♯
-              </button>
-              <button
-                type="button"
-                className={acc === "flat" ? "ativo" : ""}
-                aria-pressed={acc === "flat"}
-                onClick={() => setAccidental("flat")}
-              >
-                Bemol ♭
-              </button>
-            </div>
-            <TomExtras currentKey={currentKey} />
-            <div className="tom-semitom">
-              <button
-                type="button"
-                onClick={() => setSemitones((s) => s - 1)}
-              >
-                - ½ tom
-              </button>
-              <button
-                type="button"
-                onClick={() => setSemitones((s) => s + 1)}
-              >
-                + ½ tom
-              </button>
-            </div>
-            <div className="tom-grid">
-              {NOTES_DISPLAY.map((note) => {
-                const isAtivo = getSemitonesTo(currentKey, note) === 0;
-                return (
-                  <button
-                    key={note}
-                    type="button"
-                    className={isAtivo ? "ativo" : ""}
-                    onClick={() => {
-                      if (!originalKey) return;
-                      setSemitones((s) => s + getSemitonesTo(currentKey, note));
-                    }}
-                  >
-                    {note}
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              className="tom-restaurar"
-              onClick={() => {
-                setSemitones(0);
-                setModalTom(false);
-              }}
-            >
-              Restaurar tom inicial
-            </button>
-          </ModalTom>
-        </>
+
+      {modalTom && originalKey && (
+        <TomModal
+          currentKey={currentKey}
+          accidental={acc}
+          semitones={semitones}
+          onChange={setSemitones}
+          onClose={() => setModalTom(false)}
+        />
       )}
-      {/* MODAL DELETE  */}
+
       {modalDelete && (
-        <ModalDelete>
-          <h3>Excluir “{cifra.nome}”?</h3>
-          <p>Essa ação é irreversível e removerá a cifra permanentemente.</p>
-          <div className="modal-actions">
-            <button
-              type="button"
-              className="btn"
-              onClick={() => {
-                setModalDelete(false);
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleDeleteCifra}
-              className="btn btn-danger"
-            >
-              Excluir
-            </button>
-          </div>
-        </ModalDelete>
+        <ConfirmarExclusao nome={cifra.nome} onCancel={() => setModalDelete(false)} onConfirm={handleDeleteCifra} />
       )}
 
       {stageOpen && (
         <StageMode
           songs={[
             {
-              id: String(cifra._id || id),
+              id: cifraId,
               nome: cifra.nome,
               artista: cifra.artista,
               text: cifra.observacao,
@@ -745,7 +235,7 @@ export default function VerCifra() {
               bpm: cifra.bpm,
             },
           ]}
-          semitones={{ [String(cifra._id || id)]: semitones }}
+          semitones={{ [cifraId]: semitones }}
           onSemitonesChange={(_, n) => setSemitones(n)}
           onClose={() => setStageOpen(false)}
         />

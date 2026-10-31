@@ -1,4 +1,4 @@
-import { getImageSizeError } from "../service/s3Service";
+import { getImageSizeError } from "./imageValidation";
 import {
   createPlaylistService,
   createPlaylistWithBannerService,

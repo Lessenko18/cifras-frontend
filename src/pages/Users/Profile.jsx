@@ -10,25 +10,16 @@ import {
 } from "./ProfileStyled";
 import { getMeRequest, logout } from "../../service/auth.service";
 import { editUserService } from "../../service/userService";
-import {
-  MAX_AVATAR_SIZE_MB,
-  getImageSizeError,
-  uploadToS3ViaBackend,
-} from "../../service/s3Service";
+import { uploadAvatar } from "../../service/uploadService";
+import { MAX_AVATAR_SIZE_MB, getImageSizeError } from "../../utils/imageValidation";
 import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
 import toast from "react-hot-toast";
-import { storage } from "../../lib/storage";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const storedUser = JSON.parse(storage.get("user")) || {};
-  const normalizedStoredUser = {
-    ...storedUser,
-    avatar: normalizeAvatarUrl(storedUser.avatar),
-    photo: normalizeAvatarUrl(storedUser.photo),
-  };
-
-  const [user, setUser] = useState(normalizedStoredUser);
+  const { user: authUser, setUser: setAuthUser } = useAuth();
+  const [user, setUser] = useState(() => authUser || {});
   const [editing, setEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [preview, setPreview] = useState(user.avatar || user.photo || null);
@@ -123,7 +114,7 @@ export default function Profile() {
       if (form.avatarFile) {
         try {
           toast.loading("📤 Enviando foto para o servidor...");
-          avatarUrl = await uploadToS3ViaBackend(form.avatarFile);
+          avatarUrl = await uploadAvatar(form.avatarFile);
           toast.dismiss(); // Remove o loading toast
         } catch (uploadErr) {
           toast.dismiss();
@@ -179,8 +170,7 @@ export default function Profile() {
         ),
       };
 
-      storage.set("user", JSON.stringify(finalUser));
-      window.dispatchEvent(new Event("userUpdated"));
+      setAuthUser(finalUser);
       setUser(finalUser);
 
       toast.success("Perfil atualizado com sucesso!");

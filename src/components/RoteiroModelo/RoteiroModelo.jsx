@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
-import { getCategoriasService } from "../../service/categoriaService";
+import { useCategorias } from "../../hooks/queries/useCategorias";
 import { getCifrasService } from "../../service/cifraService";
 
 // Modelos de repertório por momento litúrgico. Cada momento é casado com uma
@@ -125,13 +125,7 @@ function Momento({ nome, categoria, escolhidos, addItem }) {
 // os momentos com sugestão de cifras da categoria correspondente.
 export default function RoteiroModelo({ escolhidos, addItem, nomeInputId }) {
   const [modelo, setModelo] = useState(null);
-  const [categorias, setCategorias] = useState([]);
-
-  useEffect(() => {
-    getCategoriasService()
-      .then((res) => setCategorias(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setCategorias([]));
-  }, []);
+  const { categorias } = useCategorias();
 
   function escolher(nome) {
     const next = modelo === nome ? null : nome;

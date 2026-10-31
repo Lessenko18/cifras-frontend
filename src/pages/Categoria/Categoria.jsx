@@ -1,8 +1,8 @@
+import { useCategorias, useInvalidateCategorias } from "../../hooks/queries/useCategorias";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createCategoriaService,
   deleteCategoriaService,
-  getCategoriasService,
   editCategoriaService,
 } from "../../service/categoriaService";
 import { Input } from "../../components/Input/Input";
@@ -30,7 +30,8 @@ const selectStyle = {
 };
 
 export default function Categorias() {
-  const [categorias, setCategorias] = useState([]);
+  const { categorias } = useCategorias();
+  const invalidateCategorias = useInvalidateCategorias();
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -75,11 +76,6 @@ export default function Categorias() {
     [rootCategorias, categorias],
   );
 
-  async function getCategorias() {
-    const response = await getCategoriasService();
-    setCategorias(response.data);
-  }
-
   async function handleCreateCategoria(event) {
     event.preventDefault();
     const formData = new FormData(event.target);
@@ -94,7 +90,7 @@ export default function Categorias() {
       toast.success("Categoria cadastrada com sucesso!");
       setIsCreating(false);
       event.target.reset();
-      await getCategorias();
+      await invalidateCategorias();
     } catch (err) {
       console.error(err);
       toast.error(
@@ -116,7 +112,7 @@ export default function Categorias() {
       await editCategoriaService(chosenCategoria._id, data);
       setIsEditing(false);
       setChosenCategoria(null);
-      await getCategorias();
+      await invalidateCategorias();
       toast.success("Categoria editada com sucesso!");
     } catch (err) {
       console.error(err);
@@ -135,7 +131,7 @@ export default function Categorias() {
       setIsDeleting(false);
       toast.success("Categoria excluída com sucesso!");
       setChosenCategoria(null);
-      await getCategorias();
+      await invalidateCategorias();
     } catch (err) {
       console.error(err);
       toast.error(
@@ -159,10 +155,6 @@ export default function Categorias() {
     setIsDeleting(false);
     setIsCreating(false);
   }
-
-  useEffect(() => {
-    getCategorias();
-  }, []);
 
   // Recolhe automaticamente todas as categorias pai na primeira carga
   useEffect(() => {

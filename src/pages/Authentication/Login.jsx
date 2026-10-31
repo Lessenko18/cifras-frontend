@@ -69,9 +69,6 @@ export default function Login() {
         return;
       }
 
-      // Avisa o AuthContext (e a Navbar) que há um usuário novo no localStorage
-      window.dispatchEvent(new Event("userUpdated"));
-
       toast.success("Login realizado com sucesso!");
       navigate(redirectTo);
     } catch (error) {

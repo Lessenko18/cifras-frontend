@@ -1,3 +1,5 @@
+// Extrai artista e título de um link do CifraClub (ex.: cifraclub.com.br/artista/musica/).
+// Não faz requisição nenhuma: só interpreta o caminho da URL. Lança se não for um link válido.
 function capitalizeSlug(slug) {
   return slug
     .split('-')
@@ -5,7 +7,7 @@ function capitalizeSlug(slug) {
     .join(' ');
 }
 
-export function fetchCifraClub(url) {
+export function parseCifraClubUrl(url) {
   try {
     const parts = new URL(url).pathname.replace(/^\/|\/$/g, '').split('/');
     const artista = parts[0] ? capitalizeSlug(parts[0]) : '';
@@ -13,8 +15,8 @@ export function fetchCifraClub(url) {
 
     if (!artista && !nome) throw new Error('URL inválida');
 
-    return Promise.resolve({ artista, nome });
+    return { artista, nome };
   } catch {
-    return Promise.reject(new Error('URL inválida. Use um link do CifraClub.'));
+    throw new Error('URL inválida. Use um link do CifraClub.');
   }
 }

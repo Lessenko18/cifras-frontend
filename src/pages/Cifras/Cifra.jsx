@@ -1,497 +1,97 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import toast from "react-hot-toast";
-import { createCifraService, getCifrasService } from "../../service/cifraService";
-import { fetchCifraClub } from "../../service/cifraClubService";
-import { getFavoritosService, toggleFavoritoService } from "../../service/favoritosService";
-import {
-  AnCifra,
-  ModalCifra,
-  CifrasBody,
-  CifrasContainer,
-  ModalOverlay,
-  CloseX,
-  PaginationContainer,
-  PaginationButton,
-  PaginationInfo,
-  FilterDropdownWrapper,
-  FilterDropdownTrigger,
-  FilterDropdownPanel,
-  FilterDropdownItem,
-} from "./CifraStyled";
-import AddToPlaylist from "../../components/AddToPlaylist/AddToPlaylist";
-import { Input } from "../../components/Input/Input";
-import { getCategoriasService } from "../../service/categoriaService";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import * as S from "./CifraStyled";
 import { UsersHeader } from "../Users/UsersStyled";
 import { FavBtn } from "../Home/HomeStyled";
 import EmptyState from "../../components/EmptyState/EmptyState";
 import { SkeletonRows } from "../../components/Skeleton/Skeleton";
-import MultSeletor from "../../components/MultSeletor/MultSeletor";
-import { useSearch } from "../../hooks/useSearch";
-import { useRequireAuth } from "../../hooks/useRequireAuth";
-import { useAuth } from "../../context/AuthContext";
-import { usePageSearchBox } from "../../context/PageSearchContext";
-import { useInitialUrlFilters, useResetPageOnChange, useSyncUrlFilters } from "../../hooks/useUrlFilters";
 import ImportarPdf from "../../components/ImportarPdf/ImportarPdf";
-import { useCategoriaFilter } from "../../hooks/useCategoriaFilter";
-import { useClickOutside } from "../../hooks/useClickOutside";
+import CategoriaFilterDropdown from "../../components/CategoriaFilterDropdown/CategoriaFilterDropdown";
+import Paginacao from "../../components/Paginacao/Paginacao";
+import { usePageSearchBox } from "../../context/PageSearchContext";
+import { useRequireAuth } from "../../hooks/useRequireAuth";
+import { useCifrasBusca } from "../../hooks/useCifrasBusca";
+import NovaCifraModal from "./components/NovaCifraModal";
+import CifraListCard from "./components/CifraListCard";
 
-const CATEGORY_ICONS = {
-  "Igreja":    "⛪",
-  "Sertanejo": "🤠",
-  "Gospel":    "🙏",
-  "Pop":       "🎤",
-  "Rock":      "🎸",
-  "MPB":       "🎵",
-  "Infantil":  "🧒",
-  "Natal":     "🎄",
-  "Páscoa":    "✝️",
+const FILTER_STYLES = {
+  Wrapper: S.FilterDropdownWrapper,
+  Trigger: S.FilterDropdownTrigger,
+  Panel: S.FilterDropdownPanel,
+  Item: S.FilterDropdownItem,
+};
+const PAGINATION_STYLES = {
+  Container: S.PaginationContainer,
+  Button: S.PaginationButton,
+  Info: S.PaginationInfo,
 };
 
-function getCategoryIcon(categoryName, parentName) {
-  const search = (parentName || categoryName || "").toLowerCase();
-  if (!search) return "🎵";
-  const key = Object.keys(CATEGORY_ICONS).find((k) =>
-    search.includes(k.toLowerCase())
-  );
-  return key ? CATEGORY_ICONS[key] : "🎵";
-}
-
 export default function Cifras() {
-  const [cifras, setCifras] = useState([]);
-  const [pages, setPages] = useState(0);
-  const [loaded, setLoaded] = useState(false);
-  const urlFilters = useInitialUrlFilters();
-  const [currentPage, setCurrentPage] = useState(() => urlFilters.getNumber("page"));
-  const [categorias, setCategorias] = useState([]);
+  const requireAuth = useRequireAuth();
   const [isCreating, setIsCreating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [chosenCategorias, setChosenCategorias] = useState([]);
-  const [sending, setSending] = useState(false);
 
-  const [formNome, setFormNome] = useState("");
-  const [formArtista, setFormArtista] = useState("");
-  const [formLink, setFormLink] = useState("");
-  const [formBpm, setFormBpm] = useState("");
-  const [formObservacao, setFormObservacao] = useState("");
-  const [fetchingCifra, setFetchingCifra] = useState(false);
+  const busca = useCifrasBusca({ limit: 15, showParent: true });
+  const {
+    categorias, cifras, pages, loaded, refetch, search, setSearch, categoriaFiltro, setCategoriaFiltro,
+    filterLabel, favoritosMode, setFavoritosMode, handleToggleFavoritosMode, favoritosIds, favoritosSet,
+    handleToggleFavorito, currentPage, setCurrentPage,
+  } = busca;
 
-  const { search: searchNome, setSearch: setSearchNome, debounced } = useSearch(300, urlFilters.get("q"));
-
-  usePageSearchBox({
-    placeholder: "Pesquisar música",
-    value: searchNome,
-    onChange: setSearchNome,
-  });
-  const [categoriaFiltro, setCategoriaFiltro] = useState(() => urlFilters.get("cat"));
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [filterExpanded, setFilterExpanded] = useState(new Set());
-  const filterRef = useRef(null);
-
-  const [favoritosIds, setFavoritosIds] = useState([]);
-  const [favoritosMode, setFavoritosMode] = useState(() => urlFilters.get("fav") === "1");
-  const favoritosSet = useMemo(() => new Set(favoritosIds), [favoritosIds]);
-
-  const requireAuth = useRequireAuth();
-  const { isAuthenticated } = useAuth();
-
-  const getCategoriaParentName = (categoria) => {
-    if (!categoria) return "";
-    if (categoria.parent?.nome) return categoria.parent.nome;
-    const parentId =
-      typeof categoria.parent === "string" ? categoria.parent : categoria.parent?._id;
-    return categorias.find((c) => c._id === parentId)?.nome || "";
-  };
-
-  const rootCategorias = useMemo(
-    () => categorias.filter((c) => !c.parent).sort((a, b) => a.nome.localeCompare(b.nome)),
-    [categorias],
-  );
-
-  const { relevantCategoriaIds, filterLabel } = useCategoriaFilter(categorias, categoriaFiltro, {
-    showParent: true,
-  });
-
-  useClickOutside(filterRef, () => setFilterOpen(false));
-
-  const getCategorias = useCallback(async () => {
-    try {
-      const response = await getCategoriasService();
-      setCategorias(response.data || []);
-    } catch (err) {
-      console.error(err);
-    }
-  }, []);
-
-  const fetchCifras = useCallback(async () => {
-    // Modo favoritas sem nenhuma favorita: nem consulta (a lista ficaria "tudo")
-    if (favoritosMode && favoritosIds.length === 0) {
-      setCifras([]);
-      setPages(0);
-      setLoaded(true);
-      return;
-    }
-    try {
-      const res = await getCifrasService({
-        nome: debounced || undefined,
-        categorias: relevantCategoriaIds.length ? relevantCategoriaIds : undefined,
-        favoritos: favoritosMode ? favoritosIds : undefined,
-        page: currentPage,
-        limit: 15,
-      });
-      const data = res.data;
-      setCifras(data.cifras || []);
-      setPages(data.pages || 0);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoaded(true);
-    }
-  }, [debounced, relevantCategoriaIds, currentPage, favoritosMode, favoritosIds]);
-
-  useEffect(() => {
-    getCategorias();
-  }, [getCategorias]);
-
-  useEffect(() => {
-    if (!isAuthenticated) { setFavoritosIds([]); return; }
-    getFavoritosService()
-      .then(setFavoritosIds)
-      .catch(() => {});
-  }, [isAuthenticated]);
-
-  const handleToggleFavorito = useCallback(async (cifraId) => {
-    if (!requireAuth("Você precisa fazer login para favoritar músicas.")) return;
-    try {
-      const updated = await toggleFavoritoService(cifraId);
-      setFavoritosIds(updated);
-    } catch (err) {
-      console.error(err);
-    }
-  }, [requireAuth]);
-
-  useEffect(() => {
-    fetchCifras();
-  }, [fetchCifras]);
-
-  useResetPageOnChange([debounced, categoriaFiltro, favoritosMode], () => setCurrentPage(0));
-  useSyncUrlFilters({
-    q: searchNome,
-    cat: categoriaFiltro,
-    fav: favoritosMode ? "1" : "",
-    page: currentPage,
-  });
-
-  const handleToggleFavoritosMode = useCallback(() => {
-    if (!favoritosMode && !requireAuth("Você precisa fazer login para ver suas favoritas.")) return;
-    setFavoritosMode((m) => !m);
-  }, [favoritosMode, requireAuth]);
-
-  const resetForm = useCallback(() => {
-    setFormNome("");
-    setFormArtista("");
-    setFormLink("");
-    setFormBpm("");
-    setFormObservacao("");
-    setChosenCategorias([]);
-  }, []);
-
-  const handleFetchCifra = useCallback(async () => {
-    if (!formLink.trim()) {
-      toast.warning("Cole o link da cifra primeiro.");
-      return;
-    }
-    setFetchingCifra(true);
-    try {
-      const { nome, artista } = await fetchCifraClub(formLink.trim());
-      if (nome) setFormNome(nome);
-      if (artista) setFormArtista(artista);
-      toast.success("Cifra carregada com sucesso!");
-    } catch {
-      toast.error("Não foi possível carregar a cifra. Verifique o link.");
-    } finally {
-      setFetchingCifra(false);
-    }
-  }, [formLink]);
-
-  const handleCreateCifra = useCallback(
-    async (event) => {
-      event.preventDefault();
-      setSending(true);
-
-      const nome = formNome.trim();
-      const link = formLink.trim();
-      const observacao = formObservacao.trim();
-      const artista = formArtista.trim();
-      const bpm = formBpm.trim() ? Number(formBpm.trim()) : undefined;
-      const categorias = chosenCategorias.map((c) => c._id);
-
-      if (!nome) {
-        toast.warning("Preencha o título da música.");
-        setSending(false);
-        return;
-      }
-
-      try {
-        await createCifraService({ nome, link: link || undefined, observacao, artista, bpm, categorias });
-        setIsCreating(false);
-        resetForm();
-        await fetchCifras();
-        toast.success("Cifra cadastrada com sucesso!");
-      } catch (err) {
-        console.error(err);
-        toast.error(
-          err?.response?.status === 409
-            ? err.response.data?.message || "Essa cifra já existe."
-            : "Falha ao cadastrar a cifra.",
-        );
-      } finally {
-        setSending(false);
-      }
-    },
-    [formNome, formLink, formObservacao, formArtista, formBpm, chosenCategorias, fetchCifras, resetForm],
-  );
-
-  const updateCategoria = useCallback((lista) => {
-    setChosenCategorias(lista);
-  }, []);
+  usePageSearchBox({ placeholder: "Pesquisar música", value: search, onChange: setSearch });
 
   return (
-    <CifrasContainer>
+    <S.CifrasContainer>
       <UsersHeader>
         <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", justifyContent: "flex-end" }}>
-        <FilterDropdownWrapper ref={filterRef}>
-          <FilterDropdownTrigger
-            type="button"
-            onClick={() => setFilterOpen((o) => !o)}
-            aria-label="Filtrar por categoria"
-          >
-            <span>{filterLabel}</span>
-            <span style={{
-              fontSize: "0.7em", transition: "transform 0.2s", display: "inline-block",
-              transform: filterOpen ? "rotate(0deg)" : "rotate(-90deg)", color: "#7c3aed",
-            }}>▼</span>
-          </FilterDropdownTrigger>
+          <CategoriaFilterDropdown
+            categorias={categorias}
+            value={categoriaFiltro}
+            onChange={setCategoriaFiltro}
+            label={filterLabel}
+            styles={FILTER_STYLES}
+          />
 
-          {filterOpen && (
-            <FilterDropdownPanel>
-              <FilterDropdownItem
-                $active={categoriaFiltro === ""}
-                onClick={() => { setCategoriaFiltro(""); setFilterOpen(false); }}
-              >
-                Todas as categorias
-              </FilterDropdownItem>
+          <FavBtn type="button" $active={favoritosMode} onClick={handleToggleFavoritosMode}>
+            {favoritosMode ? "♥" : "♡"} Favoritas
+          </FavBtn>
 
-              {rootCategorias.map((root) => {
-                const children = categorias
-                  .filter((c) => String(c.parent?._id || c.parent) === String(root._id))
-                  .sort((a, b) => a.nome.localeCompare(b.nome));
-                const isExpanded = filterExpanded.has(root._id);
-
-                if (children.length > 0) {
-                  return (
-                    <div key={root._id}>
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <FilterDropdownItem
-                          $active={categoriaFiltro === root._id}
-                          style={{ flex: 1 }}
-                          onClick={() => { setCategoriaFiltro(root._id); setFilterOpen(false); }}
-                        >
-                          {root.nome}
-                        </FilterDropdownItem>
-                        <button
-                          type="button"
-                          onClick={() => setFilterExpanded((prev) => {
-                            const next = new Set(prev);
-                            next.has(root._id) ? next.delete(root._id) : next.add(root._id);
-                            return next;
-                          })}
-                          style={{
-                            background: "none", border: "none", cursor: "pointer",
-                            padding: "0 12px", fontSize: "0.7em", color: "#7c3aed",
-                            transition: "transform 0.2s",
-                            transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)",
-                          }}
-                        >▼</button>
-                      </div>
-                      {isExpanded && children.map((child) => (
-                        <FilterDropdownItem
-                          key={child._id}
-                          $active={categoriaFiltro === child._id}
-                          $indent
-                          onClick={() => { setCategoriaFiltro(child._id); setFilterOpen(false); }}
-                        >
-                          ↳ {child.nome}
-                        </FilterDropdownItem>
-                      ))}
-                    </div>
-                  );
-                }
-
-                return (
-                  <FilterDropdownItem
-                    key={root._id}
-                    $active={categoriaFiltro === root._id}
-                    onClick={() => { setCategoriaFiltro(root._id); setFilterOpen(false); }}
-                  >
-                    {root.nome}
-                  </FilterDropdownItem>
-                );
-              })}
-            </FilterDropdownPanel>
+          {(search || categoriaFiltro || favoritosMode) && (
+            <button
+              type="button"
+              className="btn"
+              onClick={() => { setSearch(""); setCategoriaFiltro(""); setFavoritosMode(false); }}
+            >
+              Limpar filtro
+            </button>
           )}
-        </FilterDropdownWrapper>
 
-        <FavBtn type="button" $active={favoritosMode} onClick={handleToggleFavoritosMode}>
-          {favoritosMode ? "♥" : "♡"} Favoritas
-        </FavBtn>
-
-        {(searchNome || categoriaFiltro || favoritosMode) && (
           <button
-            type="button"
-            className="btn"
-            onClick={() => { setSearchNome(""); setCategoriaFiltro(""); setFavoritosMode(false); }}
+            className="btn adicionar-primary"
+            onClick={() => {
+              if (requireAuth("Você precisa fazer login para adicionar uma cifra.")) setIsCreating(true);
+            }}
           >
-            Limpar filtro
+            Adicionar Nova Cifra
           </button>
-        )}
 
-        <button
-          className="btn adicionar-primary"
-          onClick={() => {
-            if (!requireAuth("Você precisa fazer login para adicionar uma cifra.")) return;
-            setIsCreating(true);
-          }}
-        >
-          Adicionar Nova Cifra
-        </button>
-
-        <button
-          className="btn"
-          onClick={() => {
-            if (!requireAuth("Você precisa fazer login para importar cifras.")) return;
-            setIsImporting(true);
-          }}
-        >
-          Importar PDF
-        </button>
+          <button
+            className="btn"
+            onClick={() => {
+              if (requireAuth("Você precisa fazer login para importar cifras.")) setIsImporting(true);
+            }}
+          >
+            Importar PDF
+          </button>
         </div>
       </UsersHeader>
 
       {isImporting && (
-        <ImportarPdf
-          categorias={categorias}
-          onClose={() => setIsImporting(false)}
-          onImported={fetchCifras}
-        />
+        <ImportarPdf categorias={categorias} onClose={() => setIsImporting(false)} onImported={refetch} />
       )}
 
-      {isCreating && (
-        <>
-          <ModalOverlay onClick={() => { setIsCreating(false); resetForm(); }} />
+      {isCreating && <NovaCifraModal onClose={() => setIsCreating(false)} onCreated={refetch} />}
 
-          <ModalCifra onSubmit={handleCreateCifra}>
-            <CloseX type="button" onClick={() => { setIsCreating(false); resetForm(); }}>
-              ×
-            </CloseX>
-
-            <h3>Adicionar Nova Cifra</h3>
-
-            <div>
-              <label htmlFor="cifra-nome">Título da Música *</label>
-              <Input
-                id="cifra-nome"
-                name="nome"
-                required
-                placeholder="Preencha o nome da música"
-                value={formNome}
-                onChange={(e) => setFormNome(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="cifra-artista">Artista</label>
-              <Input
-                id="cifra-artista"
-                name="artista"
-                placeholder="Nome do artista (opcional)"
-                value={formArtista}
-                onChange={(e) => setFormArtista(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="cifra-bpm">BPM (batidas por minuto)</label>
-              <Input
-                id="cifra-bpm"
-                name="bpm"
-                type="number"
-                min={30}
-                max={300}
-                placeholder="Ex: 90 (opcional, dá pra ajustar depois)"
-                value={formBpm}
-                onChange={(e) => setFormBpm(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="cifra-link">Link da Cifra</label>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <Input
-                  id="cifra-link"
-                  name="link"
-                  type="url"
-                  placeholder="https://exemplo.com.br/sua-cifra (opcional)"
-                  value={formLink}
-                  onChange={(e) => setFormLink(e.target.value)}
-                  style={{ flex: 1 }}
-                />
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={handleFetchCifra}
-                  disabled={fetchingCifra}
-                  style={{ whiteSpace: "nowrap", flexShrink: 0 }}
-                >
-                  {fetchingCifra ? "Buscando..." : "Buscar"}
-                </button>
-              </div>
-            </div>
-
-            <p>Utilize "!!!" para separar a cifra em duas colunas</p>
-
-            <div>
-              <label htmlFor="cifra-observacao">Cifra</label>
-              <textarea
-                id="cifra-observacao"
-                name="observacao"
-                placeholder={`Cole sua cifra aqui:\n      Am\nDoente de amor procurei remédio\n     G\nNa vida noturna`}
-                value={formObservacao}
-                onChange={(e) => setFormObservacao(e.target.value)}
-              />
-            </div>
-
-            <MultSeletor tipo="categoria" escolhidos={chosenCategorias} addItem={updateCategoria} />
-
-            <div className="actions modal-actions">
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={() => { setIsCreating(false); resetForm(); }}
-              >
-                Cancelar
-              </button>
-              {!sending ? (
-                <button type="submit" className="btn">Adicionar</button>
-              ) : (
-                <p className="btn">Enviando</p>
-              )}
-            </div>
-          </ModalCifra>
-        </>
-      )}
-
-      <CifrasBody>
+      <S.CifrasBody>
         {!loaded && <SkeletonRows count={8} />}
         {loaded && cifras.length === 0 && (
           favoritosMode && favoritosIds.length === 0 ? (
@@ -509,63 +109,17 @@ export default function Cifras() {
           )
         )}
         {cifras.map((cifra) => (
-          <Link key={cifra._id} to={`/home/cifra/${cifra._id}`}>
-            <AnCifra>
-              <button
-                type="button"
-                className="heart-btn"
-                aria-label={favoritosSet.has(cifra._id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleToggleFavorito(cifra._id);
-                }}
-              >
-                {favoritosSet.has(cifra._id) ? "♥" : "♡"}
-              </button>
-              <h2>{cifra.nome}</h2>
-              <span className="add-playlist">
-                <AddToPlaylist cifraId={cifra._id} cifraNome={cifra.nome} />
-              </span>
-              {cifra.artista && <p className="artista">{cifra.artista}</p>}
-              <div>
-                {cifra.categorias?.map((cat) => {
-                  const catId = typeof cat === "string" ? cat : cat?._id;
-                  const categoria = categorias.find((c) => c._id === catId);
-                  const parentName = getCategoriaParentName(categoria);
-                  const icon = getCategoryIcon(categoria?.nome, parentName);
-                  return (
-                    <span key={catId} title={parentName || undefined}>
-                      {icon && icon}{icon && " "}
-                      {categoria?.nome}
-                    </span>
-                  );
-                })}
-              </div>
-            </AnCifra>
-          </Link>
+          <CifraListCard
+            key={cifra._id}
+            cifra={cifra}
+            categorias={categorias}
+            isFav={favoritosSet.has(cifra._id)}
+            onToggleFav={handleToggleFavorito}
+          />
         ))}
-      </CifrasBody>
+      </S.CifrasBody>
 
-      {pages > 1 && (
-        <PaginationContainer>
-          <PaginationButton
-            disabled={currentPage === 0}
-            onClick={() => setCurrentPage((p) => p - 1)}
-          >
-            Anterior
-          </PaginationButton>
-          <PaginationInfo>
-            Página {currentPage + 1} de {pages}
-          </PaginationInfo>
-          <PaginationButton
-            disabled={currentPage + 1 >= pages}
-            onClick={() => setCurrentPage((p) => p + 1)}
-          >
-            Próxima
-          </PaginationButton>
-        </PaginationContainer>
-      )}
-    </CifrasContainer>
+      <Paginacao page={currentPage} pages={pages} onChange={setCurrentPage} styles={PAGINATION_STYLES} />
+    </S.CifrasContainer>
   );
 }

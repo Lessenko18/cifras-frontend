@@ -186,7 +186,8 @@ export const Velocimetro = styled.div`
     font-weight: bold;
     color: var(--text-secondary);
 
-    &:hover {
+    &:hover,
+    &[aria-pressed="true"] {
       background: var(--velocimetro-hover);
     }
 
