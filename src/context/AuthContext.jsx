@@ -43,8 +43,8 @@ export function AuthProvider({ children }) {
     [queryClient],
   );
 
-  // Sem token local nem tenta buscar — evita 401 desnecessário para visitantes
-  const hasToken = Boolean(storage.get("access_token"));
+  // Sem marcador de sessão nem tenta buscar — evita 401 desnecessário para visitantes
+  const hasToken = Boolean(storage.get("has_session"));
 
   const { data, dataUpdatedAt, isError } = useQuery({
     queryKey: meKey,
@@ -75,7 +75,7 @@ export function AuthProvider({ children }) {
   );
 
   const refresh = useCallback(async () => {
-    if (!storage.get("access_token")) {
+    if (!storage.get("has_session")) {
       setUser(null);
       return null;
     }

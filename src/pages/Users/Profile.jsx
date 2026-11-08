@@ -28,8 +28,14 @@ export default function Profile() {
     name: user.name || user.nome || "",
     email: user.email || "",
     password: "",
+    currentPassword: "",
     avatarFile: null,
   });
+
+  // Trocar e-mail ou senha exige a senha atual (o servidor confere)
+  const emailChanged =
+    form.email.trim().toLowerCase() !== String(user.email || "").trim().toLowerCase();
+  const needsCurrentPassword = emailChanged || Boolean(form.password);
 
   const userName = user?.name || user?.nome;
   const initials = userName
@@ -88,6 +94,10 @@ export default function Profile() {
       toast.error("Email inválido");
       return false;
     }
+    if (needsCurrentPassword && !form.currentPassword) {
+      toast.error("Informe sua senha atual para alterar e-mail ou senha");
+      return false;
+    }
     return true;
   };
 
@@ -143,6 +153,9 @@ export default function Profile() {
       if (form.password) {
         payload.password = form.password;
       }
+      if (needsCurrentPassword) {
+        payload.currentPassword = form.currentPassword;
+      }
 
       // Não envia "avatar" aqui: o upload já persistiu a key correta no
       // backend (/user/upload-avatar). Reenviar a URL assinada quebraria o
@@ -175,7 +188,7 @@ export default function Profile() {
 
       toast.success("Perfil atualizado com sucesso!");
       setEditing(false);
-      setForm((s) => ({ ...s, password: "", avatarFile: null }));
+      setForm((s) => ({ ...s, password: "", currentPassword: "", avatarFile: null }));
       setPreview(null);
     } catch (err) {
       console.error("Erro completo:", err);
@@ -283,9 +296,25 @@ export default function Profile() {
                 value={form.password}
                 onChange={handleChange}
                 placeholder="Nova senha (opcional)"
+                autoComplete="new-password"
                 disabled={isSaving}
               />
             </div>
+
+            {needsCurrentPassword && (
+              <div>
+                <label>Senha atual * (necessária para alterar e-mail ou senha)</label>
+                <input
+                  name="currentPassword"
+                  type="password"
+                  value={form.currentPassword}
+                  onChange={handleChange}
+                  placeholder="Digite sua senha atual"
+                  autoComplete="current-password"
+                  disabled={isSaving}
+                />
+              </div>
+            )}
 
             <div>
               <label>

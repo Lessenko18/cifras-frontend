@@ -5,7 +5,8 @@
 // "sem valor" (get) ou `false` (set), e o app segue funcionando sem lembrar nada.
 //
 // Chaves usadas hoje (mantenha esta lista atualizada ao criar uma nova):
-//   access_token, user ........ sessão (limpas no logout)
+//   has_session, user ......... marcador de sessão e cópia do usuário (limpos no logout).
+//                               O token em si NÃO fica aqui: vive no cookie httpOnly.
 //   theme ..................... "light" | "dark" (ausente = segue o sistema)
 //   acidente, cifraSimples .... preferências de exibição da cifra
 //   instrumento ............... "guitar" | "piano" (diagrama de acordes)
