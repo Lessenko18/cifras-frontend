@@ -1,8 +1,32 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig({
+// Origem da API vinda do MESMO env que o app usa (VITE_API_BASE_URL), para o
+// service worker nunca apontar para um host diferente do real (antes estava
+// fixo em onrender.com enquanto a API roda na Vercel, então o cache nunca valia).
+function apiOrigin(mode) {
+  const env = loadEnv(mode, ".", "VITE_");
+  try {
+    return new URL(env.VITE_API_BASE_URL?.trim() || "http://localhost:3000").origin;
+  } catch {
+    return "";
+  }
+}
+
+export default defineConfig(({ mode }) => {
+  const API = apiOrigin(mode);
+  const origin = API.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+  // Só o catálogo público pode ir para cache. Playlists privadas, favoritos,
+  // auditoria, feedback e tudo de /auth e /user são por usuário e nunca ficam em
+  // cache (senão outra conta no mesmo aparelho veria dados da anterior).
+  // IMPORTANTE: o workbox serializa o config para dentro do sw.js, então aqui só
+  // valem RegExp (com a origem já embutida); funções não enxergam variáveis daqui.
+  const PUBLIC = "(cifra|categoria|playlist/public)(/|\\?|$)";
+  const publicApi = API ? new RegExp("^" + origin + "/" + PUBLIC) : /(?!)/;
+  const privateApi = API ? new RegExp("^" + origin + "/(?!" + PUBLIC + ")") : /(?!)/;
+
+  return {
   plugins: [
     react(),
     VitePWA({
@@ -45,11 +69,11 @@ export default defineConfig({
             // avatar novo (ou logout/login com outra conta) precisa sempre
             // bater no servidor, senão a página fica com dados de sessões
             // anteriores.
-            urlPattern: /^https:\/\/cifras-backend\.onrender\.com\/(auth|user)\/.*/i,
+            urlPattern: privateApi,
             handler: "NetworkOnly",
           },
           {
-            urlPattern: /^https:\/\/cifras-backend\.onrender\.com\/.*/i,
+            urlPattern: publicApi,
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",
@@ -65,4 +89,5 @@ export default defineConfig({
     }),
   ],
   base: "/",
+  };
 });
