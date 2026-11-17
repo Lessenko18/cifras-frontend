@@ -49,6 +49,11 @@ describe("transposeText", () => {
     expect(transposeText("[Intro] Bm  D  Bm  A\nBm  G", 2)).toBe("[Intro] C#m  E  C#m  B\nC#m  A");
   });
 
+  it("transpõe linhas com parênteses: D9  ( D4  D ) (antes a linha ficava no tom antigo)", () => {
+    expect(transposeText("D9   ( D4  D )\nAos homens", 2)).toBe("E9   ( E4  E )\nAos homens");
+    expect(transposeText("D  G  D  ( G  A )", 2)).toBe("E  A  E  ( A  B )");
+  });
+
   it("não confunde letra com acorde", () => {
     const letra = "A casa de Deus";
     expect(transposeText(letra, 3)).toBe(letra);

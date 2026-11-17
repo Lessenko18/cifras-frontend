@@ -105,9 +105,14 @@ function isChord(token) {
   return token.split(/(?<=\/[A-G][#b]?)(?=[A-G])/).every((t) => CHORD_PATTERN.test(t));
 }
 
-// Uma linha é de acordes se TODOS os tokens forem acordes válidos
+// Uma linha é de acordes se TODOS os tokens forem acordes válidos.
+// Parênteses não contam ("D9  ( D4  D )", "(G", "A)"): só envolvem acordes.
 function isChordLine(line) {
-  const tokens = line.trim().split(/\s+/).filter(Boolean);
+  const tokens = line
+    .trim()
+    .split(/\s+/)
+    .map((t) => t.replace(/^\(+|\)+$/g, ''))
+    .filter(Boolean);
   return tokens.length > 0 && tokens.every(isChord);
 }
 

@@ -7,6 +7,17 @@ describe("isChordLine", () => {
     expect(isChordLine("C7M  Dm7(9)")).toBe(true);
   });
 
+  it("aceita parênteses soltos em volta de acordes: D9  ( D4  D )", () => {
+    expect(isChordLine("                  D9   ( D4  D )")).toBe(true);
+    expect(isChordLine("D       G       D    ( G   A )")).toBe(true);
+    expect(isChordLine("C  (G)  Am")).toBe(true);
+  });
+
+  it("parênteses sem acorde ou em letra continuam sendo letra", () => {
+    expect(isChordLine("( )")).toBe(false);
+    expect(isChordLine("(refrão duas vezes)")).toBe(false);
+  });
+
   it("rejeita letra e linha vazia", () => {
     expect(isChordLine("Deve haver um lugar")).toBe(false);
     expect(isChordLine("   ")).toBe(false);
@@ -19,6 +30,15 @@ describe("parseCifraText", () => {
     const [seg] = parseCifraText("C      G\nDeve haver um lugar");
     expect(seg.type).toBe("chord-lyric");
     expect(seg.tokens[0]).toMatchObject({ chord: "C", lyric: "Deve " });
+  });
+
+  it("cola o parêntese solto no acorde vizinho: ( D4 D ) → (D4 e D)", () => {
+    const [seg] = parseCifraText("D9   ( D4  D )\nAos homens por Ele amados");
+    expect(seg.type).toBe("chord-lyric");
+    const chords = seg.tokens.map((t) => t.chord).join(" ");
+    expect(chords).toContain("(D4");
+    expect(chords).toContain("D)");
+    expect(chords).not.toMatch(/(^|\s)[()](\s|$)/);
   });
 
   it("junta acordes que caem na mesma palavra (o renderizador separa depois)", () => {
