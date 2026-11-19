@@ -15,6 +15,7 @@ import { MAX_AVATAR_SIZE_MB, getImageSizeError } from "../../utils/imageValidati
 import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
+import PreferenciasPerfil from "../../components/Onboarding/PreferenciasPerfil";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -344,6 +345,8 @@ export default function Profile() {
             </Actions>
           </div>
         )}
+
+        <PreferenciasPerfil />
       </Card>
     </ProfileContainer>
   );

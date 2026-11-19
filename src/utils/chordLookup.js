@@ -130,8 +130,7 @@ function buildVoicings(base, bassPc, names) {
     .slice(0, 4); // fundamental + até 3 inversões
 }
 
-// Retorna { notes, voicings } ou null. `flat` escolhe a grafia (♭ ou ♯) dos nomes das notas.
-export function chordNotes(name, flat = false) {
+function resolveChord(name) {
   const parsed = parseChord(name);
   if (!parsed) return null;
 
@@ -142,10 +141,29 @@ export function chordNotes(name, flat = false) {
     if (!t) return null;
     ({ root, formula } = t);
   }
+  const bassPc = parsed.bass && PC[parsed.bass] !== undefined ? PC[parsed.bass] : null;
+  return { root, formula, bassPc };
+}
+
+// Baixo: classes de nota (0-11) do acorde. `bass` é a nota que o baixista toca
+// (a do "/" quando existe, senão a fundamental).
+export function chordPitchClasses(name) {
+  const r = resolveChord(name);
+  if (!r) return null;
+  const pcs = [...new Set(r.formula.map((i) => (r.root + i) % 12))];
+  const bass = r.bassPc ?? r.root % 12;
+  if (!pcs.includes(bass)) pcs.push(bass);
+  return { root: r.root % 12, bass, pcs };
+}
+
+// Retorna { notes, voicings } ou null. `flat` escolhe a grafia (♭ ou ♯) dos nomes das notas.
+export function chordNotes(name, flat = false) {
+  const r = resolveChord(name);
+  if (!r) return null;
+  const { root, formula, bassPc } = r;
 
   const names = flat ? NAMES_FLAT : NAMES_SHARP;
   const base = formula.map((i) => root + i);
-  const bassPc = parsed.bass && PC[parsed.bass] !== undefined ? PC[parsed.bass] : null;
   const voicings = buildVoicings(base, bassPc, names);
   if (!voicings.length) return null;
 

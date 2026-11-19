@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import styled from "styled-components";
-import { chordNotes, findChord } from "../../utils/chordLookup";
+import { chordNotes, chordPitchClasses, findChord } from "../../utils/chordLookup";
 import { getAccidental } from "../../utils/transpose";
 import { storage } from "../../lib/storage";
-
-const INSTRUMENTS = { guitar: "Violão", piano: "Teclado/Piano" };
+import { INSTRUMENTS, normalizeInstrument } from "../../utils/instruments";
 
 // O banco de acordes é grande: só baixa quando alguém toca num acorde.
+// A guitarra usa as mesmas formas do violão.
 const loaders = {
   guitar: () => import("@tombatossals/chords-db/lib/guitar.json"),
 };
+const DATA_SOURCE = { guitar: "guitar", guitarra: "guitar" };
 
 const Overlay = styled.div`
   position: fixed;
@@ -25,7 +26,7 @@ const Box = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(320px, calc(100vw - 32px));
+  width: min(340px, calc(100vw - 32px));
   background: var(--bg);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
@@ -46,6 +47,7 @@ const Box = styled.div`
     gap: 6px;
     justify-content: center;
     margin-bottom: 10px;
+    flex-wrap: wrap;
   }
   button {
     border: 1px solid var(--border-color);
@@ -116,6 +118,67 @@ function PianoDiagram({ voicing }) {
   );
 }
 
+// Baixo de 4 cordas (E A D G). Mostra as notas do acorde numa janela de 5 casas
+// perto da nota que o baixista toca (fundamental ou a do "/"), que fica cheia.
+const BASS_OPEN = [7, 2, 9, 4]; // G D A E, de cima para baixo no diagrama (G à esquerda)
+function BassDiagram({ info, names }) {
+  const strings = 4;
+  const frets = 5;
+  const W = 140;
+  const H = 150;
+  const left = 28;
+  const top = 24;
+  const right = W - 20;
+  const gx = (right - left) / (strings - 1);
+  const gy = (H - top - 12) / frets;
+  const stroke = "var(--text-primary)";
+
+  // casa da nota-guia: corda E; se ficar alta demais, usa a corda A
+  const fretOnE = (info.bass - 4 + 12) % 12;
+  const anchor = fretOnE <= 7 ? fretOnE : (info.bass - 9 + 12) % 12;
+  const base = Math.max(1, anchor - 1);
+
+  const dots = [];
+  BASS_OPEN.forEach((open, s) => {
+    for (let f = base === 1 ? 0 : base; f < base + frets; f++) {
+      const pc = (open + f) % 12;
+      if (info.pcs.includes(pc)) dots.push({ s, f, pc });
+    }
+  });
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Diagrama do baixo">
+      {base > 1 && (
+        <text x={4} y={top + gy / 2 + 4} fontSize="11" fill={stroke}>
+          {base}
+        </text>
+      )}
+      <line x1={left} x2={right} y1={top} y2={top} stroke={stroke} strokeWidth={base === 1 ? 4 : 1} />
+      {Array.from({ length: frets }, (_, i) => (
+        <line key={i} x1={left} x2={right} y1={top + (i + 1) * gy} y2={top + (i + 1) * gy} stroke={stroke} strokeWidth="1" opacity="0.6" />
+      ))}
+      {Array.from({ length: strings }, (_, i) => (
+        <line key={i} x1={left + i * gx} x2={left + i * gx} y1={top} y2={top + frets * gy} stroke={stroke} strokeWidth="1" opacity="0.8" />
+      ))}
+      {dots.map(({ s, f, pc }) => {
+        const x = left + s * gx;
+        const isBass = pc === info.bass;
+        const cy = f === 0 ? top - 11 : top + (f - base + 0.5) * gy;
+        return (
+          <g key={`${s}-${f}`}>
+            <circle cx={x} cy={cy} r={f === 0 ? 4.5 : 7} fill={isBass ? "var(--tom-active-bg)" : "var(--bg)"} stroke="var(--tom-active-bg)" strokeWidth="1.5" />
+            {f !== 0 && (
+              <text x={x} y={cy + 3} fontSize="7" fontWeight="700" textAnchor="middle" fill={isBass ? "var(--tom-active-text)" : stroke}>
+                {names[pc]}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 function Diagram({ position, strings = 6, frets = 4 }) {
   const W = 140;
   const H = 150;
@@ -175,7 +238,7 @@ function Diagram({ position, strings = 6, frets = 4 }) {
 export default function ChordDialog({ chord, onClose }) {
   const [instrument, setInstrument] = useState(() => {
     try {
-      return storage.get("instrumento") === "piano" ? "piano" : "guitar";
+      return normalizeInstrument(storage.get("instrumento"));
     } catch {
       return "guitar";
     }
@@ -184,19 +247,20 @@ export default function ChordDialog({ chord, onClose }) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    // o teclado é calculado na hora; só o violão baixa o banco de acordes
-    if (instrument === "piano") {
+    // teclado e baixo são calculados na hora; violão/guitarra baixam o banco de acordes
+    const source = DATA_SOURCE[instrument];
+    if (!source) {
       setIndex(0);
       return undefined;
     }
     let alive = true;
-    loaders[instrument]()
+    loaders[source]()
       .then((mod) => {
         if (!alive) return;
         const data = mod.default ?? mod;
         setState({
           loading: false,
-          found: findChord(data, instrument, chord),
+          found: findChord(data, source, chord),
           strings: data.main.strings,
           frets: data.main.fretsOnChord,
         });
@@ -225,6 +289,8 @@ export default function ChordDialog({ chord, onClose }) {
   }
 
   const piano = instrument === "piano" ? chordNotes(chord, getAccidental() === "flat") : null;
+  const bassInfo = instrument === "baixo" ? chordPitchClasses(chord) : null;
+  const bassNames = getAccidental() === "flat" ? ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] : ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   const positions = state.found?.positions || [];
   const pos = positions[index];
 
@@ -240,7 +306,20 @@ export default function ChordDialog({ chord, onClose }) {
             </button>
           ))}
         </div>
-        {instrument === "piano" ? (
+        {instrument === "baixo" ? (
+          bassInfo ? (
+            <>
+              <BassDiagram info={bassInfo} names={bassNames} />
+              <p style={{ margin: "10px 0 12px", fontSize: 14 }}>
+                <strong>Notas:</strong> {bassInfo.pcs.map((pc) => bassNames[pc]).join(" · ")}
+                <br />
+                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Bolinha cheia: nota base ({bassNames[bassInfo.bass]})</span>
+              </p>
+            </>
+          ) : (
+            <p className="vazio">Diagrama não disponível para este acorde.</p>
+          )
+        ) : instrument === "piano" ? (
           piano ? (
             <>
               <PianoDiagram voicing={piano.voicings[Math.min(index, piano.voicings.length - 1)]} />

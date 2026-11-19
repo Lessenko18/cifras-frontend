@@ -263,8 +263,10 @@ export const ModalCifra = styled.form`
   }
 
   textarea {
-    min-height: 90px;
-    resize: vertical;
+    height: 240px;
+    max-height: 40vh;
+    resize: none;
+    overflow-y: auto;
   }
 
   .actions {

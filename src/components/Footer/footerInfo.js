@@ -3,6 +3,9 @@
 export const FOOTER_INFO = {
   proxima: {
     titulo: "Em breve",
-    texto: "Compartilhar playlists por link público",
+    texto: "Link de vídeo de referência (YouTube) em cada cifra",
   },
+  // Identificação do projeto (autoria, ano de criação e origem)
+  autor: "Thiago Lessenko",
+  criadoEm: 2025,
 };

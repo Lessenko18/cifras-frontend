@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { useTheme } from "../../context/ThemeContext";
 import { getAccidental, setAccidental } from "../../utils/transpose";
 import { storage } from "../../lib/storage";
+import { INSTRUMENT_OPTIONS } from "../../utils/instruments";
 
 const KEY = "onboarding_v1";
 
@@ -134,10 +135,7 @@ export default function Onboarding() {
       <Box role="dialog" aria-modal="true" aria-label="Bem-vindo ao TL Cifras">
         <h2>Bem-vindo ao TL Cifras</h2>
         <p className="sub">Ajuste três preferências rápidas. Você pode mudar depois.</p>
-        {group("Seu instrumento", instrumento, setInstrumento, [
-          ["guitar", "Violão"],
-          ["piano", "Teclado/Piano"],
-        ])}
+        {group("Seu instrumento", instrumento, setInstrumento, INSTRUMENT_OPTIONS)}
         {group("Notas com", acc, setAcc, [
           ["sharp", "Sustenido ♯"],
           ["flat", "Bemol ♭"],

@@ -27,6 +27,29 @@ export const FooterContainer = styled.footer`
   color: rgba(255, 255, 255, 0.85);
 `;
 
+export const CreditBar = styled.div`
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 10px 20px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.65);
+
+  strong {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .made-in {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+`;
+
 export const FooterInner = styled.div`
   max-width: 1400px;
   width: 100%;
