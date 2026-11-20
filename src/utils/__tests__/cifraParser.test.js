@@ -13,6 +13,10 @@ describe("isChordLine", () => {
     expect(isChordLine("C  (G)  Am")).toBe(true);
   });
 
+  it("aceita baixo numérico: F#m  E  B4/7  B7", () => {
+    expect(isChordLine("F#m   E   B4/7  B7")).toBe(true);
+  });
+
   it("parênteses sem acorde ou em letra continuam sendo letra", () => {
     expect(isChordLine("( )")).toBe(false);
     expect(isChordLine("(refrão duas vezes)")).toBe(false);

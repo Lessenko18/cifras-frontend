@@ -98,7 +98,7 @@ export function transposeNote(note, semitones) {
 
 // Padrão de acorde: Am, G7, F#m7, Bb, C/E, Dm7sus4, Cmaj7, Asus2, etc.
 const CHORD_PATTERN =
-  /^[A-G][#b]?(m(?:aj\d*)?|min\d*|dim\d*|aug\d*|sus\d*|add\d*)?\d*M?(sus\d*)?(\/[A-G][#b]?)?$/;
+  /^[A-G][#b]?(m(?:aj\d*)?|min\d*|dim\d*|aug\d*|sus\d*|add\d*)?\d*M?(sus\d*)?(\/([A-G][#b]?|\d))?$/;
 
 // Aceita acordes colados após um baixo (ex: "E/GF#m7" = "E/G" + "F#m7")
 function isChord(token) {

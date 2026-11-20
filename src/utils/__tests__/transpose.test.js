@@ -54,6 +54,10 @@ describe("transposeText", () => {
     expect(transposeText("D  G  D  ( G  A )", 2)).toBe("E  A  E  ( A  B )");
   });
 
+  it("transpõe linha com B4/7 (baixo numérico)", () => {
+    expect(transposeText("F#m  E  B4/7  B7\nSem a benção", 2)).toBe("G#m  F#  C#4/7  C#7\nSem a benção");
+  });
+
   it("não confunde letra com acorde", () => {
     const letra = "A casa de Deus";
     expect(transposeText(letra, 3)).toBe(letra);
