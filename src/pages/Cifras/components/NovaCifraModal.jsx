@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { createCifraService } from "../../../service/cifraService";
 import { parseCifraClubUrl } from "../../../utils/parseCifraClubUrl";
@@ -16,6 +16,15 @@ export default function NovaCifraModal({ onClose, onCreated }) {
   const [observacao, setObservacao] = useState("");
   const [categorias, setCategorias] = useState([]);
   const [sending, setSending] = useState(false);
+
+  // Trava a rolagem da página de fundo enquanto o modal está aberto
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
 
   // Preenche título e artista a partir do link do CifraClub (não faz requisição)
   function handleFillFromLink() {

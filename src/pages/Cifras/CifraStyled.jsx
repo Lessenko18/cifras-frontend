@@ -238,6 +238,9 @@ export const ModalCifra = styled.form`
 
   display: grid;
   gap: 14px;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 
   h3 {
     font-size: 20px;
