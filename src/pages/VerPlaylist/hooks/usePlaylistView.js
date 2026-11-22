@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { getPlaylistViewService, setPlaylistTomService } from "../../../service/playlistService";
 import { hasOfflinePlaylist, loadOfflinePlaylist, saveOfflinePlaylist } from "../../../utils/offlinePlaylist";
 import { getSavedTom, saveTom } from "../../../utils/tomStorage";
+import { wrapSemitones } from "../../../utils/transpose";
 import { resolveInitialToms } from "../../../utils/playlistMusic";
 
 // Carrega a playlist (da rede ou, sem sinal, da cópia offline) e guarda os tons
@@ -61,7 +62,8 @@ export function usePlaylistView(id, { onLoaded } = {}) {
   // Atualiza o tom: salva na playlist (vale para todos) e mantém cópia local
   // como fallback caso a gravação falhe (ex.: offline).
   const updateTom = useCallback(
-    (songId, semitones) => {
+    (songId, rawSemitones) => {
+      const semitones = wrapSemitones(rawSemitones);
       setToms((prev) => ({ ...prev, [songId]: semitones }));
       saveTom(songId, semitones);
       setPlaylistTomService(id, String(songId), semitones).catch(() => {

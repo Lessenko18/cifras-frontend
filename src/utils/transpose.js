@@ -1,6 +1,5 @@
-import { useSyncExternalStore } from 'react';
 import { cleanCifraText } from './cleanCifraText';
-import { storage } from "../lib/storage";
+import { createStoredPreference } from "../lib/storedPreference";
 
 // Escala cromática completa com sustenidos
 const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -8,70 +7,32 @@ const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', '
 // Escala com bemóis (F# mantido: é a grafia usual de Gb/F#)
 const CHROMATIC_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
 
-// Preferência de grafia (sustenido x bemol), salva no aparelho
-const ACCIDENTAL_KEY = 'acidente';
-const listeners = new Set();
+// Preferências de exibição, salvas no aparelho. Os hooks re-renderizam quem os usa; as
+// funções abaixo aceitam o valor como argumento (padrão: o salvo) para que as
+// dependências de useMemo sejam explícitas: renderCifra(doc, n, { accidental, simplify }).
+const accidentalPref = createStoredPreference('acidente', {
+  parse: (raw) => (raw === 'flat' ? 'flat' : 'sharp'),
+});
+export const getAccidental = accidentalPref.get;
+export const setAccidental = accidentalPref.set;
+export const useAccidental = accidentalPref.use;
 
-export function getAccidental() {
-  try {
-    return storage.get(ACCIDENTAL_KEY) === 'flat' ? 'flat' : 'sharp';
-  } catch {
-    return 'sharp';
-  }
+// "Cifra simplificada" (N3): reduz cada acorde a maior/menor, sem baixo
+const simplifyPref = createStoredPreference('cifraSimples', {
+  parse: (raw) => raw === '1',
+  serialize: (value) => (value ? '1' : '0'),
+});
+export const getSimplify = simplifyPref.get;
+export const setSimplify = simplifyPref.set;
+export const useSimplify = simplifyPref.use;
+
+const scale = (accidental = getAccidental()) => (accidental === 'flat' ? CHROMATIC_FLAT : CHROMATIC);
+
+// Tom em semitons sempre entre -5 e +6 (o caminho mais curto até a nota)
+export function wrapSemitones(n) {
+  const m = ((Math.trunc(Number(n)) % 12) + 12) % 12;
+  return m > 6 ? m - 12 : m;
 }
-
-export function setAccidental(value) {
-  try {
-    storage.set(ACCIDENTAL_KEY, value === 'flat' ? 'flat' : 'sharp');
-  } catch {
-    // sem storage: a preferência só vale até recarregar
-  }
-  listeners.forEach((l) => l());
-}
-
-// Hook: re-renderiza quem usa a transposição quando a preferência muda.
-// Inclua o valor retornado nas dependências de useMemo que chamam transposeText.
-export function useAccidental() {
-  return useSyncExternalStore(
-    (cb) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
-    },
-    getAccidental,
-  );
-}
-
-// Preferência "cifra simplificada" (N3): reduz cada acorde a maior/menor, sem baixo
-const SIMPLIFY_KEY = 'cifraSimples';
-
-export function getSimplify() {
-  try {
-    return storage.get(SIMPLIFY_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-export function setSimplify(value) {
-  try {
-    storage.set(SIMPLIFY_KEY, value ? '1' : '0');
-  } catch {
-    // sem storage: vale só até recarregar
-  }
-  listeners.forEach((l) => l());
-}
-
-export function useSimplify() {
-  return useSyncExternalStore(
-    (cb) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
-    },
-    getSimplify,
-  );
-}
-
-const scale = () => (getAccidental() === 'flat' ? CHROMATIC_FLAT : CHROMATIC);
 
 // Mapa de bemóis → sustenido equivalente
 const FLAT_TO_SHARP = {
@@ -90,10 +51,10 @@ function getNoteIndex(note) {
   return CHROMATIC.indexOf(toSharp(note));
 }
 
-export function transposeNote(note, semitones) {
+export function transposeNote(note, semitones, accidental) {
   const idx = getNoteIndex(note);
   if (idx === -1) return note;
-  return scale()[((idx + semitones) % 12 + 12) % 12];
+  return scale(accidental)[((idx + semitones) % 12 + 12) % 12];
 }
 
 // Padrão de acorde: Am, G7, F#m7, Bb, C/E, Dm7sus4, Cmaj7, Asus2, etc.
@@ -120,10 +81,10 @@ function isChordLine(line) {
 const CHORD_TOKEN_REGEX =
   /([A-G][#b]?)(m(?:aj\d*)?|min\d*|dim\d*|aug\d*|sus\d*|add\d*)?\d*M?(sus\d*)?(\/([A-G][#b]?))?/g;
 
-export function transposeLine(line, semitones) {
+export function transposeLine(line, semitones, accidental) {
   return line.replace(CHORD_TOKEN_REGEX, (match, root, _q, _n, _, bass) => {
-    const newRoot = transposeNote(root, semitones);
-    const newBass = bass ? '/' + transposeNote(bass, semitones) : '';
+    const newRoot = transposeNote(root, semitones, accidental);
+    const newBass = bass ? '/' + transposeNote(bass, semitones, accidental) : '';
     return match
       .replace(/^[A-G][#b]?/, newRoot)
       .replace(/\/[A-G][#b]?$/, newBass || '');
@@ -148,22 +109,21 @@ const LABELED_CHORDS_RE = /^(\s*\[[^\]]{1,40}\]\s+)(\S.*)$/;
  * Transpõe todas as linhas de acorde de um texto, preservando letras intactas.
  * Usa sustenido ou bemol na saída, conforme a preferência (getAccidental).
  */
-export function transposeText(rawText, semitones) {
+export function transposeText(rawText, semitones, { simplify = getSimplify(), accidental = getAccidental() } = {}) {
   const text = cleanCifraText(rawText);
-  const simplify = getSimplify();
   if (!text || (semitones === 0 && !simplify)) return text;
   return text
     .split('\n')
     .map((line) => {
       const tomMatch = line.match(TOM_LINE_REGEX);
       if (tomMatch) {
-        return tomMatch[1] + transposeNote(tomMatch[2], semitones) + tomMatch[3];
+        return tomMatch[1] + transposeNote(tomMatch[2], semitones, accidental) + tomMatch[3];
       }
       // com rótulo na frente, só a parte dos acordes é transposta
       const labeled = line.match(LABELED_CHORDS_RE);
       const [prefix, body] = labeled && isChordLine(labeled[2]) ? [labeled[1], labeled[2]] : ['', line];
       if (!isChordLine(body)) return line;
-      const moved = semitones === 0 ? body : transposeLine(body, semitones);
+      const moved = semitones === 0 ? body : transposeLine(body, semitones, accidental);
       return prefix + (simplify ? simplifyLine(moved) : moved);
     })
     .join('\n');
@@ -190,14 +150,38 @@ export function detectOriginalKey(rawText) {
   return null;
 }
 
+// "m", "min", "m7"... (menor) x "maj", "M", "7"... (maior); `quality` é o que vem depois da nota
+export const isMinorQuality = (quality) => /^(m(?!aj)|min)/.test(quality || '');
+
+/**
+ * A tonalidade original é menor? Segue a mesma regra de detectOriginalKey: linha "Tom: Am"
+ * se houver; senão o primeiro acorde da cifra.
+ */
+export function detectOriginalMinor(rawText) {
+  const text = cleanCifraText(rawText);
+  if (!text) return false;
+  const lines = text.split("\n");
+  for (const line of lines) {
+    const tomMatch = line.trim().match(TOM_LINE_REGEX);
+    if (tomMatch) return isMinorQuality(tomMatch[3].trim());
+  }
+  for (const line of lines) {
+    if (isChordLine(line)) {
+      const match = line.trim().match(/^\(?[A-G][#b]?(.*)/);
+      if (match) return isMinorQuality(match[1]);
+    }
+  }
+  return false;
+}
+
 /**
  * Retorna o nome da tonalidade após N semitons, na grafia preferida.
  */
-export function getKeyAtOffset(baseKey, semitones) {
+export function getKeyAtOffset(baseKey, semitones, accidental) {
   if (!baseKey) return null;
   const idx = getNoteIndex(baseKey);
   if (idx === -1) return baseKey;
-  return scale()[((idx + semitones) % 12 + 12) % 12];
+  return scale(accidental)[((idx + semitones) % 12 + 12) % 12];
 }
 
 /**
@@ -218,11 +202,12 @@ export function getSemitonesTo(fromNote, toNote) {
  * `key` é a tonalidade atual (ex.: "Eb"). Retorna até 3 opções, da menor casa
  * para a maior; capo 0 significa tocar sem capo.
  */
-export function suggestCapo(key) {
+export function suggestCapo(key, minor = false) {
   const idx = getNoteIndex(key);
   if (idx === -1) return [];
-  return ['C', 'G', 'D', 'A', 'E']
-    .map((shape) => ({ shape, capo: (idx - getNoteIndex(shape) + 12) % 12 }))
+  // Formas fáceis: C G D A E (maiores) ou Am Em Dm (menores)
+  return (minor ? ['A', 'E', 'D'] : ['C', 'G', 'D', 'A', 'E'])
+    .map((shape) => ({ shape, label: shape + (minor ? 'm' : ''), capo: (idx - getNoteIndex(shape) + 12) % 12 }))
     .filter((o) => o.capo <= 7)
     .sort((a, b) => a.capo - b.capo)
     .slice(0, 3);

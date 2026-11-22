@@ -5,7 +5,7 @@ import { FiMonitor } from "react-icons/fi";
 import { getPublicPlaylistService } from "../../service/playlistService";
 import { CifraRenderer } from "../../components/CifraRenderer/CifraRenderer";
 import StageMode from "../../components/StageMode/StageMode";
-import { detectKey, renderCifra } from "../../utils/cifraDoc";
+import { detectKey, detectMinor, renderCifra } from "../../utils/cifraDoc";
 import { getKeyAtOffset, useAccidental, useSimplify } from "../../utils/transpose";
 
 const Page = styled.main`
@@ -91,12 +91,12 @@ export default function PublicPlaylist() {
         return {
           ...m,
           st,
-          tom: origKey ? getKeyAtOffset(origKey, st) : null,
-          doc: renderCifra({ text: m.descricao, chordpro: m.chordpro }, st),
+          tom: origKey
+            ? getKeyAtOffset(origKey, st, acc) + (detectMinor({ text: m.descricao, chordpro: m.chordpro }) ? "m" : "")
+            : null,
+          doc: renderCifra({ text: m.descricao, chordpro: m.chordpro }, st, { accidental: acc, simplify: simple }),
         };
       }),
-    // acc/simple mudam a saída de renderCifra/getKeyAtOffset
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, acc, simple],
   );
 

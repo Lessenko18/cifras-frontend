@@ -5,7 +5,9 @@ export async function getCifrasService({ nome, artista, categorias, favoritos, p
   if (nome) params.set("nome", nome);
   if (artista) params.set("artista", artista);
   if (categorias?.length) params.set("categorias", categorias.join(","));
-  if (favoritos?.length) params.set("favoritos", favoritos.join(","));
+  // true = só as favoritas de quem está logado (o servidor sabe quais são)
+  if (favoritos === true) params.set("favoritos", "1");
+  else if (favoritos?.length) params.set("favoritos", favoritos.join(","));
   params.set("page", String(page));
   params.set("limit", String(limit));
 

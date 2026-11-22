@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
 import { getCifrasService } from "../service/cifraService";
 import { useCategorias } from "./queries/useCategorias";
 import { useFavoritos } from "./queries/useFavoritos";
@@ -51,15 +53,18 @@ export function useCifrasBusca({ limit, withArtist = false, showParent = false }
         nome: debounced || undefined,
         artista: artistaFiltro || undefined,
         categorias: relevantCategoriaIds.length ? relevantCategoriaIds : undefined,
-        favoritos: favoritosMode ? favoritosIds : undefined,
+        favoritos: favoritosMode ? true : undefined,
         page: currentPage,
         limit,
         signal: controller.signal,
       });
       setCifras(res.data.cifras || []);
       setPages(res.data.pages || 0);
-    } catch {
-      // busca cancelada ou falha de rede: mantém a lista atual
+    } catch (err) {
+      // busca cancelada por outra mais nova: normal. Falha de verdade: avisa (mantém a lista atual)
+      if (!axios.isCancel(err) && !controller.signal.aborted) {
+        toast.error("Não foi possível carregar as cifras. Tente novamente.", { id: "cifras-busca-erro" });
+      }
     } finally {
       if (!controller.signal.aborted) setLoaded(true);
     }
@@ -104,6 +109,7 @@ export function useCifrasBusca({ limit, withArtist = false, showParent = false }
     refetch,
     search,
     setSearch,
+    termo: debounced, // o que foi realmente buscado (para destacar nos resultados)
     categoriaFiltro,
     setCategoriaFiltro,
     filterLabel,

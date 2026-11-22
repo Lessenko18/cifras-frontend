@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import AddToPlaylist from "../../../components/AddToPlaylist/AddToPlaylist";
+import Destaque from "../../../components/Destaque/Destaque";
 import { AnCifra } from "../CifraStyled";
 
 const CATEGORY_ICONS = {
@@ -23,7 +24,7 @@ export function getCategoryIcon(categoryName, parentName) {
 }
 
 // Card de uma cifra na lista: favoritar, adicionar à playlist, artista e categorias.
-export default function CifraListCard({ cifra, categorias, isFav, onToggleFav }) {
+export default function CifraListCard({ cifra, categorias, isFav, onToggleFav, termo }) {
   const parentNameOf = (categoria) => {
     if (!categoria) return "";
     if (categoria.parent?.nome) return categoria.parent.nome;
@@ -46,11 +47,11 @@ export default function CifraListCard({ cifra, categorias, isFav, onToggleFav })
         >
           {isFav ? "♥" : "♡"}
         </button>
-        <h2>{cifra.nome}</h2>
+        <h2><Destaque texto={cifra.nome} termo={termo} /></h2>
         <span className="add-playlist">
           <AddToPlaylist cifraId={cifra._id} cifraNome={cifra.nome} />
         </span>
-        {cifra.artista && <p className="artista">{cifra.artista}</p>}
+        {cifra.artista && <p className="artista"><Destaque texto={cifra.artista} termo={termo} /></p>}
         <div>
           {cifra.categorias?.map((cat) => {
             const catId = typeof cat === "string" ? cat : cat?._id;

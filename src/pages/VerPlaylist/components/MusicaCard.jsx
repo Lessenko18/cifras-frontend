@@ -8,6 +8,8 @@ export default function MusicaCard({
   music,
   originalKey,
   currentKey,
+  minor,
+  capo = 0,
   doc,
   fontSize,
   controlesVisiveis,
@@ -37,10 +39,15 @@ export default function MusicaCard({
           >
             <img src={controlesVisiveis ? "/closeeye.svg" : "/openeye.svg"} alt="toggle controles" />
           </button>
+          {capo > 0 && (
+            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--chord)", whiteSpace: "nowrap" }}>
+              Capo {capo}ª
+            </span>
+          )}
           {originalKey && (
             <TomButton type="button" aria-label="Abrir seletor de tom" onClick={onOpenTom}>
               <span className="tom-label">Tom:</span>
-              <span className="tom-value">{currentKey}</span>
+              <span className="tom-value">{currentKey}{minor ? "m" : ""}</span>
             </TomButton>
           )}
         </div>

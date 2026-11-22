@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "sync:shared": "node scripts/sync-shared.mjs"
+    "sync:shared": "node scripts/sync-shared.mjs",
+    "check:env": "node scripts/check-env.mjs"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.3.0",

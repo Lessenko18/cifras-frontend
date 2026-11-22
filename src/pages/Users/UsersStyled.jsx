@@ -7,61 +7,6 @@ export const UsersContainer = styled.section`
   display: grid;
   gap: 40px;
 `;
-export const UsersHeader = styled.header`
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  text-align: center;
-  align-items: center;
-
-  > :first-child {
-    justify-self: start;
-  }
-
-  > :nth-child(2) {
-    justify-self: center;
-    text-align: center;
-    margin: 0;
-    min-width: 0;
-  }
-
-  > :last-child {
-    justify-self: end;
-  }
-
-  button {
-    max-width: fit-content;
-  }
-  .btn {
-    margin: 0;
-  }
-
-  gap: 20px;
-
-  @media (max-width: 700px) {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 10px;
-  }
-
-  @media (max-width: 430px) {
-    gap: 6px;
-  }
-
-  .btns-header {
-    display: flex;
-    align-items: center;
-    max-width: fit-content;
-    margin-left: auto;
-    gap: 13px;
-    img {
-      max-width: 35px;
-    }
-    @media only screen and (max-width: 700px) {
-      img {
-        max-width: 25px;
-      }
-    }
-  }
-`;
 export const UsersBody = styled.div`
   display: grid;
   justify-items: center;

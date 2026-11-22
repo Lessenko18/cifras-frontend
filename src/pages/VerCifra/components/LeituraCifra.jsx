@@ -10,6 +10,9 @@ export default function LeituraCifra({
   twoColumns,
   originalKey,
   currentKey,
+  minor,
+  capo = 0,
+  formaKey,
   fontSize,
   controlesVisiveis,
   onOpenTom,
@@ -23,8 +26,17 @@ export default function LeituraCifra({
         {originalKey && (
           <TomButton type="button" aria-label="Abrir seletor de tom" onClick={onOpenTom}>
             <span className="tom-label">Tom:</span>
-            <span className="tom-value">{currentKey}</span>
+            <span className="tom-value">{currentKey}{minor ? "m" : ""}</span>
           </TomButton>
+        )}
+        {capo > 0 && (
+          <span
+            className="capo-badge"
+            title={formaKey ? `Formas de ${formaKey}${minor ? "m" : ""}, com capo na ${capo}ª casa` : undefined}
+            style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--chord)", whiteSpace: "nowrap" }}
+          >
+            Capo {capo}ª{formaKey ? ` · formas de ${formaKey}${minor ? "m" : ""}` : ""}
+          </span>
         )}
         {cifra.artista && (
           <p style={{ margin: 0, flex: 1, minWidth: 0, color: "var(--text-muted)", fontSize: "0.95rem", fontStyle: "italic" }}>

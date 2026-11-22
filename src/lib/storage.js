@@ -15,6 +15,10 @@
 //   cifra_fontSize, stage_* ... tamanho da fonte e preferências do modo palco
 //   tom_<cifraId> ............. transposição escolhida numa cifra neste aparelho
 //   nota_<cifraId> ............ anotação pessoal da cifra
+//   bpm_<cifraId> ............. BPM preferido (de quem não pode editar a cifra)
+//   scroll_<cifraId> .......... nível da rolagem automática nesta cifra
+//   cifra_cache_<id>, cifra_cache_index .. cópia offline das últimas cifras abertas
+//   pwa_install_dispensado .... quando a pessoa dispensou o convite de instalar o app
 //   cifras_recentes ........... últimas cifras abertas
 //   offline_playlist_<id> ..... cópia offline de uma playlist (apagada no logout)
 //

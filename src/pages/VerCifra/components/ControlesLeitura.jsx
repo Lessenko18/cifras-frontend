@@ -94,17 +94,15 @@ export default function ControlesLeitura({
         >
           {metronome.isPlaying ? (metronome.beatPulse ? "●" : "○") : "♩"}
         </button>
-        {canSaveBpm && (
-          <button
-            type="button"
-            className="metronomo-save"
-            aria-label="Salvar este BPM na cifra"
-            title="Salvar BPM na cifra"
-            onClick={onSaveBpm}
-          >
-            <FiSave size={16} />
-          </button>
-        )}
+        <button
+          type="button"
+          className="metronomo-save"
+          aria-label={canSaveBpm ? "Salvar este BPM na cifra" : "Salvar este BPM neste aparelho"}
+          title={canSaveBpm ? "Salvar BPM na cifra" : "Salvar BPM neste aparelho"}
+          onClick={onSaveBpm}
+        >
+          <FiSave size={16} />
+        </button>
       </div>
 
       <span className="velocimetro-sep" />

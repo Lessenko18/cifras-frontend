@@ -42,7 +42,7 @@ export default function Home() {
 
   /* ── Cifras: busca, filtros, favoritos e paginação ── */
   const {
-    categorias, cifras, pages, loaded, search, setSearch, categoriaFiltro, setCategoriaFiltro, filterLabel,
+    categorias, cifras, pages, loaded, search, setSearch, termo, categoriaFiltro, setCategoriaFiltro, filterLabel,
     artistaFiltro, setArtistaFiltro, favoritosMode, handleToggleFavoritosMode, favoritosIds, favoritosSet,
     handleToggleFavorito, currentPage, setCurrentPage,
   } = useCifrasBusca({ limit: 6, withArtist: true });
@@ -151,6 +151,7 @@ export default function Home() {
                   <CifraListItem
                     key={cifra._id}
                     cifra={cifra}
+                    termo={termo}
                     isFav={favoritosSet.has(cifra._id)}
                     onToggleFav={handleToggleFavorito}
                     getCatLabel={getCatLabel}

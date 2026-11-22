@@ -98,8 +98,12 @@ describe("tonalidade", () => {
   });
 
   it("sugere capotraste com formas fáceis, da menor casa para a maior", () => {
-    expect(suggestCapo("Eb")[0]).toEqual({ shape: "D", capo: 1 });
-    expect(suggestCapo("C")[0]).toEqual({ shape: "C", capo: 0 });
+    expect(suggestCapo("Eb")[0]).toEqual({ shape: "D", label: "D", capo: 1 });
+    expect(suggestCapo("C")[0]).toEqual({ shape: "C", label: "C", capo: 0 });
+    // tom menor: formas de Am, Em, Dm
+    expect(suggestCapo("Bb", true)[0]).toEqual({ shape: "A", label: "Am", capo: 1 });
+    // F#m: Am exigiria capo na 9ª (acima do limite de 7), então só Em (capo 2) e Dm (capo 4)
+    expect(suggestCapo("F#", true).map((o) => `${o.label}:${o.capo}`)).toEqual(["Em:2", "Dm:4"]);
     expect(suggestCapo("X")).toEqual([]);
   });
 });

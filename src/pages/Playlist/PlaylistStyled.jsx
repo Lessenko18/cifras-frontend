@@ -37,26 +37,6 @@ export const Page = styled.section`
   }
 `;
 
-export const Title = styled.h1`
-  text-align: center;
-  line-height: 1.2em;
-  font-size: 28px;
-  font-weight: 800;
-  margin: 0 0 24px;
-  color: var(--text-primary);
-
-  @media (max-width: 700px) {
-    font-size: 22px;
-  }
-
-  @media (max-width: 530px) {
-    font-size: 18px;
-  }
-  @media (max-width: 360px) {
-    font-size: 14px;
-  }
-`;
-
 export const CardsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);

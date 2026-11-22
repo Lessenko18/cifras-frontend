@@ -1,6 +1,6 @@
 import { useState } from "react";
 import * as S from "./CifraStyled";
-import { UsersHeader } from "../Users/UsersStyled";
+import { UsersHeader } from "../../components/PageHeader/PageHeaderStyled";
 import { FavBtn } from "../Home/HomeStyled";
 import EmptyState from "../../components/EmptyState/EmptyState";
 import { SkeletonRows } from "../../components/Skeleton/Skeleton";
@@ -32,7 +32,7 @@ export default function Cifras() {
 
   const busca = useCifrasBusca({ limit: 15, showParent: true });
   const {
-    categorias, cifras, pages, loaded, refetch, search, setSearch, categoriaFiltro, setCategoriaFiltro,
+    categorias, cifras, pages, loaded, refetch, search, setSearch, termo, categoriaFiltro, setCategoriaFiltro,
     filterLabel, favoritosMode, setFavoritosMode, handleToggleFavoritosMode, favoritosIds, favoritosSet,
     handleToggleFavorito, currentPage, setCurrentPage,
   } = busca;
@@ -112,6 +112,7 @@ export default function Cifras() {
           <CifraListCard
             key={cifra._id}
             cifra={cifra}
+            termo={termo}
             categorias={categorias}
             isFav={favoritosSet.has(cifra._id)}
             onToggleFav={handleToggleFavorito}

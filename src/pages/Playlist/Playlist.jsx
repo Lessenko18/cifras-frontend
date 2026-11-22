@@ -8,7 +8,7 @@ import EmptyState from "../../components/EmptyState/EmptyState";
 import { SkeletonCards } from "../../components/Skeleton/Skeleton";
 import { usePlaylists, useInvalidatePlaylists } from "../../hooks/queries/usePlaylists";
 import { useNavigate } from "react-router-dom";
-import { UsersHeader } from "../Users/UsersStyled";
+import { UsersHeader } from "../../components/PageHeader/PageHeaderStyled";
 import toast from "react-hot-toast";
 import PlaylistActionsMenu from "../../components/PlaylistActionsMenu/PlaylistActionsMenu";
 import { usePlaylistManager } from "../../components/PlaylistManager/PlaylistManager";

@@ -16,8 +16,7 @@ import {
   AnCategoria,
 } from "./CategoriaStyled";
 import { useNavigate } from "react-router-dom";
-import { UsersHeader } from "../Users/UsersStyled";
-import { Title } from "../Playlist/PlaylistStyled";
+import { UsersHeader, Title } from "../../components/PageHeader/PageHeaderStyled";
 import toast from "react-hot-toast";
 
 const selectStyle = {

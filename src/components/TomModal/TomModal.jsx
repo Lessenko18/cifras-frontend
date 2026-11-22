@@ -1,16 +1,27 @@
 import { ModalTom, Overlay } from "../../pages/VerCifra/VerCifraStyled";
 import TomExtras from "../TomExtras/TomExtras";
-import { NOTES_DISPLAY, getSemitonesTo, setAccidental } from "../../utils/transpose";
+import { shapeSemitones, useCapo } from "../../utils/capoStorage";
+import { NOTES_DISPLAY, getKeyAtOffset, getSemitonesTo, setAccidental } from "../../utils/transpose";
 
 // Seletor de tom (cifra avulsa e playlist): grafia (sustenido/bemol), meio-tom e as 12 notas.
 // `semitones` é o deslocamento atual e `onChange(n)` recebe o NOVO deslocamento absoluto.
-export default function TomModal({ currentKey, accidental, semitones, onChange, onClose }) {
+export default function TomModal({ currentKey, originalKey, cifraId, minor = false, accidental, semitones, onChange, onClose }) {
+  const suffix = minor ? "m" : "";
+  const capo = useCapo(cifraId);
+  const formaLabel =
+    capo && originalKey ? getKeyAtOffset(originalKey, shapeSemitones(semitones, capo), accidental) + suffix : null;
+  const originalLabel = originalKey ? getKeyAtOffset(originalKey, 0, accidental) + suffix : null;
   return (
     <>
       <Overlay onClick={onClose} />
       <ModalTom>
         <div className="tom-titulo">
-          Tom: <span>{currentKey}</span>
+          Tom: <span>{currentKey}{suffix}</span>
+          {originalLabel && semitones !== 0 && (
+            <small style={{ display: "block", fontSize: 12, fontWeight: 400, color: "var(--text-muted)" }}>
+              Tom original: {originalLabel} · atual: {currentKey}{suffix}
+            </small>
+          )}
         </div>
         <div className="tom-semitom" role="group" aria-label="Grafia das notas">
           <button
@@ -30,7 +41,7 @@ export default function TomModal({ currentKey, accidental, semitones, onChange, 
             Bemol ♭
           </button>
         </div>
-        <TomExtras currentKey={currentKey} />
+        <TomExtras currentKey={currentKey} minor={minor} cifraId={cifraId} capo={capo} formaLabel={formaLabel} />
         <div className="tom-semitom">
           <button type="button" onClick={() => onChange(semitones - 1)}>
             - ½ tom

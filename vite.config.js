@@ -30,7 +30,8 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      // "prompt": a versão nova espera a pessoa tocar em "Atualizar" (components/PwaPrompts)
+      registerType: "prompt",
       includeAssets: ["logotlcifras.webp", "tlcifras.webp"],
       manifest: {
         name: "TL Cifras",

@@ -12,7 +12,10 @@ import { chordProToSegments } from "./chordpro";
 import {
   TOM_LINE_REGEX,
   detectOriginalKey,
+  detectOriginalMinor,
+  getAccidental,
   getSimplify,
+  isMinorQuality,
   simplifyLine,
   toSharp,
   transposeLine,
@@ -58,13 +61,30 @@ export function detectKey({ text, chordpro } = {}) {
   return null;
 }
 
+/** A tonalidade original é menor (Am, Em...)? Mesma regra de detectKey. */
+export function detectMinor({ text, chordpro } = {}) {
+  if (text || !chordpro) return detectOriginalMinor(text);
+
+  const segments = chordProToSegments(chordpro);
+  for (const s of segments) {
+    if (s.type !== "plain") continue;
+    const m = s.line.trim().match(TOM_LINE_REGEX);
+    if (m) return isMinorQuality(m[3].trim());
+  }
+  for (const s of segments) {
+    const chord = firstChordOf(s);
+    const quality = chord?.match(/^\(?[A-G][#b]?(.*)/)?.[1];
+    if (quality !== undefined) return isMinorQuality(quality);
+  }
+  return false;
+}
+
 /** Transpõe (e, se a preferência estiver ligada, simplifica) trechos já montados. */
-export function transposeSegments(segments, semitones) {
-  const simplify = getSimplify();
+export function transposeSegments(segments, semitones, { simplify = getSimplify(), accidental = getAccidental() } = {}) {
   if (semitones === 0 && !simplify) return segments;
 
   const fix = (chordText) => {
-    const moved = semitones === 0 ? chordText : transposeLine(chordText, semitones);
+    const moved = semitones === 0 ? chordText : transposeLine(chordText, semitones, accidental);
     return simplify ? simplifyLine(moved) : moved;
   };
 
@@ -75,7 +95,7 @@ export function transposeSegments(segments, semitones) {
     if (s.type === "chord-only") return { ...s, line: fix(s.line) };
     if (s.type === "plain") {
       const m = s.line.match(TOM_LINE_REGEX);
-      if (m) return { ...s, line: m[1] + transposeNote(m[2], semitones) + m[3] };
+      if (m) return { ...s, line: m[1] + transposeNote(m[2], semitones, accidental) + m[3] };
     }
     return s;
   });
@@ -123,10 +143,10 @@ export function segmentsToText(segments) {
  * -> { segments, columns, text }
  *    segments: tudo, para desenhar; columns: separado nos "!!!"; text: duas linhas, para PDF.
  */
-export function renderCifra({ text, chordpro } = {}, semitones = 0) {
+export function renderCifra({ text, chordpro } = {}, semitones = 0, prefs = {}) {
   if (!chordpro) {
     // caminho antigo, igual ao de antes: transpõe o texto e divide nos "!!!" como string
-    const transposed = transposeText(text || "", semitones);
+    const transposed = transposeText(text || "", semitones, prefs);
     const parts = transposed.split(COLUMN_BREAK);
     const joined = parts.filter(Boolean).join("\n\n");
     return {
@@ -136,7 +156,7 @@ export function renderCifra({ text, chordpro } = {}, semitones = 0) {
     };
   }
 
-  const segments = transposeSegments(chordProToSegments(chordpro), semitones);
+  const segments = transposeSegments(chordProToSegments(chordpro), semitones, prefs);
   const columns = splitColumns(segments);
   // Entre colunas, 3 linhas em branco: é o espaçamento que o caminho antigo sempre teve
   const gap = [{ type: "blank" }, { type: "blank" }, { type: "blank" }];

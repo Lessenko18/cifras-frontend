@@ -3,16 +3,18 @@ import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { FiMonitor } from "react-icons/fi";
 import { deleteCifraService, editCifraService } from "../../service/cifraService";
-import { UsersHeader } from "../Users/UsersStyled";
 import { CifraBody, VerCifraContainer } from "./VerCifraStyled";
-import { Title } from "../Playlist/PlaylistStyled";
-import { detectKey, renderCifra } from "../../utils/cifraDoc";
+import { UsersHeader, Title } from "../../components/PageHeader/PageHeaderStyled";
+import { detectKey, detectMinor, renderCifra } from "../../utils/cifraDoc";
+import { getLocalBpm, saveLocalBpm } from "../../utils/bpmStorage";
+import { shapeSemitones, useCapo } from "../../utils/capoStorage";
 import { getKeyAtOffset, useAccidental, useSimplify } from "../../utils/transpose";
 import { exportCifraPdf } from "../../utils/pdfExport";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { useMetronome } from "../../hooks/useMetronome";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
 import { useFontSize } from "../../hooks/useFontSize";
+import { SkeletonPage } from "../../components/Skeleton/Skeleton";
 import AddToPlaylist from "../../components/AddToPlaylist/AddToPlaylist";
 import StageMode from "../../components/StageMode/StageMode";
 import { useCifraDetalhe } from "./hooks/useCifraDetalhe";
@@ -27,7 +29,8 @@ export default function VerCifra() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { cifra, setCifra, escolhidos, setEscolhidos, semitones, setSemitones, reload } = useCifraDetalhe(id);
+  const { cifra, setCifra, status, erro, retry, escolhidos, setEscolhidos, semitones, setSemitones, reload } =
+    useCifraDetalhe(id);
   const canManageCifra = useCanManageCifra(cifra);
 
   const [update, setUpdate] = useState(false);
@@ -36,18 +39,22 @@ export default function VerCifra() {
   const [stageOpen, setStageOpen] = useState(false);
   const [controlesVisiveis, setControlesVisiveis] = useState(true);
 
-  const { scrolling, toggle: toggleScroll, slower, faster } = useAutoScroll();
+  const { scrolling, toggle: toggleScroll, slower, faster } = useAutoScroll({ levelKey: `scroll_${id}` });
   const [fontSize, changeFontSize] = useFontSize();
   const acc = useAccidental();
   const simple = useSimplify();
+  const capo = useCapo(id);
 
   useWakeLock();
   const metronome = useMetronome(90);
+  const setMetronomeBpm = metronome.setBpm;
 
-  // Assim que a cifra carrega, o metrônomo já nasce no BPM salvo pra ela
+  // Assim que a cifra carrega, o metrônomo já nasce no BPM salvo pra ela. Quem não pode
+  // editar a cifra pode ter um BPM só seu, guardado neste aparelho.
   useEffect(() => {
-    if (cifra?.bpm) metronome.setBpm(cifra.bpm);
-  }, [cifra?.bpm]);
+    const bpm = (!canManageCifra && getLocalBpm(id)) || cifra?.bpm;
+    if (bpm) setMetronomeBpm(bpm);
+  }, [id, cifra?.bpm, canManageCifra, setMetronomeBpm]);
 
   // Tonalidade original detectada a partir do primeiro acorde da cifra
   const originalKey = useMemo(
@@ -55,17 +62,30 @@ export default function VerCifra() {
     [cifra.observacao, cifra.chordpro],
   );
 
-  // Tonalidade atual com grafia correta (sustenido ou bemol conforme a tonalidade)
-  const currentKey = useMemo(
-    () => getKeyAtOffset(originalKey, semitones),
-    [originalKey, semitones, acc, simple],
+  // Tom menor (Am, Em...): mostra o "m" junto da nota
+  const minor = useMemo(
+    () => detectMinor({ text: cifra.observacao, chordpro: cifra.chordpro }),
+    [cifra.observacao, cifra.chordpro],
   );
+
+  // Tonalidade atual com grafia correta (sustenido ou bemol conforme a preferência)
+  const currentKey = useMemo(
+    () => getKeyAtOffset(originalKey, semitones, acc),
+    [originalKey, semitones, acc],
+  );
+
+  // Com capo, a tela mostra as formas de acorde (o tom acima continua sendo o que soa)
+  const formaKey = capo ? getKeyAtOffset(originalKey, shapeSemitones(semitones, capo), acc) : null;
 
   // A cifra pronta para a tela e já transposta (calculada na renderização, sem alterar o banco).
   // Usa o ChordPro quando a cifra tem; senão o texto antigo, como sempre foi.
   const doc = useMemo(
-    () => renderCifra({ text: cifra.observacao, chordpro: cifra.chordpro }, semitones),
-    [cifra.observacao, cifra.chordpro, semitones, acc, simple],
+    () =>
+      renderCifra({ text: cifra.observacao, chordpro: cifra.chordpro }, shapeSemitones(semitones, capo), {
+        accidental: acc,
+        simplify: simple,
+      }),
+    [cifra.observacao, cifra.chordpro, semitones, capo, acc, simple],
   );
   const twoColumns = doc.columns.length === 2; // um único "!!!" no texto = duas colunas
   const cifraId = String(cifra._id || id);
@@ -92,18 +112,24 @@ export default function VerCifra() {
     else data.bpm = Number(data.bpm);
     try {
       await editCifraService(id, data);
-      toast.success("Cifra atualizada com sucesso!");
-      metronome.setBpm(data.bpm || 90);
     } catch (err) {
+      // Mantém o formulário aberto: o que foi digitado não se perde
       console.error(err);
-      toast.error("Falha ao atualizar a cifra.");
+      toast.error(err.response?.data?.message || "Falha ao atualizar a cifra. Suas alterações continuam na tela.");
+      return;
     }
+    toast.success("Cifra atualizada com sucesso!");
+    metronome.setBpm(data.bpm || 90);
     setUpdate(false);
-    reload();
+    if (!(await reload())) toast.error("Salvo, mas não foi possível atualizar a tela. Recarregue a página.");
   }
 
   async function handleSaveBpm() {
-    if (!canManageCifra) return;
+    if (!canManageCifra) {
+      saveLocalBpm(id, metronome.bpm);
+      toast.success("BPM salvo neste aparelho!");
+      return;
+    }
     try {
       await editCifraService(id, { bpm: metronome.bpm });
       setCifra((c) => ({ ...c, bpm: metronome.bpm }));
@@ -133,10 +159,31 @@ export default function VerCifra() {
     exportCifraPdf({
       nome: cifra.nome,
       artista: cifra.artista,
-      tom: originalKey ? currentKey : null,
+      tom: originalKey ? currentKey + (minor ? "m" : "") : null,
+      capo,
       bpm: cifra.bpm,
       text: doc.text,
     });
+  }
+
+  if (status === "loading") return <SkeletonPage />;
+
+  if (status === "error") {
+    return (
+      <VerCifraContainer>
+        <div role="alert" style={{ textAlign: "center", padding: "48px 16px", display: "grid", gap: 16, justifyItems: "center" }}>
+          <p style={{ margin: 0, color: "var(--text-primary)" }}>{erro}</p>
+          <div style={{ display: "flex", gap: 12 }}>
+            <button type="button" className="btn" onClick={retry}>
+              Tentar de novo
+            </button>
+            <button type="button" className="btn" onClick={() => navigate("/home/cifras")}>
+              Ver todas as cifras
+            </button>
+          </div>
+        </div>
+      </VerCifraContainer>
+    );
   }
 
   return (
@@ -193,6 +240,9 @@ export default function VerCifra() {
             twoColumns={twoColumns}
             originalKey={originalKey}
             currentKey={currentKey}
+            minor={minor}
+            capo={capo}
+            formaKey={formaKey}
             fontSize={fontSize}
             controlesVisiveis={controlesVisiveis}
             onOpenTom={() => setModalTom(true)}
@@ -212,6 +262,9 @@ export default function VerCifra() {
       {modalTom && originalKey && (
         <TomModal
           currentKey={currentKey}
+          cifraId={id}
+          originalKey={originalKey}
+          minor={minor}
           accidental={acc}
           semitones={semitones}
           onChange={setSemitones}

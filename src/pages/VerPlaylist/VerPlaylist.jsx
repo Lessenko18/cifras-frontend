@@ -4,6 +4,7 @@ import { SkeletonRows } from "../../components/Skeleton/Skeleton";
 import { Page, Empty, PlaylistBody } from "./VerPlaylistStyled";
 import { useAccidental, useSimplify } from "../../utils/transpose";
 import { getMusicId, describeMusic, toPdfSong } from "../../utils/playlistMusic";
+import { getCapo, useCapoVersion } from "../../utils/capoStorage";
 import { exportPlaylistPdf, exportCifraPdf } from "../../utils/pdfExport";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
@@ -31,7 +32,8 @@ export default function VerPlaylist() {
   );
 
   const acc = useAccidental(); // re-renderiza a lista ao trocar ♯/♭
-  useSimplify(); // idem ao simplificar a cifra
+  const simple = useSimplify(); // idem ao simplificar a cifra
+  useCapoVersion(); // idem ao mudar o capotraste de uma música
   useWakeLock();
   const { scrolling, setScrolling, toggle: toggleScroll, slower, faster } = useAutoScroll();
   const [fontSize, changeFontSize] = useFontSize();
@@ -50,6 +52,7 @@ export default function VerPlaylist() {
   if (loading) return <Page><SkeletonRows count={6} /></Page>;
   if (err) return <Page>{err}</Page>;
 
+  const prefsOf = (m) => ({ accidental: acc, simplify: simple, capo: getCapo(getMusicId(m)) });
   const musicas = data.musicas || [];
   const semitonesOf = (m) => toms[getMusicId(m)] || 0;
 
@@ -62,14 +65,14 @@ export default function VerPlaylist() {
 
   function handleExportPlaylistPdf() {
     if (!musicas.length) return;
-    exportPlaylistPdf({ nome: data.nome, musicas: musicas.map((m) => toPdfSong(m, semitonesOf(m))) });
+    exportPlaylistPdf({ nome: data.nome, musicas: musicas.map((m) => toPdfSong(m, semitonesOf(m), prefsOf(m))) });
   }
 
   // Música com o seletor de tom aberto
   const modalMusica = modalMusicaId
     ? musicas.find((m) => String(getMusicId(m)) === String(modalMusicaId))
     : null;
-  const modalInfo = modalMusica ? describeMusic(modalMusica, toms[modalMusicaId] || 0) : null;
+  const modalInfo = modalMusica ? describeMusic(modalMusica, toms[modalMusicaId] || 0, prefsOf(modalMusica)) : null;
 
   return (
     <Page>
@@ -114,7 +117,7 @@ export default function VerPlaylist() {
         <PlaylistBody>
           {musicas.map((m, i) => {
             const songId = getMusicId(m);
-            const { originalKey, currentKey, doc } = describeMusic(m, semitonesOf(m));
+            const { originalKey, currentKey, minor, capo, doc } = describeMusic(m, semitonesOf(m), prefsOf(m));
             return (
               <MusicaCard
                 key={`${songId}-${i}`}
@@ -122,10 +125,12 @@ export default function VerPlaylist() {
                 music={m}
                 originalKey={originalKey}
                 currentKey={currentKey}
+                minor={minor}
+                capo={capo}
                 doc={doc}
                 fontSize={fontSize}
                 controlesVisiveis={controlesVisiveis}
-                onExportPdf={() => exportCifraPdf(toPdfSong(m, semitonesOf(m)))}
+                onExportPdf={() => exportCifraPdf(toPdfSong(m, semitonesOf(m), prefsOf(m)))}
                 onToggleControles={() => setControlesVisiveis((v) => !v)}
                 onOpenTom={() => setModalMusicaId(songId)}
               />
@@ -137,7 +142,10 @@ export default function VerPlaylist() {
 
       {modalInfo?.originalKey && (
         <TomModal
+          cifraId={modalMusicaId}
           currentKey={modalInfo.currentKey}
+          originalKey={modalInfo.originalKey}
+          minor={modalInfo.minor}
           accidental={acc}
           semitones={toms[modalMusicaId] || 0}
           onChange={(n) => updateTom(modalMusicaId, n)}

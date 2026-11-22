@@ -15,36 +15,22 @@ import { CifraRenderer } from "../CifraRenderer/CifraRenderer";
 import { useWakeLock } from "../../hooks/useWakeLock";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
 import { useMetronome } from "../../hooks/useMetronome";
-import { detectKey, renderCifra } from "../../utils/cifraDoc";
-import { getKeyAtOffset, useAccidental, useSimplify } from "../../utils/transpose";
+import { detectKey, detectMinor, renderCifra } from "../../utils/cifraDoc";
+import { getKeyAtOffset, useAccidental, useSimplify, wrapSemitones } from "../../utils/transpose";
+import { shapeSemitones, useCapo } from "../../utils/capoStorage";
+import { createStoredNumber, createStoredPreference } from "../../lib/storedPreference";
 import { Root, TopBar, BottomBar, Scroller, Page, BeatDot, Group, Hint } from "./StageModeStyled";
-import { storage } from "../../lib/storage";
 
 const MIN_FONT = 16;
 const MAX_FONT = 64;
 const HIDE_CONTROLS_MS = 3500;
 const SWIPE_MIN_PX = 80;
 
-const readStored = (key, fallback) => {
-  try {
-    return storage.get(key) ?? fallback;
-  } catch {
-    return fallback;
-  }
-};
-const store = (key, value) => {
-  try {
-    storage.set(key, value);
-  } catch {
-    // modo privado etc.: só não lembra da preferência
-  }
-};
-
-// Tom em semitons mantido entre -5 e +6 (o caminho mais curto até a nota)
-const wrapSemitones = (n) => {
-  const m = ((n % 12) + 12) % 12;
-  return m > 6 ? m - 12 : m;
-};
+// Preferências do modo palco, lembradas no aparelho
+const stageFontSize = createStoredNumber("stage_fontSize", { initial: 28, min: MIN_FONT, max: MAX_FONT });
+const stageTheme = createStoredPreference("stage_theme", {
+  parse: (raw) => (raw === "light" ? "light" : "dark"),
+});
 
 /**
  * Modo palco: tela cheia, letra grande, sem distrações, pra tocar ao vivo.
@@ -55,11 +41,8 @@ const wrapSemitones = (n) => {
  */
 export default function StageMode({ songs, startIndex = 0, semitones = {}, onSemitonesChange, onClose }) {
   const [index, setIndex] = useState(() => Math.min(Math.max(startIndex, 0), Math.max(songs.length - 1, 0)));
-  const [fontSize, setFontSize] = useState(() => {
-    const n = parseInt(readStored("stage_fontSize", "28"), 10);
-    return Number.isFinite(n) ? Math.min(MAX_FONT, Math.max(MIN_FONT, n)) : 28;
-  });
-  const [theme, setTheme] = useState(() => (readStored("stage_theme", "dark") === "light" ? "light" : "dark"));
+  const fontSize = stageFontSize.use();
+  const theme = stageTheme.use();
   const [controlsVisible, setControlsVisible] = useState(true);
 
   const scrollerRef = useRef(null);
@@ -92,16 +75,21 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
 
   const acc = useAccidental();
   const simple = useSimplify();
+  const capo = useCapo(song?.id);
   // Cifra transposta (do ChordPro, se tiver) + tom exibido
   const doc = useMemo(
-    () => renderCifra({ text: song?.text, chordpro: song?.chordpro }, st),
-    [song?.text, song?.chordpro, st, acc, simple],
+    () => renderCifra({ text: song?.text, chordpro: song?.chordpro }, shapeSemitones(st, capo), { accidental: acc, simplify: simple }),
+    [song?.text, song?.chordpro, st, capo, acc, simple],
   );
   const originalKey = useMemo(
     () => detectKey({ text: song?.text, chordpro: song?.chordpro }),
     [song?.text, song?.chordpro],
   );
-  const currentKey = originalKey ? getKeyAtOffset(originalKey, st) : null; // recalcula a cada render, acompanha `acc`
+  const minor = useMemo(
+    () => detectMinor({ text: song?.text, chordpro: song?.chordpro }),
+    [song?.text, song?.chordpro],
+  );
+  const currentKey = originalKey ? getKeyAtOffset(originalKey, st, acc) + (minor ? "m" : "") : null;
 
   /* ---------- controles que somem sozinhos ---------- */
   const showControls = useCallback(() => {
@@ -204,20 +192,12 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
 
   /* ---------- ajustes ---------- */
   const changeFont = (delta) => {
-    setFontSize((prev) => {
-      const next = Math.min(MAX_FONT, Math.max(MIN_FONT, prev + delta));
-      store("stage_fontSize", String(next));
-      return next;
-    });
+    stageFontSize.change(delta);
     showControls();
   };
 
   const toggleTheme = () => {
-    setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
-      store("stage_theme", next);
-      return next;
-    });
+    stageTheme.set(theme === "dark" ? "light" : "dark");
     showControls();
   };
 
@@ -265,6 +245,7 @@ export default function StageMode({ songs, startIndex = 0, semitones = {}, onSem
           </button>
           <span className="value" title="Tom atual">
             {currentKey ? `Tom ${currentKey}` : st === 0 ? "Tom" : `${st > 0 ? "+" : ""}${st}`}
+            {capo > 0 && ` · Capo ${capo}ª`}
           </span>
           <button type="button" onClick={() => changeTom(1)} aria-label="Subir meio tom">
             <FiPlus size={16} />

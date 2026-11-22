@@ -1,5 +1,6 @@
 import PlaylistActionsMenu from "../../components/PlaylistActionsMenu/PlaylistActionsMenu";
 import AddToPlaylist from "../../components/AddToPlaylist/AddToPlaylist";
+import Destaque from "../../components/Destaque/Destaque";
 import { useState, memo } from "react";
 import { Link } from "react-router-dom";
 import { FiMusic } from "react-icons/fi";
@@ -58,12 +59,12 @@ export const ArtistAvatar = memo(function ArtistAvatar({ artista, bg }) {
   return <RankAvatar $bg={bg}>{getInitials(artista)}</RankAvatar>;
 });
 
-export const CifraListItem = memo(function CifraListItem({ cifra, isFav, onToggleFav, getCatLabel }) {
+export const CifraListItem = memo(function CifraListItem({ cifra, isFav, onToggleFav, getCatLabel, termo }) {
   return (
     <Link to={`/home/cifra/${cifra._id}`}>
       <CifraItem>
         <div className="cifra-head">
-          <h2>{cifra.nome}</h2>
+          <h2><Destaque texto={cifra.nome} termo={termo} /></h2>
           <AddToPlaylist cifraId={cifra._id} cifraNome={cifra.nome} />
           <button
             type="button"
@@ -75,7 +76,7 @@ export const CifraListItem = memo(function CifraListItem({ cifra, isFav, onToggl
           </button>
         </div>
         <div className="cifra-body">
-          {cifra.artista && <span className="cifra-artista">{cifra.artista}</span>}
+          {cifra.artista && <span className="cifra-artista"><Destaque texto={cifra.artista} termo={termo} /></span>}
           <span className="cifra-cats">
             {cifra.categorias?.map((cat, i) => (
               <span key={typeof cat === "string" ? cat : cat?._id}>

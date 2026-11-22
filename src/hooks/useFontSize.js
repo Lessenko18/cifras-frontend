@@ -1,23 +1,11 @@
-import { useCallback, useState } from "react";
-import { storage } from "../lib/storage";
+import { useCallback } from "react";
+import { createStoredNumber } from "../lib/storedPreference";
 
 // Tamanho da letra da cifra (px), lembrado no aparelho. `change(delta)` respeita 12–30.
-export function useFontSize(initial = 18, min = 12, max = 30) {
-  const [fontSize, setFontSize] = useState(() => {
-    const saved = parseInt(storage.get("cifra_fontSize"), 10);
-    return Number.isNaN(saved) ? initial : saved;
-  });
+const cifraFontSize = createStoredNumber("cifra_fontSize", { initial: 18, min: 12, max: 30 });
 
-  const change = useCallback(
-    (delta) => {
-      setFontSize((prev) => {
-        const next = Math.min(max, Math.max(min, prev + delta));
-        storage.set("cifra_fontSize", next);
-        return next;
-      });
-    },
-    [min, max],
-  );
-
+export function useFontSize() {
+  const fontSize = cifraFontSize.use();
+  const change = useCallback((delta) => cifraFontSize.change(delta), []);
   return [fontSize, change];
 }

@@ -12,11 +12,10 @@ import {
   ModalEdit,
   UsersBody,
   UsersContainer,
-  UsersHeader,
 } from "./UsersStyled";
 import { Input } from "../../components/Input/Input";
 import { useNavigate } from "react-router-dom";
-import { Title } from "../Playlist/PlaylistStyled";
+import { UsersHeader, Title } from "../../components/PageHeader/PageHeaderStyled";
 import toast from "react-hot-toast";
 import { normalizeAvatarUrl } from "../../utils/normalizeAvatarUrl";
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { storage } from "../lib/storage";
 
 // Velocidades em pixels por segundo, da mais lenta (nível 0) à mais rápida.
 export const SCROLL_SPEEDS = [6, 8, 10, 13, 17, 23, 32, 45, 66];
@@ -8,6 +9,11 @@ const END_MARGIN_PX = 2;
 const MAX_FRAME_SECONDS = 0.1;
 const NAV_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"]);
 
+const readLevel = (levelKey) => {
+  const n = levelKey ? parseInt(storage.get(levelKey), 10) : NaN;
+  return Number.isInteger(n) && n >= 0 && n < SCROLL_SPEEDS.length ? n : DEFAULT_LEVEL;
+};
+
 const isEditable = (el) => el?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el?.tagName || "");
 
 // Rolagem automática (botão play/pause de cifras, playlists e modo palco).
@@ -16,9 +22,18 @@ const isEditable = (el) => el?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.
 // - Pausa ao chegar no fim e quando a pessoa rola por conta própria (roda do mouse,
 //   arrastar o dedo ou setas/PageUp/PageDown). `pauseOnKeys: false` deixa as teclas
 //   com quem usa o hook (o modo palco trata as dele).
-export function useAutoScroll({ getScroller, pauseOnKeys = true } = {}) {
+// `levelKey`: chave do storage onde lembrar a velocidade (ex.: uma por cifra).
+export function useAutoScroll({ getScroller, pauseOnKeys = true, levelKey } = {}) {
   const [scrolling, setScrolling] = useState(false);
-  const [level, setLevel] = useState(DEFAULT_LEVEL);
+  const [level, setLevel] = useState(() => readLevel(levelKey));
+  const levelRef = useRef(level);
+
+  // Outra cifra: volta para a velocidade que ela tinha
+  useEffect(() => {
+    const saved = readLevel(levelKey);
+    levelRef.current = saved;
+    setLevel(saved);
+  }, [levelKey]);
 
   // Sempre a versão mais recente, sem reiniciar a animação a cada render
   const getScrollerRef = useRef(getScroller);
@@ -76,8 +91,17 @@ export function useAutoScroll({ getScroller, pauseOnKeys = true } = {}) {
   }, [scrolling, level, pauseOnKeys]);
 
   const toggle = useCallback(() => setScrolling((s) => !s), []);
-  const slower = useCallback(() => setLevel((l) => Math.max(0, l - 1)), []);
-  const faster = useCallback(() => setLevel((l) => Math.min(SCROLL_SPEEDS.length - 1, l + 1)), []);
+  const changeLevel = useCallback(
+    (delta) => {
+      const next = Math.min(SCROLL_SPEEDS.length - 1, Math.max(0, levelRef.current + delta));
+      levelRef.current = next;
+      setLevel(next);
+      if (levelKey) storage.set(levelKey, next);
+    },
+    [levelKey],
+  );
+  const slower = useCallback(() => changeLevel(-1), [changeLevel]);
+  const faster = useCallback(() => changeLevel(1), [changeLevel]);
 
   return { scrolling, setScrolling, toggle, level, slower, faster };
 }

@@ -129,19 +129,20 @@ function writeCifraBody(doc, cursor, text) {
   }
 }
 
-function buildMeta({ artista, tom, bpm }) {
+function buildMeta({ artista, tom, bpm, capo }) {
   const partes = [];
   if (artista) partes.push(artista);
   if (tom) partes.push(`Tom: ${tom}`);
+  if (capo) partes.push(`Capo na ${capo}ª casa`);
   if (bpm) partes.push(`${bpm} BPM`);
   return partes.join("   •   ");
 }
 
-export function exportCifraPdf({ nome, artista, tom, bpm, text }) {
+export function exportCifraPdf({ nome, artista, tom, bpm, capo, text }) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const cursor = newPageCursor(doc);
 
-  writeHeading(doc, cursor, nome, buildMeta({ artista, tom, bpm }));
+  writeHeading(doc, cursor, nome, buildMeta({ artista, tom, bpm, capo }));
   writeCifraBody(doc, cursor, text);
 
   drawAllPageBorders(doc);
