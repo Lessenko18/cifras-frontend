@@ -280,12 +280,8 @@ export default function ChordDialog({ chord, onClose }) {
 
   function pick(next) {
     setState((s) => ({ ...s, loading: true }));
+    // só troca a visão; a escolha de instrumentos fica em Preferências
     setInstrument(next);
-    try {
-      storage.set("instrumento", next);
-    } catch {
-      // sem storage: vale só nesta sessão
-    }
   }
 
   const piano = instrument === "piano" ? chordNotes(chord, getAccidental() === "flat") : null;

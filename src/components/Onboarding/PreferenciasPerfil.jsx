@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useTheme } from "../../context/ThemeContext";
 import { getAccidental, setAccidental } from "../../utils/transpose";
 import { storage } from "../../lib/storage";
-import { INSTRUMENT_OPTIONS, normalizeInstrument } from "../../utils/instruments";
+import { INSTRUMENT_OPTIONS, parseInstruments } from "../../utils/instruments";
 
 const Wrap = styled.section`
   margin-top: 20px;
@@ -49,28 +49,23 @@ const Wrap = styled.section`
   }
 `;
 
-function lerInstrumento() {
-  try {
-    return normalizeInstrument(storage.get("instrumento"));
-  } catch {
-    return "guitar";
-  }
+function lerInstrumentos() {
+  return parseInstruments(storage.get("instrumento"));
 }
 
 // Mesmas preferências da tela de boas-vindas, para a pessoa poder mudar
 // quando quiser. Cada escolha é aplicada na hora.
 export default function PreferenciasPerfil() {
   const { dark, toggle } = useTheme();
-  const [instrumento, setInstrumento] = useState(lerInstrumento);
+  const [instrumentos, setInstrumentos] = useState(lerInstrumentos);
   const [acc, setAcc] = useState(getAccidental());
 
+  // Seleção múltipla: clicar alterna o instrumento (sempre fica ao menos um).
   function escolherInstrumento(v) {
-    setInstrumento(v);
-    try {
-      storage.set("instrumento", v);
-    } catch {
-      // sem storage: vale só nesta sessão
-    }
+    const next = instrumentos.includes(v) ? instrumentos.filter((i) => i !== v) : [...instrumentos, v];
+    if (!next.length) return;
+    setInstrumentos(next);
+    storage.set("instrumento", next.join(","));
   }
 
   function escolherAcidente(v) {
@@ -78,24 +73,27 @@ export default function PreferenciasPerfil() {
     setAccidental(v);
   }
 
-  const group = (legend, value, set, items) => (
-    <fieldset>
-      <legend>{legend}</legend>
-      <div className="opcoes">
-        {items.map(([v, label]) => (
-          <button key={v} type="button" className={value === v ? "ativo" : ""} aria-pressed={value === v} onClick={() => set(v)}>
-            {label}
-          </button>
-        ))}
-      </div>
-    </fieldset>
-  );
+  const group = (legend, value, set, items) => {
+    const isOn = (v) => (Array.isArray(value) ? value.includes(v) : value === v);
+    return (
+      <fieldset>
+        <legend>{legend}</legend>
+        <div className="opcoes">
+          {items.map(([v, label]) => (
+            <button key={v} type="button" className={isOn(v) ? "ativo" : ""} aria-pressed={isOn(v)} onClick={() => set(v)}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+    );
+  };
 
   return (
     <Wrap aria-label="Preferências">
       <h3>Preferências</h3>
       <p className="sub">Ajustes salvos neste aparelho. Valem na hora.</p>
-      {group("Seu instrumento", instrumento, escolherInstrumento, INSTRUMENT_OPTIONS)}
+      {group("Seus instrumentos", instrumentos, escolherInstrumento, INSTRUMENT_OPTIONS)}
       {group("Notas com", acc, escolherAcidente, [
         ["sharp", "Sustenido ♯"],
         ["flat", "Bemol ♭"],

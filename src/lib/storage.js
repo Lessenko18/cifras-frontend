@@ -9,7 +9,8 @@
 //                               O token em si NÃO fica aqui: vive no cookie httpOnly.
 //   theme ..................... "light" | "dark" (ausente = segue o sistema)
 //   acidente, cifraSimples .... preferências de exibição da cifra
-//   instrumento ............... "guitar" | "guitarra" | "baixo" | "piano" (diagrama de acordes)
+//   instrumento ............... lista separada por vírgula de "guitar" | "guitarra" | "baixo" | "piano"
+//                               (ex.: "guitar,piano"); o primeiro abre no diagrama de acordes
 //   onboarding_v1 ............. boas-vindas já vistas
 //   cifra_fontSize, stage_* ... tamanho da fonte e preferências do modo palco
 //   tom_<cifraId> ............. transposição escolhida numa cifra neste aparelho

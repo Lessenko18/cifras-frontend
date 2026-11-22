@@ -94,7 +94,14 @@ function alreadyDone() {
 export default function Onboarding() {
   const [open, setOpen] = useState(() => !alreadyDone());
   const { dark, toggle } = useTheme();
-  const [instrumento, setInstrumento] = useState("guitar");
+  const [instrumentos, setInstrumentos] = useState(["guitar"]);
+
+  // Seleção múltipla: clicar alterna (sempre fica ao menos um).
+  const toggleInstrumento = (v) =>
+    setInstrumentos((cur) => {
+      const next = cur.includes(v) ? cur.filter((i) => i !== v) : [...cur, v];
+      return next.length ? next : cur;
+    });
   const [acc, setAcc] = useState(getAccidental());
 
   if (!open) return null;
@@ -102,7 +109,7 @@ export default function Onboarding() {
   function finish(save) {
     if (save) {
       try {
-        storage.set("instrumento", instrumento);
+        storage.set("instrumento", instrumentos.join(","));
       } catch {
         // sem storage: vale só nesta sessão
       }
@@ -116,18 +123,21 @@ export default function Onboarding() {
     setOpen(false);
   }
 
-  const group = (legend, value, set, items) => (
-    <fieldset>
-      <legend>{legend}</legend>
-      <div className="opcoes">
-        {items.map(([v, label]) => (
-          <button key={v} type="button" className={value === v ? "ativo" : ""} aria-pressed={value === v} onClick={() => set(v)}>
-            {label}
-          </button>
-        ))}
-      </div>
-    </fieldset>
-  );
+  const group = (legend, value, set, items) => {
+    const isOn = (v) => (Array.isArray(value) ? value.includes(v) : value === v);
+    return (
+      <fieldset>
+        <legend>{legend}</legend>
+        <div className="opcoes">
+          {items.map(([v, label]) => (
+            <button key={v} type="button" className={isOn(v) ? "ativo" : ""} aria-pressed={isOn(v)} onClick={() => set(v)}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+    );
+  };
 
   return (
     <>
@@ -135,7 +145,7 @@ export default function Onboarding() {
       <Box role="dialog" aria-modal="true" aria-label="Bem-vindo ao TL Cifras">
         <h2>Bem-vindo ao TL Cifras</h2>
         <p className="sub">Ajuste três preferências rápidas. Você pode mudar depois.</p>
-        {group("Seu instrumento", instrumento, setInstrumento, INSTRUMENT_OPTIONS)}
+        {group("Seus instrumentos", instrumentos, toggleInstrumento,INSTRUMENT_OPTIONS)}
         {group("Notas com", acc, setAcc, [
           ["sharp", "Sustenido ♯"],
           ["flat", "Bemol ♭"],
