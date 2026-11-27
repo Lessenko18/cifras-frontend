@@ -39,7 +39,7 @@ export default function LeituraCifra({
           </span>
         )}
         {cifra.artista && (
-          <p style={{ margin: 0, flex: 1, minWidth: 0, color: "var(--text-muted)", fontSize: "0.95rem", fontStyle: "italic" }}>
+          <p className="cifra-artista">
             {cifra.artista}
           </p>
         )}

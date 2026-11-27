@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import {
   FiHome, FiMusic, FiList, FiMenu, FiTool, FiUsers, FiTag, FiInbox, FiUser, FiClock,
@@ -9,6 +9,41 @@ import { BottomBar, SheetOverlay, Sheet } from "./MobileNavStyled";
 const ICON = 22;
 const ITEM_ICON = 20;
 
+// Esconde a barra ao rolar para BAIXO (mais espaço para ler a cifra) e mostra ao rolar para
+// CIMA, no topo ou no fim da página. `lock` mantém a barra visível (ex.: folha "Mais" aberta).
+function useHideOnScroll(lock) {
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+
+  useEffect(() => {
+    lastY.current = window.scrollY;
+    let ticking = false;
+
+    const update = () => {
+      ticking = false;
+      const y = Math.max(0, window.scrollY);
+      const delta = y - lastY.current;
+      const nearTop = y < 80;
+      const nearBottom = window.innerHeight + y >= document.documentElement.scrollHeight - 40;
+
+      if (nearTop || nearBottom || delta < -6) setHidden(false);
+      else if (delta > 6) setHidden(true);
+      if (Math.abs(delta) > 6) lastY.current = y;
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return hidden && !lock;
+}
+
 const linkClass = ({ isActive }) => (isActive ? "tab active" : "tab");
 
 // Navegação mobile: barra inferior (Home · Cifras · Playlists · Mais) + folha "Mais"
@@ -16,6 +51,7 @@ const linkClass = ({ isActive }) => (isActive ? "tab active" : "tab");
 export default function MobileNav({ isAdmin, isAuthenticated, dark, onToggleTheme, onLogout }) {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
+  const hidden = useHideOnScroll(open);
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -31,7 +67,7 @@ export default function MobileNav({ isAdmin, isAuthenticated, dark, onToggleThem
 
   return (
     <>
-      <BottomBar aria-label="Navegação principal">
+      <BottomBar aria-label="Navegação principal" $hidden={hidden}>
         <NavLink to="/home" end className={linkClass}>
           <FiHome size={ICON} aria-hidden="true" />
           <span>Home</span>

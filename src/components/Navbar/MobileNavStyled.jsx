@@ -19,6 +19,12 @@ export const BottomBar = styled.nav`
     background: var(--chrome-bg);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 -8px 24px -12px rgba(0, 0, 0, 0.5);
+    transform: translateY(${({ $hidden }) => ($hidden ? "100%" : "0")});
+    transition: transform 0.25s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 
   .tab {

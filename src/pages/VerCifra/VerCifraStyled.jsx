@@ -96,11 +96,24 @@ export const CifraContent = styled.div`
     flex-wrap: wrap;
     gap: 8px 12px;
 
+    /* flex-basis automático: se artista + link não cabem na linha, o link desce em vez de
+       ficar por cima do nome (antes o artista tinha largura 0 e vazava para trás do link) */
+    .cifra-artista {
+      margin: 0;
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-style: italic;
+    }
+
     a {
       color: #0070f3;
       text-decoration: underline;
       font-style: italic;
       margin-left: auto;
+      flex-shrink: 0;
     }
   }
 
