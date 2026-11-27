@@ -69,7 +69,7 @@ export default function InsightsSection({ insights, onFilterByArtist }) {
       <InsightsGrid>
         <RankPanel
           bgImage="/fundoGuitarra.webp"
-          gradient="linear-gradient(135deg, #8b5cf6, #6d28d9)"
+          gradient="linear-gradient(135deg, var(--accent-soft), var(--accent-deep))"
           icon={<FiTrendingUp size={20} aria-hidden="true" />}
           title="Músicas mais acessadas"
           subtitle="As cifras que estão em alta por aqui"
@@ -114,7 +114,7 @@ export default function InsightsSection({ insights, onFilterByArtist }) {
 
         <RankPanel
           bgImage="/NovasMusicas.webp"
-          gradient="linear-gradient(135deg, #a78bfa, #7c3aed)"
+          gradient="linear-gradient(135deg, var(--accent), var(--accent-strong))"
           icon={<FiStar size={20} aria-hidden="true" />}
           title="Novas músicas"
           subtitle="As últimas cifras adicionadas"

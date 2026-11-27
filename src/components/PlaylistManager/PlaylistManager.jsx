@@ -39,7 +39,8 @@ const parseEmails = (raw) =>
  * (ex.: quem já recebeu a playlist).
  */
 function useEmailChips(active, blocked = []) {
-  const { user, isAdmin } = useAuth();
+  const { user, can } = useAuth();
+  const isAdmin = can("admin:access");
   const selfEmail = user?.email?.toLowerCase() || "";
   const [emails, setEmails] = useState([]);
   const [input, setInput] = useState("");
@@ -171,8 +172,7 @@ function EmailChipsField({ label, chips }) {
  * ...e renderize {manager.modals} uma vez na página.
  */
 export function usePlaylistManager({ onChanged } = {}) {
-  const { user, isAdmin } = useAuth();
-  const currentUserId = user?._id || user?.id || null;
+  const { can } = useAuth();
 
   // { type: "create" | "edit" | "share" | "delete", playlist? }
   const [dialog, setDialog] = useState(null);
@@ -421,7 +421,7 @@ export function usePlaylistManager({ onChanged } = {}) {
                 {existingShared.map((value) => {
                   const isDeletedUser = OBJECT_ID_PATTERN.test(value);
                   const ownerId = getPlaylistOwnerId(playlist);
-                  const canRemove = (ownerId && ownerId === currentUserId) || isAdmin;
+                  const canRemove = can("playlist:manage-share", { ownerId });
                   // quem não é dono/ADM não vê nem remove entradas de usuários excluídos
                   if (isDeletedUser && !canRemove) return null;
                   return (

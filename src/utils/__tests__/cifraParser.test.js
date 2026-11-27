@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { isChordLine, parseCifraText } from "../cifraParser";
 
 describe("isChordLine", () => {
+  it("reconhece acorde diminuto com °, º ou ˚", () => {
+    for (const d of ["°", "º", "˚"]) expect(isChordLine(`D       D#${d}      Em`)).toBe(true);
+  });
+
   it("aceita linhas só de acordes", () => {
     expect(isChordLine("C   G   Am7  F/A")).toBe(true);
     expect(isChordLine("C7M  Dm7(9)")).toBe(true);

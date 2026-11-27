@@ -23,7 +23,8 @@ export default function Playlists() {
   const isLoadingPlaylists = playlistsQuery.isLoading;
   const invalidatePlaylists = useInvalidatePlaylists();
 
-  const { user: authenticatedUser, isAdmin } = useAuth();
+  const { user: authenticatedUser, can } = useAuth();
+  const isAdmin = can("admin:access");
   const urlFilters = useInitialUrlFilters();
   const { search: searchNome, setSearch: setSearchNome, debounced, normalize } = useSearch(300, urlFilters.get("q"));
   useSyncUrlFilters({ q: searchNome });

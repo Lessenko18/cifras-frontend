@@ -1,4 +1,5 @@
 import { cleanCifraText } from './cleanCifraText';
+import { DIM_CHARS, isChordToken } from './chordSyntax';
 import { createStoredPreference } from "../lib/storedPreference";
 
 // Escala cromática completa com sustenidos
@@ -57,15 +58,6 @@ export function transposeNote(note, semitones, accidental) {
   return scale(accidental)[((idx + semitones) % 12 + 12) % 12];
 }
 
-// Padrão de acorde: Am, G7, F#m7, Bb, C/E, Dm7sus4, Cmaj7, Asus2, etc.
-const CHORD_PATTERN =
-  /^[A-G][#b]?(m(?:aj\d*)?|min\d*|dim\d*|aug\d*|sus\d*|add\d*)?\d*M?(sus\d*)?(\/([A-G][#b]?|\d))?$/;
-
-// Aceita acordes colados após um baixo (ex: "E/GF#m7" = "E/G" + "F#m7")
-function isChord(token) {
-  return token.split(/(?<=\/[A-G][#b]?)(?=[A-G])/).every((t) => CHORD_PATTERN.test(t));
-}
-
 // Uma linha é de acordes se TODOS os tokens forem acordes válidos.
 // Parênteses não contam ("D9  ( D4  D )", "(G", "A)"): só envolvem acordes.
 function isChordLine(line) {
@@ -74,12 +66,14 @@ function isChordLine(line) {
     .split(/\s+/)
     .map((t) => t.replace(/^\(+|\)+$/g, ''))
     .filter(Boolean);
-  return tokens.length > 0 && tokens.every(isChord);
+  return tokens.length > 0 && tokens.every(isChordToken);
 }
 
 // Regex para encontrar tokens de acorde dentro de uma linha já confirmada como linha de acordes
-const CHORD_TOKEN_REGEX =
-  /([A-G][#b]?)(m(?:aj\d*)?|min\d*|dim\d*|aug\d*|sus\d*|add\d*)?\d*M?(sus\d*)?(\/([A-G][#b]?))?/g;
+const CHORD_TOKEN_REGEX = new RegExp(
+  String.raw`([A-G][#b]?)(m(?:aj\d*)?|min\d*|dim\d*|aug\d*|sus\d*|add\d*|[${DIM_CHARS}])?\d*M?(sus\d*)?(\/([A-G][#b]?))?`,
+  "g",
+);
 
 export function transposeLine(line, semitones, accidental) {
   return line.replace(CHORD_TOKEN_REGEX, (match, root, _q, _n, _, bass) => {
@@ -97,7 +91,7 @@ export const TOM_LINE_REGEX = /^(Tom:\s*)([A-G][#b]?)(.*)/i;
 // C7M → C, F/G → F, Am7 → Am, Dsus4 → D, Bdim → Bm
 export function simplifyLine(line) {
   return line.replace(CHORD_TOKEN_REGEX, (match, root, quality) => {
-    const minor = quality && /^(m(?!aj)|min|dim)/.test(quality);
+    const minor = quality && new RegExp(`^(m(?!aj)|min|dim|[${DIM_CHARS}])`).test(quality);
     return root + (minor ? 'm' : '');
   });
 }

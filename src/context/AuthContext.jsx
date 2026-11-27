@@ -4,6 +4,7 @@ import { getMeRequest } from "../service/auth.service";
 import { normalizeAvatarUrl } from "../utils/normalizeAvatarUrl";
 import { storage } from "../lib/storage";
 import { meKey } from "../lib/authKeys";
+import { can as canUser } from "../lib/permissions";
 
 const AuthContext = createContext(null);
 
@@ -88,12 +89,12 @@ export function AuthProvider({ children }) {
 
   // Carregando = ainda não houve a 1ª resposta do servidor nesta sessão
   const isLoading = hasToken && dataUpdatedAt === 0 && !isError;
-  const isAdmin = String(user?.level || "").toUpperCase() === "ADM";
+  const can = useCallback((action, resource) => canUser(user, action, resource), [user]);
   const isAuthenticated = Boolean(user);
 
   const value = useMemo(
-    () => ({ user, isLoading, isAuthenticated, isAdmin, refresh, setUser }),
-    [user, isLoading, isAuthenticated, isAdmin, refresh, setUser],
+    () => ({ user, isLoading, isAuthenticated, can, refresh, setUser }),
+    [user, isLoading, isAuthenticated, can, refresh, setUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -30,7 +30,8 @@ const PAGINATION_STYLES = {
 };
 
 export default function Home() {
-  const { user, isAdmin, isAuthenticated } = useAuth();
+  const { user, can, isAuthenticated } = useAuth();
+  const isAdmin = can("admin:access");
   const cifraPanelRef = useRef(null);
   const [insights, setInsights] = useState(EMPTY_INSIGHTS);
 

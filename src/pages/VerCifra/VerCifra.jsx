@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { FiMonitor } from "react-icons/fi";
+import { FiDownload, FiEdit2, FiMonitor } from "react-icons/fi";
 import { deleteCifraService, editCifraService } from "../../service/cifraService";
 import { CifraBody, VerCifraContainer } from "./VerCifraStyled";
 import { UsersHeader, Title } from "../../components/PageHeader/PageHeaderStyled";
@@ -198,20 +198,20 @@ export default function VerCifra() {
         <div className="btns-header">
           <button
             type="button"
+            className="hdr-btn"
             aria-label="Abrir modo palco"
             title="Modo palco (tela cheia, letra grande)"
             onClick={() => setStageOpen(true)}
-            style={{ color: "var(--text-primary)" }}
           >
-            <FiMonitor size={24} />
+            <FiMonitor aria-hidden="true" />
           </button>
-          <AddToPlaylist cifraId={cifraId} cifraNome={cifra.nome} />
-          <button type="button" aria-label="Exportar cifra em PDF" onClick={handleExportPdf}>
-            <img src="/pdf.svg" alt="Exportar PDF" title="Exportar PDF" />
+          <AddToPlaylist className="hdr-btn" cifraId={cifraId} cifraNome={cifra.nome} />
+          <button type="button" className="hdr-btn" aria-label="Exportar cifra em PDF" title="Exportar PDF" onClick={handleExportPdf}>
+            <FiDownload aria-hidden="true" />
           </button>
           {canManageCifra && (
-            <button type="button" aria-label="Editar cifra" onClick={() => setUpdate(!update)}>
-              <img src="/update.svg" alt="Update" title="editar" />
+            <button type="button" className="hdr-btn" aria-label="Editar cifra" title="Editar cifra" onClick={() => setUpdate(!update)}>
+              <FiEdit2 aria-hidden="true" />
             </button>
           )}
         </div>

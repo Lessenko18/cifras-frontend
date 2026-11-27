@@ -71,7 +71,7 @@ export const FilterDropdownItem = styled.button`
   padding-left: ${({ $indent }) => ($indent ? "32px" : "16px")};
   text-align: left;
   background: ${({ $active }) => ($active ? "#ede9fe" : "transparent")};
-  color: ${({ $active }) => ($active ? "#6d28d9" : "var(--text-secondary)")};
+  color: ${({ $active }) => ($active ? "var(--accent-deep)" : "var(--text-secondary)")};
   font-weight: ${({ $active }) => ($active ? "700" : "500")};
   font-size: 0.9rem;
   border: none;
@@ -332,4 +332,139 @@ export const PaginationInfo = styled.p`
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
+`;
+
+// ── Barra de ferramentas da lista: filtros à esquerda, ações à direita ──
+export const Toolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  .filters,
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .filters {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+  }
+
+  .tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tool-btn.primary {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-deep));
+    color: #fff;
+  }
+
+  .tool-btn.icon {
+    width: 40px;
+    padding: 0;
+  }
+
+  .tool-btn.chip {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .more {
+    position: relative;
+  }
+
+  .more-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 200;
+    min-width: 180px;
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--light);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.25);
+  }
+
+  .more-menu button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--bg-input);
+    }
+  }
+
+  @media (max-width: 700px) {
+    .filters {
+      flex: 1 1 100%;
+    }
+    .actions {
+      flex: 1 1 100%;
+    }
+    .actions .primary {
+      flex: 1;
+    }
+  }
+`;
+
+// Dropdown de categoria dentro da barra: largura do conteúdo, mesma altura dos botões
+export const ToolbarFilterWrapper = styled(FilterDropdownWrapper)`
+  min-width: 0;
+
+  @media (max-width: 700px) {
+    min-width: 0;
+  }
+`;
+
+export const ToolbarFilterTrigger = styled(FilterDropdownTrigger)`
+  height: 40px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  background: var(--bg-input);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  max-width: 220px;
+
+  span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 `;

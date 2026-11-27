@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import * as S from "./CifraStyled";
-import { UsersHeader } from "../../components/PageHeader/PageHeaderStyled";
+import { FiHeart, FiX, FiPlus, FiMoreHorizontal, FiUpload } from "react-icons/fi";
+import { useClickOutside } from "../../hooks/useClickOutside";
 import { FavBtn } from "../Home/HomeStyled";
 import EmptyState from "../../components/EmptyState/EmptyState";
 import { SkeletonRows } from "../../components/Skeleton/Skeleton";
@@ -14,8 +15,8 @@ import NovaCifraModal from "./components/NovaCifraModal";
 import CifraListCard from "./components/CifraListCard";
 
 const FILTER_STYLES = {
-  Wrapper: S.FilterDropdownWrapper,
-  Trigger: S.FilterDropdownTrigger,
+  Wrapper: S.ToolbarFilterWrapper,
+  Trigger: S.ToolbarFilterTrigger,
   Panel: S.FilterDropdownPanel,
   Item: S.FilterDropdownItem,
 };
@@ -29,6 +30,9 @@ export default function Cifras() {
   const requireAuth = useRequireAuth();
   const [isCreating, setIsCreating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef(null);
+  useClickOutside(moreRef, () => setMoreOpen(false));
 
   const busca = useCifrasBusca({ limit: 15, showParent: true });
   const {
@@ -41,8 +45,8 @@ export default function Cifras() {
 
   return (
     <S.CifrasContainer>
-      <UsersHeader>
-        <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+      <S.Toolbar role="toolbar" aria-label="Filtros e ações">
+        <div className="filters">
           <CategoriaFilterDropdown
             categorias={categorias}
             value={categoriaFiltro}
@@ -51,39 +55,58 @@ export default function Cifras() {
             styles={FILTER_STYLES}
           />
 
-          <FavBtn type="button" $active={favoritosMode} onClick={handleToggleFavoritosMode}>
-            {favoritosMode ? "♥" : "♡"} Favoritas
+          <FavBtn type="button" $active={favoritosMode} onClick={handleToggleFavoritosMode} aria-pressed={favoritosMode}>
+            <FiHeart size={16} fill={favoritosMode ? "currentColor" : "none"} aria-hidden="true" /> Favoritas
           </FavBtn>
 
           {(search || categoriaFiltro || favoritosMode) && (
             <button
               type="button"
-              className="btn"
+              className="tool-btn chip"
               onClick={() => { setSearch(""); setCategoriaFiltro(""); setFavoritosMode(false); }}
             >
-              Limpar filtro
+              <FiX size={14} aria-hidden="true" /> Limpar
             </button>
           )}
+        </div>
 
+        <div className="actions">
           <button
-            className="btn adicionar-primary"
+            type="button"
+            className="tool-btn primary"
             onClick={() => {
               if (requireAuth("Você precisa fazer login para adicionar uma cifra.")) setIsCreating(true);
             }}
           >
-            Adicionar Nova Cifra
+            <FiPlus size={18} aria-hidden="true" /> Nova cifra
           </button>
 
-          <button
-            className="btn"
-            onClick={() => {
-              if (requireAuth("Você precisa fazer login para importar cifras.")) setIsImporting(true);
-            }}
-          >
-            Importar PDF
-          </button>
+          <div className="more" ref={moreRef}>
+            <button
+              type="button"
+              className="tool-btn icon"
+              aria-label="Mais ações"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen((o) => !o)}
+            >
+              <FiMoreHorizontal size={18} aria-hidden="true" />
+            </button>
+            {moreOpen && (
+              <div className="more-menu">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    if (requireAuth("Você precisa fazer login para importar cifras.")) setIsImporting(true);
+                  }}
+                >
+                  <FiUpload size={18} aria-hidden="true" /> Importar PDF
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </UsersHeader>
+      </S.Toolbar>
 
       {isImporting && (
         <ImportarPdf categorias={categorias} onClose={() => setIsImporting(false)} onImported={refetch} />

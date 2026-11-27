@@ -73,6 +73,19 @@ describe("preferência ♯/♭", () => {
   });
 });
 
+describe("acorde diminuto", () => {
+  it("transpõe a linha inteira, com ° ou º", () => {
+    setAccidental("sharp");
+    expect(transposeText("D      D#°      Em", 2)).toBe("E      F°      F#m");
+    expect(transposeText("D      D#º      Em", 2)).toBe("E      Fº      F#m");
+  });
+
+  it("simplifica o diminuto para menor", () => {
+    setSimplify(true);
+    expect(transposeText("D#º", 0)).toBe("D#m");
+  });
+});
+
 describe("cifra simplificada", () => {
   it("reduz extensões e remove o baixo", () => {
     setSimplify(true);

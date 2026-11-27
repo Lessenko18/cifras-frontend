@@ -7,6 +7,11 @@ export const PageShell = styled.div`
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+
+  /* reserva espaço para a barra de navegação inferior no mobile */
+  @media (max-width: 700px) {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
 `;
 
 // Mesmo layout do #root (coluna centralizada) pra as páginas se comportarem
@@ -22,7 +27,7 @@ export const PageContent = styled.main`
 export const FooterContainer = styled.footer`
   width: 100%;
   margin-top: 40px;
-  background-color: #050810;
+  background-color: var(--chrome-bg);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.85);
 `;

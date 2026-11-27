@@ -84,7 +84,7 @@ export const InsightIconBadge = styled.div`
   justify-content: center;
   font-size: 1.05rem;
   color: #fff;
-  background: ${({ $gradient }) => $gradient || "linear-gradient(135deg, #8b5cf6, #6d28d9)"};
+  background: ${({ $gradient }) => $gradient || "linear-gradient(135deg, var(--accent-soft), var(--accent-deep))"};
   box-shadow: 0 6px 16px -4px rgba(124, 58, 237, 0.6);
 `;
 
@@ -175,7 +175,7 @@ export const RankIndex = styled.span`
 `;
 
 const SQUARE_GRADIENTS = [
-  "linear-gradient(135deg, #7c3aed, #4c1d95)",
+  "linear-gradient(135deg, var(--accent-strong), #4c1d95)",
   "linear-gradient(135deg, #0ea5e9, #0369a1)",
   "linear-gradient(135deg, #f59e0b, #b45309)",
   "linear-gradient(135deg, #ec4899, #9d174d)",
@@ -183,7 +183,7 @@ const SQUARE_GRADIENTS = [
 ];
 
 const SQUARE_VARIANTS = {
-  purple: "linear-gradient(135deg, #7c3aed, #4c1d95)",
+  purple: "linear-gradient(135deg, var(--accent-strong), #4c1d95)",
   blue: "linear-gradient(135deg, #0ea5e9, #0369a1)",
 };
 
@@ -257,7 +257,7 @@ export const RankStat = styled.span`
   font-weight: 700;
   white-space: nowrap;
   color: ${({ $variant }) =>
-    $variant === "date" ? "rgba(255, 255, 255, 0.5)" : $variant === "plays" ? "#a78bfa" : "#fbbf24"};
+    $variant === "date" ? "rgba(255, 255, 255, 0.5)" : $variant === "plays" ? "var(--accent)" : "#fbbf24"};
 `;
 
 export const InsightEmpty = styled.p`
@@ -534,7 +534,7 @@ export const FilterDropdownItem = styled.button`
   padding-left: ${({ $indent }) => ($indent ? "28px" : "14px")};
   text-align: left;
   background: ${({ $active }) => ($active ? "#ede9fe" : "transparent")};
-  color: ${({ $active }) => ($active ? "#6d28d9" : "var(--text-secondary)")};
+  color: ${({ $active }) => ($active ? "var(--accent-deep)" : "var(--text-secondary)")};
   font-weight: ${({ $active }) => ($active ? "700" : "500")};
   font-size: 0.88rem;
   border: none;

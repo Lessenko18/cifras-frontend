@@ -19,6 +19,14 @@ export const GlobalStyled = createGlobalStyle`
   --gray: #eeeeee;
   --dark: #000;
 
+  /* tokens de navegação e destaque (violeta). Use estes em vez de hex solto. */
+  --chrome-bg: #050810;       /* navbar, rodapé e barra inferior */
+  --accent-light: #c084fc;
+  --accent: #a78bfa;          /* item ativo sobre fundo escuro */
+  --accent-soft: #8b5cf6;
+  --accent-strong: #7c3aed;
+  --accent-deep: #6d28d9;
+
   /* tema claro (padrão) */
   --bg: #ffffff;
   --bg-card: #fafafa;

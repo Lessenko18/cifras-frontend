@@ -1,19 +1,21 @@
 // Converte o nome de um acorde da cifra ("F#m7", "C7M", "Am/C") na chave/sufixo
 // usados pelo @tombatossals/chords-db.
 import { get as getTonalChord } from "@tonaljs/chord";
+import { normalizeDim } from "./chordSyntax";
 
 const KEY_ALIAS = {
   guitar: { "C#": "Csharp", Db: "Csharp", "D#": "Eb", "F#": "Fsharp", Gb: "Fsharp", "G#": "Ab", "A#": "Bb" },
 };
 
 function normalizeSuffix(raw) {
-  let s = raw.replace(/[()]/g, "");
+  let s = normalizeDim(raw.replace(/[()]/g, ""));
   if (s === "") return "major";
   s = s.replace(/^m7M|^mM7|^mmaj7/, "mmaj7");
   s = s.replace(/^min/, "m").replace(/^maj7|^M7|^7M|^7\+/, "maj7");
   if (s === "sus") s = "sus4";
   if (s === "m") return "minor";
   if (s === "°") return "dim";
+  if (s === "°7") return "dim7";
   if (s === "+") return "aug";
   return s;
 }

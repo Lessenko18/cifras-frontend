@@ -5,6 +5,7 @@ import { logout } from "../../service/auth.service";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { FiSun, FiMoon, FiHome, FiMusic, FiList, FiUsers, FiTag, FiSearch, FiTool, FiInbox } from "react-icons/fi";
+import MobileNav from "./MobileNav";
 import Onboarding from "../Onboarding/Onboarding";
 import { PageShell, PageContent } from "../Footer/FooterStyled";
 import { Footer } from "../Footer/Footer";
@@ -20,7 +21,8 @@ export function Navbar() {
 }
 
 function NavbarContent() {
-  const { user, isAuthenticated, isAdmin, setUser } = useAuth();
+  const { user, isAuthenticated, can, setUser } = useAuth();
+  const isAdmin = can("admin:access");
   const pageSearch = usePageSearchConfig();
 
   const navigate = useNavigate();
@@ -95,28 +97,28 @@ function NavbarContent() {
 
         <NavContent>
           <NavLink to="/home" end className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            <FiHome size={17} /> Home
+            <FiHome size={18} /> Home
           </NavLink>
           <NavLink to="/home/cifras" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            <FiMusic size={17} /> Cifras
+            <FiMusic size={18} /> Cifras
           </NavLink>
           <NavLink to="/home/playlists" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            <FiList size={17} /> Playlists
+            <FiList size={18} /> Playlists
           </NavLink>
           <NavLink to="/home/ferramentas" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            <FiTool size={17} /> Ferramentas
+            <FiTool size={18} /> Ferramentas
           </NavLink>
 
           {isAdmin && (
             <>
               <NavLink to="/home/users" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                <FiUsers size={17} /> Usuários
+                <FiUsers size={18} /> Usuários
               </NavLink>
               <NavLink to="/home/categorias" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                <FiTag size={17} /> Categorias
+                <FiTag size={18} /> Categorias
               </NavLink>
               <NavLink to="/home/feedbacks" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-                <FiInbox size={17} /> Relatos
+                <FiInbox size={18} /> Relatos
               </NavLink>
             </>
           )}
@@ -131,7 +133,7 @@ function NavbarContent() {
         <RightArea>
           {pageSearch ? (
             <SearchBox>
-              <FiSearch size={16} />
+              <FiSearch size={18} />
               <input
                 type="text"
                 data-global-search
@@ -154,6 +156,12 @@ function NavbarContent() {
           >
             {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
           </button>
+
+          {!isAuthenticated && (
+            <Link className="mobile-login" to="/login">
+              Entrar
+            </Link>
+          )}
 
           {isAuthenticated && (
             <UserArea ref={menuRef}>
@@ -222,6 +230,13 @@ function NavbarContent() {
         <Outlet />
       </PageContent>
       <Footer />
+      <MobileNav
+        isAdmin={isAdmin}
+        isAuthenticated={isAuthenticated}
+        dark={dark}
+        onToggleTheme={toggle}
+        onLogout={handleLogout}
+      />
     </PageShell>
   );
 }

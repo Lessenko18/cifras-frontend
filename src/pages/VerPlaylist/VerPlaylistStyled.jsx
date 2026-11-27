@@ -240,7 +240,7 @@ export const Velocimetro = styled.div`
 
   .metronomo-play.playing {
     background: var(--velocimetro-hover);
-    color: #7c3aed;
+    color: var(--accent-strong);
   }
 
   .metronomo-save {

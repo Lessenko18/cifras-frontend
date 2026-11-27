@@ -15,6 +15,54 @@ export const VerCifraContainer = styled.section`
     margin-left: -6px;
   }
 
+  /* Ações do cabeçalho: todas com a mesma caixa, o mesmo ícone e o mesmo espaçamento */
+  .btns-header {
+    gap: 8px;
+  }
+
+  .btns-header .hdr-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      transform: none;
+      border-color: var(--accent);
+      color: var(--accent-strong);
+    }
+  }
+
+  @media (max-width: 700px) {
+    .btns-header {
+      gap: 6px;
+    }
+
+    .btns-header .hdr-btn {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
+    }
+  }
+
   &.partes {
     max-width: 1300px;
   }

@@ -19,8 +19,19 @@ const MODELOS = {
     "Pós-Comunhão",
     "Final",
   ],
-  Casamento: ["Entrada", "Ato Penitencial", "Ofertório", "Comunhão", "Final"],
-  Retiro: ["Entrada", "Adoração", "Comunhão", "Final"],
+  // Texto simples = busca na categoria de mesmo nome. { nome, busca } = mostra `nome`
+  // mas sugere as cifras da categoria `busca`.
+  Casamento: [
+    { nome: "Entrada dos Padrinhos", busca: "Entrada" },
+    { nome: "Entrada do Noivo", busca: "Entrada" },
+    { nome: "Entrada do Pajem e da Daminha", busca: "Entrada" },
+    { nome: "Entrada da Noiva", busca: "Entrada" },
+    "Alianças",
+    "Comunhão",
+    "Assinaturas",
+    { nome: "Saída dos Noivos", busca: "Final" },
+  ],
+  Retiro: ["Entrada", "Animação", "Oração", "Adoração", "Comunhão", "Final"],
 };
 
 const normalize = (t = "") =>
@@ -57,7 +68,7 @@ const Box = styled.div`
   }
   .momento {
     display: grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: minmax(110px, 150px) 1fr;
     align-items: center;
     gap: 8px;
     font-size: 0.9rem;
@@ -148,15 +159,18 @@ export default function RoteiroModelo({ escolhidos, addItem, nomeInputId }) {
         ))}
       </div>
       {modelo &&
-        MODELOS[modelo].map((momento) => (
-          <Momento
-            key={`${modelo}-${momento}`}
-            nome={momento}
-            categoria={categorias.find((c) => normalize(c.nome) === normalize(momento))}
-            escolhidos={escolhidos}
-            addItem={addItem}
-          />
-        ))}
+        MODELOS[modelo].map((momento) => {
+          const { nome, busca = nome } = typeof momento === "string" ? { nome: momento } : momento;
+          return (
+            <Momento
+              key={`${modelo}-${nome}`}
+              nome={nome}
+              categoria={categorias.find((c) => normalize(c.nome) === normalize(busca))}
+              escolhidos={escolhidos}
+              addItem={addItem}
+            />
+          );
+        })}
     </Box>
   );
 }

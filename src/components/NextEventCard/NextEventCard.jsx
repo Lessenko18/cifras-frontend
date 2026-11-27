@@ -1,11 +1,13 @@
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { FiCalendar, FiPlay } from "react-icons/fi";
+import { FiCalendar, FiClock, FiPlay } from "react-icons/fi";
 import { getRecentCifras } from "../../utils/recentCifras";
 
 const Wrap = styled.section`
   margin-bottom: 16px;
+  min-width: 0;
+  max-width: 100%;
 
   .evento {
     display: flex;
@@ -52,15 +54,36 @@ const Wrap = styled.section`
     cursor: pointer;
   }
   .recentes {
-    margin-top: 12px;
+    margin-top: 14px;
+  }
+  .recentes h4 {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
     gap: 6px;
-    font-size: 0.85rem;
+    margin: 0 0 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--text-muted);
   }
+  .recentes ul {
+    /* width:0 + min-width:100% impede que os chips alarguem o painel pai */
+    width: 0;
+    min-width: 100%;
+    list-style: none;
+    margin: 0;
+    padding: 0 0 4px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .recentes li {
+    flex: 0 0 auto;
+  }
   .recentes a {
+    display: block;
     padding: 4px 10px;
     border-radius: 999px;
     border: 1px solid var(--border-color);
@@ -120,12 +143,18 @@ export default function NextEventCard({ playlists }) {
       )}
       {recentes.length > 0 && (
         <div className="recentes">
-          <span>Recentes:</span>
-          {recentes.map((c) => (
-            <Link key={c.id} to={`/home/cifra/${c.id}`} title={c.artista ? `${c.nome} — ${c.artista}` : c.nome}>
-              {c.nome}
-            </Link>
-          ))}
+          <h4>
+            <FiClock size={14} aria-hidden="true" /> Acessadas recentemente
+          </h4>
+          <ul>
+            {recentes.map((c) => (
+              <li key={c.id}>
+                <Link to={`/home/cifra/${c.id}`} title={c.artista ? `${c.nome} — ${c.artista}` : c.nome}>
+                  {c.nome}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </Wrap>

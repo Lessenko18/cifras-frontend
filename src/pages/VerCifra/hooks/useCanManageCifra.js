@@ -23,13 +23,8 @@ function getOwnerId(cifra) {
 }
 
 export function useCanManageCifra(cifra) {
-  const { user, isAdmin } = useAuth();
+  const { can } = useAuth();
   const ownerId = getOwnerId(cifra);
 
-  return useMemo(() => {
-    if (isAdmin) return true;
-    const userId = user?._id || user?.id;
-    if (!userId || !ownerId) return false;
-    return String(userId) === String(ownerId);
-  }, [user, isAdmin, ownerId]);
+  return useMemo(() => can("cifra:manage", { ownerId }), [can, ownerId]);
 }

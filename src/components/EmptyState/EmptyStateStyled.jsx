@@ -54,7 +54,7 @@ export const Art = styled.div`
     display: grid;
     place-items: center;
     color: #fff;
-    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    background: linear-gradient(135deg, var(--accent-strong), #4f46e5);
     box-shadow: 0 10px 22px -8px rgba(79, 70, 229, 0.6);
     transform: rotate(-6deg);
   }
@@ -62,7 +62,7 @@ export const Art = styled.div`
   .dot {
     position: absolute;
     border-radius: 50%;
-    background: #a78bfa;
+    background: var(--accent);
     opacity: 0.55;
   }
   .d1 { width: 9px; height: 9px; top: 6px; left: 14px; }

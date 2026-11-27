@@ -6,7 +6,7 @@ const parentIdOf = (c) => String(c.parent?._id || c.parent);
 
 const arrowStyle = (open, extra) => ({
   fontSize: "0.7em",
-  color: "#7c3aed",
+  color: "var(--accent-strong)",
   display: "inline-block",
   transition: "transform 0.2s",
   transform: open ? "rotate(0deg)" : "rotate(-90deg)",

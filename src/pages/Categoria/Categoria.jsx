@@ -15,7 +15,6 @@ import {
   ModalEdit,
   AnCategoria,
 } from "./CategoriaStyled";
-import { useNavigate } from "react-router-dom";
 import { UsersHeader, Title } from "../../components/PageHeader/PageHeaderStyled";
 import toast from "react-hot-toast";
 
@@ -45,7 +44,6 @@ export default function Categorias() {
       return next;
     });
   }
-  const navigate = useNavigate();
 
   const rootCategorias = useMemo(
     () =>
@@ -171,14 +169,7 @@ export default function Categorias() {
     <CategoriasContainer>
       {/* HEADER */}
       <UsersHeader>
-        <button onClick={() => navigate(-1)}>
-          <img
-            src="/back.svg"
-            alt="Voltar"
-            title="Voltar"
-            className="img-hover"
-          />
-        </button>
+        <span aria-hidden="true" /> {/* mantém o título centralizado na grade */}
         <Title>Categorias</Title>
         <button
           className="btn adicionar-primary"
@@ -342,7 +333,7 @@ export default function Categorias() {
                       transition: "transform 0.2s",
                       transform: collapsed.has(root._id) ? "rotate(-90deg)" : "rotate(0deg)",
                       fontSize: "0.7em",
-                      color: "#7c3aed",
+                      color: "var(--accent-strong)",
                     }}
                   >
                     ▼

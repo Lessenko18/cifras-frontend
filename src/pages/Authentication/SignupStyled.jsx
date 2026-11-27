@@ -103,7 +103,7 @@ export const SignupContainer = styled.div`
     border: none;
     border-radius: 40px;
 
-    background: linear-gradient(90deg, #8b5cf6 0%, #3b82f6 100%);
+    background: linear-gradient(90deg, var(--accent-soft) 0%, #3b82f6 100%);
     color: #fff;
     font-size: 16px;
     cursor: pointer;
@@ -112,7 +112,7 @@ export const SignupContainer = styled.div`
     transition: 0.25s;
 
     &:hover {
-      background: linear-gradient(90deg, #7c3aed 0%, #2563eb 100%);
+      background: linear-gradient(90deg, var(--accent-strong) 0%, #2563eb 100%);
       transform: scale(1.02);
     }
   }

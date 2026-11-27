@@ -143,7 +143,7 @@ export const DeviceOption = styled.button`
   }
 
   &.active .radio {
-    border-color: #7c3aed;
+    border-color: var(--accent-strong);
   }
 
   &.active .radio::after {
@@ -151,7 +151,7 @@ export const DeviceOption = styled.button`
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #7c3aed;
+    background: var(--accent-strong);
   }
 
   .label {

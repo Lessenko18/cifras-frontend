@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const backendUtils = path.resolve(root, "../Backend/src/utils");
 
-export const SHARED_FILES = ["chordpro.js", "cifraParser.js", "cleanCifraText.js"];
+export const SHARED_FILES = ["chordpro.js", "cifraParser.js", "cleanCifraText.js", "chordSyntax.js"];
 
 const BANNER = (name) =>
   `// GERADO por Frontend/scripts/sync-shared.mjs a partir de Frontend/src/utils/${name}.\n` +

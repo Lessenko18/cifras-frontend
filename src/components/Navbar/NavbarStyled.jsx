@@ -3,7 +3,7 @@ import styled from "styled-components";
 export const NavContainer = styled.nav`
   width: 100%;
   margin: 0 0 20px;
-  background-color: #050810;
+  background-color: var(--chrome-bg);
   background-image: url("/navbar.webp");
   background-repeat: no-repeat;
   background-size: cover;
@@ -35,11 +35,15 @@ export const NavInner = styled.div`
   gap: 20px;
   padding: 10px 20px;
 
-  @media only screen and (max-width: 420px) {
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px 10px;
+  /* Mobile: só logo + busca + avatar numa linha; a navegação vai pra barra inferior */
+  @media only screen and (max-width: 700px) {
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding: 8px 12px;
+
+    #logo {
+      flex-shrink: 0;
+    }
   }
 `;
 export const NavContent = styled.div`
@@ -88,30 +92,17 @@ export const NavContent = styled.div`
     }
 
     &.active {
-      color: #a78bfa;
+      color: var(--accent);
     }
 
     &.active::after {
       transform: scaleX(1);
-      background: linear-gradient(90deg, #c084fc, #7c3aed);
+      background: linear-gradient(90deg, var(--accent-light), var(--accent-strong));
     }
   }
 
-  @media only screen and (max-width: 600px) {
-    font-size: 14px;
-    gap: 16px;
-  }
-
-  @media only screen and (max-width: 528px) {
-    padding-top: 0;
-  }
-
-  @media only screen and (max-width: 420px) {
-    width: 100%;
-    justify-content: center;
-    gap: 8px;
-    padding: 4px 0 0;
-    font-size: 13px;
+  @media only screen and (max-width: 700px) {
+    display: none;
   }
 `;
 
@@ -145,12 +136,31 @@ export const RightArea = styled.div`
     color: #fbbf24;
   }
 
-  @media only screen and (max-width: 420px) {
-    gap: 8px;
+  .mobile-login {
+    display: none;
+  }
 
-    .icon-btn {
-      width: 32px;
-      height: 32px;
+  @media only screen and (max-width: 700px) {
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+    justify-content: flex-end; /* sem campo de busca, lupa e avatar ficam à direita */
+
+    /* tema vai para o "Mais" */
+    .icon-btn.theme-toggle {
+      display: none;
+    }
+
+    .mobile-login {
+      display: inline-flex;
+      align-items: center;
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 12px;
+      background: var(--accent-strong);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
     }
   }
 `;
@@ -190,19 +200,15 @@ export const SearchBox = styled.div`
     }
   }
 
-  @media only screen and (max-width: 600px) {
-    input {
-      width: 110px;
-    }
-  }
-
-  @media only screen and (max-width: 420px) {
-    height: 32px;
-    padding: 0 10px;
+  @media only screen and (max-width: 700px) {
+    flex: 1;
+    min-width: 0;
 
     input {
-      width: 90px;
-      font-size: 0.8rem;
+      flex: 1;
+      width: 100%;
+      min-width: 0;
+      font-size: 16px; /* evita zoom automático do iOS ao focar */
     }
   }
 `;
@@ -266,13 +272,13 @@ export const UserArea = styled.div`
     }
 
     img {
-      width: 32px;
-      height: 32px;
+      width: 38px;
+      height: 38px;
     }
 
     .initials {
-      width: 28px;
-      height: 28px;
+      width: 38px;
+      height: 38px;
       font-size: 12px;
     }
   }
@@ -281,7 +287,7 @@ export const UserArea = styled.div`
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent-deep));
     color: #fff;
     display: flex;
     align-items: center;
